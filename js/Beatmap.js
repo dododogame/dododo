@@ -386,8 +386,16 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 			if (event.tie && i === notes.length - 1 && isLast) {
 				this.drawLeftHalfTie(bitmap, event.x, y + (lastNote.multiplicity - 1) * 5);
 			}
-			this.drawBeamedNote(bitmap, event, y, notes[i - 1], notes[i + 1], !lastTie, height,
-					isLast && i === notes.length-1, timeLengthPassed);
+			let previousIndex = i - 1;
+			while (notes[previousIndex] && notes[previousIndex].event === "barline") {
+				previousIndex--;
+			}
+			let nextIndex = i + 1;
+			while (notes[nextIndex] && notes[nextIndex].event === "barline") {
+				nextIndex++;
+			}
+			this.drawBeamedNote(bitmap, event, y, notes[previousIndex], notes[nextIndex], !lastTie,
+					height, isLast && i === notes.length-1, timeLengthPassed);
 			lastNote = event;
 		} else if (event.event === "group") {
 			if (lastTie) {
@@ -402,8 +410,43 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 		}
 		timeLengthPassed = timeLengthPassed.add(event.trueLength);
 	}
+	if (group.ratio1) {
+		const oldFontSize = bitmap.fontSize;
+		const oldColor = bitmap.textColor;
+		bitmap.fontSize = 16;
+		bitmap.textColor = 'dimgray';
+		const width = bitmap.measureTextWidth(group.ratio1);
+		const x = (group.x + lastNote.x) / 2;
+		if (!this.isGroupBeamedRecursive(group)) {
+			const context = bitmap._context;
+			context.save();
+			context.strokeStyle = 'dimgray';
+			context.beginPath();
+			context.moveTo(group.x - 5, y - height);
+			context.lineTo(group.x - 5, y - height - 12);
+			context.lineTo(x - width / 2 - 5, y - height - 12);
+			context.moveTo(lastNote.x + 5, y - height);
+			context.lineTo(lastNote.x + 5, y - height - 12);
+			context.lineTo(x + width / 2 + 5, y - height - 12);
+			context.stroke();
+			context.restore();
+		}
+		bitmap.drawText(group.ratio1, x - width/2, y - height - 24, width, 24, 'center');
+		bitmap.fontSize = oldFontSize;
+		bitmap.textColor = oldColor;
+	}
 	return lastNote;
 };
+
+Beatmap.prototype.isGroupBeamedRecursive = function (group) {
+	for (let i = 0; i < group.notes.length; i++) {
+		const event = group.notes[i];
+		const isBeamed = event.event === "group" ? this.isGroupBeamedRecursive(event) : this.getBeamsNumber(event) > 0;
+		if (!isBeamed)
+			return false;
+	}
+	return true;
+}
 
 Beatmap.prototype.getFirstNoteRecursive = function (event) {
 	let result = event;
@@ -537,6 +580,24 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 					}
 				}
 			}
+		} else {
+			context.lineWidth = 2;
+			context.beginPath();
+			context.moveTo(note.x, y0 - 5);
+			if (note.length > 0)
+				context.lineTo(note.x, y0 - 30);
+			if (note.length > 3)
+				context.lineTo(note.x, y0 - 30 - 10*(note.length - 3))
+			context.stroke();
+			if (note.length > 2) {
+				for (let i = 0; i < note.length - 2; i++) {
+					context.beginPath();
+					context.moveTo(note.x, y0 - 30 - 10*i);
+					context.bezierCurveTo(note.x+6, y0-30-10*i, note.x+16, y0-24-10*i, note.x+12, y0-8-10*i);
+					context.bezierCurveTo(note.x+12, y0-20-10*i, note.x+6, y0-24-10*i, note.x, y0-24-10*i);
+					context.fill();
+				}
+			}
 		}
 	} else if (previous) {
 		if (beams > 0) {
@@ -571,6 +632,24 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 						context.bezierCurveTo(note.x+12, y0-20-10*i, note.x+6, y0-24-10*i, note.x, y0-24-10*i);
 						context.fill();
 					}
+				}
+			}
+		} else {
+			context.lineWidth = 2;
+			context.beginPath();
+			context.moveTo(note.x, y0 - 5);
+			if (note.length > 0)
+				context.lineTo(note.x, y0 - 30);
+			if (note.length > 3)
+				context.lineTo(note.x, y0 - 30 - 10*(note.length - 3))
+			context.stroke();
+			if (note.length > 2) {
+				for (let i = 0; i < note.length - 2; i++) {
+					context.beginPath();
+					context.moveTo(note.x, y0 - 30 - 10*i);
+					context.bezierCurveTo(note.x+6, y0-30-10*i, note.x+16, y0-24-10*i, note.x+12, y0-8-10*i);
+					context.bezierCurveTo(note.x+12, y0-20-10*i, note.x+6, y0-24-10*i, note.x, y0-24-10*i);
+					context.fill();
 				}
 			}
 		}
@@ -708,7 +787,7 @@ Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm) {
 	context.fillStyle = 'white';
 	context.strokeStyle = 'white';
 	const x = 32;
-	const y = 60 + (beatNote - 3)*10;
+	const y = 160 + (beatNote - 3)*10;
 	for (let i = 0; i < dots; i++) {
 		context.beginPath();
 		context.arc(x+10+5*i, y, 2, 0, 2*Math.PI);

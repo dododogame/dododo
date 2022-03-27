@@ -65,23 +65,32 @@ Scene_Preferences.prototype.start = function () {
 	this._countdownInput.x = Graphics.width - TyphmConstants.PREFERENCES_MARGIN;
 	this._countdownInput.y = TyphmConstants.TEXT_HEIGHT * 5;
 	this.addChild(this._countdownInput);
-
+	
+	this._offsetWizard = new Button(new Bitmap(512, TyphmConstants.TEXT_HEIGHT),
+		() => { this._shouldGotoOffsetWizard = true; })
+	this._offsetWizard.anchor.x = 0.5;
+	this._offsetWizard.x = Graphics.width / 2;
+	this._offsetWizard.y = TyphmConstants.TEXT_HEIGHT*7;
+	this._offsetWizard.bitmap.drawText('Offset wizard', 0, 0, 512, TyphmConstants.TEXT_HEIGHT, 'center');
+	this.addChild(this._offsetWizard);
+	
 	this._ok = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
 			() => { this._shouldOk = true; });
-	this._center(this._ok, TyphmConstants.TEXT_HEIGHT*8);
+	this._center(this._ok, TyphmConstants.TEXT_HEIGHT*10);
 	this._ok.bitmap.drawText('OK (\\n)', 0, 0,
 			256, TyphmConstants.TEXT_HEIGHT, 'center');
 	this.addChild(this._ok);
 
 	this._back = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
 			() => { this._shouldBack = true; });
-	this._center(this._back, TyphmConstants.TEXT_HEIGHT*9);
+	this._center(this._back, TyphmConstants.TEXT_HEIGHT*11);
 	this._back.bitmap.drawText('Back (Esc)', 0, 0,
 			256, TyphmConstants.TEXT_HEIGHT, 'center');
 	this.addChild(this._back);
 
 	this._shouldOk = false;
 	this._shouldBack = false;
+	this._shouldGotoOffsetWizard = false;
 
 	this._keydownEventListener = this._onKeydown.bind(this);
 	document.addEventListener('keydown', this._keydownEventListener);
@@ -96,6 +105,10 @@ Scene_Preferences.prototype.update = function () {
 		window.scene = new Scene_Title();
 	} else if (this._shouldBack) {
 		window.scene = new Scene_Title();
+	} else if (this._shouldGotoOffsetWizard) {
+		const scoreUrl = 'offset_wizard.ddd';
+		const musicUrl = '../offset_wizard.ogg';
+		window.scene = new Scene_Game(musicUrl, scoreUrl);
 	}
 	Scene_Base.prototype.update.call(this);
 };

@@ -181,6 +181,7 @@ Scene_Game.prototype.update = function () {
 				this._unclearedEvents.splice(i, 1);
 			} else if (now >= event.time + this._badTolerance*preferences.playRate) {
 				this._beatmap.clearNote(event, 'miss');
+				this._missNumber++;
 				this._combo = 0;
 				this._updateCombo();
 				this._unclearedEvents.splice(i, 1);
