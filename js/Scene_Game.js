@@ -114,7 +114,7 @@ Scene_Game.prototype.start = function () {
 		this._autoPlayIndicator = new Sprite(new Bitmap(256, TyphmConstants.TEXT_HEIGHT));
 		this._autoPlayIndicator.anchor.y = 0.5;
 		this._autoPlayIndicator.y = Graphics.height / 2;
-		this._autoPlayIndicator.bitmap.drawText('Auto-playing', 0, 0, 256, TyphmConstants.TEXT_HEIGHT);
+		this._autoPlayIndicator.bitmap.drawText('Auto-playing', 0, 0, 256, TyphmConstants.TEXT_HEIGHT, 'left');
 		this.addChild(this._autoPlayIndicator);
 	}
 
@@ -141,6 +141,8 @@ Scene_Game.prototype.start = function () {
 	document.addEventListener('keydown', this._keydownEventListener);
 	this._blurEventListener = this._onBlur.bind(this);
 	window.addEventListener('blur', this._blurEventListener);
+	this._touchStartEventListener = this._onTouchStart.bind(this);
+	document.addEventListener('touchstart', this._touchStartEventListener);
 
 	this._resumingCountdown = null;
 
@@ -345,45 +347,53 @@ Scene_Game.prototype._onKeydown = function (event) {
 			this._shouldBack = true;
 		}
 	} else if (!preferences.autoPlay) {
-		const now = this._now();
-		const key = event.key;
-		if (key && !this._ended) {
-			const event = this._unclearedEvents[0];
-			if (now >= event.time - this._badTolerance*preferences.playRate) {
-				if (this._inaccuraciesArray) {
-					this._inaccuraciesArray.push(now - event.time);
-				}
-				const inaccuracy = (now - event.time)/preferences.playRate;
-				let judge;
-				if (Math.abs(inaccuracy) <= this._perfectTolerance) {
-					judge = 'perfect';
-					this._perfectNumber++;
-					this._combo++;
-				} else if (Math.abs(inaccuracy) <= this._goodTolerance) {
-					judge = 'good';
-					this._goodNumber++;
-					this._combo++;
-				} else {
-					judge = 'bad';
-					this._badNumber++;
-					this._combo = 0;
-				}
-				this._beatmap.clearNote(event, judge);
-				this._unclearedEvents.splice(0, 1);
-				this._updateScore();
-				this._updateCombo();
-				this._createInaccuracyIndicator(inaccuracy);
-				this._createHitEffect(event, judge);
-			} else {
-				this._createWrongNote(now);
-				this._combo = 0;
-				this._updateCombo();
-				this._excessNumber++;
-				this._updateScore();
-			}
-		}
+		this._processHit();
 	}
 };
+
+Scene_Game.prototype._onTouchStart = function (event) {
+	if (!this._paused && !preferences.autoPlay)
+		this._processHit();
+}
+
+Scene_Game.prototype._processHit = function () {
+	const now = this._now();
+	if (!this._ended) {
+		const event = this._unclearedEvents[0];
+		if (now >= event.time - this._badTolerance*preferences.playRate) {
+			if (this._inaccuraciesArray) {
+				this._inaccuraciesArray.push(now - event.time);
+			}
+			const inaccuracy = (now - event.time)/preferences.playRate;
+			let judge;
+			if (Math.abs(inaccuracy) <= this._perfectTolerance) {
+				judge = 'perfect';
+				this._perfectNumber++;
+				this._combo++;
+			} else if (Math.abs(inaccuracy) <= this._goodTolerance) {
+				judge = 'good';
+				this._goodNumber++;
+				this._combo++;
+			} else {
+				judge = 'bad';
+				this._badNumber++;
+				this._combo = 0;
+			}
+			this._beatmap.clearNote(event, judge);
+			this._unclearedEvents.splice(0, 1);
+			this._updateScore();
+			this._updateCombo();
+			this._createInaccuracyIndicator(inaccuracy);
+			this._createHitEffect(event, judge);
+		} else {
+			this._createWrongNote(now);
+			this._combo = 0;
+			this._updateCombo();
+			this._excessNumber++;
+			this._updateScore();
+		}
+	}
+}
 
 Scene_Game.prototype._updateScore = function () {
 	this._scoreSprite.bitmap.clear();
