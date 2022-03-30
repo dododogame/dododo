@@ -130,6 +130,9 @@ Scene_Game.prototype.start = function () {
 	this._excessNumber = 0;
 	this._combo = 0;
 	this._maxCombo = 0;
+	
+	this._holdings = [];
+	this._pressings = {};
 
 	this._lastX = 16;
 	this._lastTime = 0.0;
@@ -143,6 +146,10 @@ Scene_Game.prototype.start = function () {
 	window.addEventListener('blur', this._blurEventListener);
 	this._touchStartEventListener = this._onTouchStart.bind(this);
 	document.addEventListener('touchstart', this._touchStartEventListener);
+	this._touchEndEventListener = this._onTouchEnd.bind(this);
+	document.addEventListener('touchend', this._touchEndEventListener);
+	this._keyupEventListener = this._onKeyup.bind(this);
+	document.addEventListener('keyup', this._keyupEventListener);
 
 	this._resumingCountdown = null;
 
@@ -174,14 +181,18 @@ Scene_Game.prototype.update = function () {
 			if (now < event.time)
 				break;
 			if (preferences.autoPlay && now >= event.time) {
-				this._beatmap.clearNote(event, 'perfect');
 				this._createHitEffect(event, 'perfect');
-				this._combo++;
-				this._updateCombo();
-				this._perfectNumber++;
-				this._updateScore();
 				this._unclearedEvents.splice(i, 1);
-			} else if (now >= event.time + this._badTolerance*preferences.playRate) {
+				if (event.hold) {
+					this._holdings.push([event, 'perfect']);
+				} else {
+					this._beatmap.clearNote(event, 'perfect');
+					this._combo++;
+					this._updateCombo();
+					this._perfectNumber++;
+					this._updateScore();
+				}
+			} else if (now >= event.time + this._badTolerance) {
 				this._beatmap.clearNote(event, 'miss');
 				this._missNumber++;
 				this._combo = 0;
@@ -189,6 +200,24 @@ Scene_Game.prototype.update = function () {
 				this._unclearedEvents.splice(i, 1);
 			} else
 				i++;
+		}
+		for (let i = 0; i < this._holdings.length; i++) {
+			const [event, judge] = this._holdings[i];
+			if (now >= event.timeEnd) {
+				this._beatmap.clearNote(event, judge);
+				if (judge === 'perfect') {
+					this._perfectNumber++;
+				} else {
+					this._goodNumber++;
+				}
+				this._combo++;
+				this._updateScore();
+				this._updateCombo();
+				this._holdings.splice(i, 1);
+				i--;
+			} else {
+				this._beatmap.trackHoldTo(now, this._judgeLine.x, event, judge, this._line1Index);
+			}
 		}
 		if (now >= this._line1.bitmap.endTime) {
 			let t = this._line1;
@@ -242,6 +271,9 @@ Scene_Game.prototype._setUpNewLine = function () {
 Scene_Game.prototype.stop = function () {
 	document.removeEventListener('keydown', this._keydownEventListener);
 	window.removeEventListener('blur', this._blurEventListener);
+	document.removeEventListener('touchstart', this._touchStartEventListener);
+	document.removeEventListener('keyup', this._keyupEventListener);
+	document.removeEventListener('touchend', this._touchEndEventListener);
 };
 
 Scene_Game.prototype._onLoad = async function () {
@@ -338,6 +370,9 @@ Scene_Game.prototype.actualResume = function () {
 }
 
 Scene_Game.prototype._onKeydown = function (event) {
+	if (this._pressings[event.key])
+		return;
+	this._pressings[event.key] = true;
 	if (event.key ==='Escape') {
 		this._pause();
 	} else if (this._paused) {
@@ -351,29 +386,73 @@ Scene_Game.prototype._onKeydown = function (event) {
 	}
 };
 
+Scene_Game.prototype._onKeyup = function (event) {
+	delete this._pressings[event.key];
+	if (!this._paused && !preferences.autoPlay) {
+		this._processLoosen(event.key);
+	}
+};
+
+Scene_Game.prototype._onTouchEnd = function (event) {
+	const changedTouches = event.changedTouches;
+	for (let i = 0; i < changedTouches.length; i++) {
+		delete this._pressings[changedTouches.item(i).identifier];
+	}
+	if (!this._paused && !preferences.autoPlay) {
+		for (let i = 0; i < changedTouches.length; i++) {
+			this._processLoosen(changedTouches.item(i).identifier);
+		}
+	}
+};
+
 Scene_Game.prototype._onTouchStart = function (event) {
-	if (!this._paused && !preferences.autoPlay)
-		this._processHit();
-}
+	const changedTouches = event.changedTouches;
+	for (let i = 0; i < changedTouches.length; i++) {
+		this._pressings[changedTouches.item(i).identifier] = true;
+	}
+	if (!this._paused && !preferences.autoPlay) {
+		const identifiers = [];
+		for (let i = 0; i < changedTouches.length; i++) {
+			const touch = changedTouches.item(i);
+			if (!this._pauseButton.isInside(Graphics.pageToCanvasX(touch.pageX), Graphics.pageToCanvasY(touch.pageY))) {
+				this._pressings[touch.identifier] = true;
+				identifiers.push(touch.identifier); // not supported by Safari...
+			} else {
+				return;
+			}
+		}
+		for (let i = 0; i < identifiers.length; i++) {
+			this._processHit();
+		}
+	}
+};
 
 Scene_Game.prototype._processHit = function () {
 	const now = this._now();
 	if (!this._ended) {
 		const event = this._unclearedEvents[0];
-		if (now >= event.time - this._badTolerance*preferences.playRate) {
+		if (event && now >= event.time - this._badTolerance) {
 			if (this._inaccuraciesArray) {
 				this._inaccuraciesArray.push(now - event.time);
 			}
-			const inaccuracy = (now - event.time)/preferences.playRate;
+			const inaccuracy = now - event.time;
 			let judge;
 			if (Math.abs(inaccuracy) <= this._perfectTolerance) {
 				judge = 'perfect';
-				this._perfectNumber++;
-				this._combo++;
+				if (!event.hold) {
+					this._perfectNumber++;
+					this._combo++;
+				} else {
+					this._holdings.push([event, judge]);
+				}
 			} else if (Math.abs(inaccuracy) <= this._goodTolerance) {
 				judge = 'good';
-				this._goodNumber++;
-				this._combo++;
+				if (!event.hold) {
+					this._goodNumber++;
+					this._combo++;
+				} else {
+					this._holdings.push([event, judge]);
+				}
 			} else {
 				judge = 'bad';
 				this._badNumber++;
@@ -381,9 +460,13 @@ Scene_Game.prototype._processHit = function () {
 			}
 			this._beatmap.clearNote(event, judge);
 			this._unclearedEvents.splice(0, 1);
-			this._updateScore();
-			this._updateCombo();
-			this._createInaccuracyIndicator(inaccuracy);
+			if (!event.hold || judge === 'bad') {
+				this._updateScore();
+				this._updateCombo();
+				this._createInaccuracyIndicator(inaccuracy);
+			} else {
+				this._holdings.sort((a, b) => a.timeEnd - b.timeEnd);
+			}
 			this._createHitEffect(event, judge);
 		} else {
 			this._createWrongNote(now);
@@ -393,7 +476,20 @@ Scene_Game.prototype._processHit = function () {
 			this._updateScore();
 		}
 	}
-}
+};
+
+Scene_Game.prototype._processLoosen = function () {
+	if (Object.keys(this._pressings).length < this._holdings.length) {
+		const [event, judge] = this._holdings.shift();
+		if (this._now() < event.timeEnd - this._goodTolerance) {
+			this._beatmap.clearNote(event, 'miss');
+			this._missNumber++;
+			this._combo = 0;
+			this._updateScore();
+			this._updateCombo();
+		}
+	}
+};
 
 Scene_Game.prototype._updateScore = function () {
 	this._scoreSprite.bitmap.clear();

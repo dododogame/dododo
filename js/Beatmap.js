@@ -260,7 +260,7 @@ Beatmap.prototype.drawIndividualNote = function (bitmap, note, y, shouldHit) {
 	if (shouldHit) {
 		note.hitEvents = [];
 		for (let i = 0; i < note.multiplicity; i++) {
-			const hitEvent = {"x": note.x, "y": y+i*10, "time": note.time, "timeEnd": note.timeEnd,
+			const hitEvent = {"x": note.x, "y": y+i*10, "xEnd": note.xEnd, "time": note.time, "timeEnd": note.timeEnd,
 					"hold": note.hold, "solid": note.length > 1, "lineno": bitmap.lineno};
 			note.hitEvents.push(hitEvent);
 			this.notes.push(hitEvent);
@@ -273,7 +273,8 @@ Beatmap.prototype.drawIndividualNote = function (bitmap, note, y, shouldHit) {
 		for (let i = 0; i < note.multiplicity; i++) {
 			tiedNote.hitEvents[i].ySwitches ||= [];
 			tiedNote.hitEvents[i].timeEnd = note.timeEnd;
-			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y + i*10});
+			tiedNote.hitEvents[i].xEnd = note.xEnd;
+			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y + i*10, "lineno": bitmap.lineno});
 		}
 		note.hold = tiedNote.hold;
 	}
@@ -438,6 +439,46 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 	return lastNote;
 };
 
+Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, lineno) {
+	let y = hitEvent.y;
+	let x = hitEvent.x + 5;
+	let eventLineno = hitEvent.lineno;
+	let reachedEnd = true;
+	if (hitEvent.ySwitches) {
+		for (let i = 0; i < hitEvent.ySwitches.length; i++) {
+			if (now >= hitEvent.ySwitches[i].time) {
+				y = hitEvent.ySwitches[i].y;
+				if (eventLineno !== hitEvent.ySwitches[i].lineno) {
+					x = TyphmConstants.MARGIN;
+					eventLineno = hitEvent.ySwitches[i].lineno;
+				}
+			} else {
+				reachedEnd = false;
+				break;
+			}
+		}
+	}
+	if (eventLineno !== lineno)
+		return;
+	if (reachedEnd)
+		xNow = Math.min(xNow, hitEvent.xEnd - 5);
+	const context = this.lines[lineno]._context;
+	context.save();
+	context.beginPath();
+	context.moveTo(x, y);
+	context.lineTo(xNow, y);
+	context.lineWidth = 5;
+	let color;
+	if (judge === 'perfect')
+		color = 'yellow';
+	else if (judge === 'good')
+		color = 'blue';
+	context.strokeStyle = color;
+	context.stroke();
+	context.restore();
+	this.lines[lineno]._setDirty();
+};
+
 Beatmap.prototype.isGroupBeamedRecursive = function (group) {
 	for (let i = 0; i < group.notes.length; i++) {
 		const event = group.notes[i];
@@ -484,7 +525,7 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 	if (shouldHit) {
 		note.hitEvents = [];
 		for (let i = 0; i < note.multiplicity; i++) {
-			const hitEvent = {"x": note.x, "y": y0+i*10, "time": note.time, "timeEnd": note.timeEnd,
+			const hitEvent = {"x": note.x, "y": y0+i*10, "xEnd": note.xEnd, "time": note.time, "timeEnd": note.timeEnd,
 					"hold": note.hold, "solid": note.length > 1, "lineno": bitmap.lineno};
 			note.hitEvents.push(hitEvent);
 			this.notes.push(hitEvent);
@@ -496,8 +537,9 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 		}
 		for (let i = 0; i < note.multiplicity; i++) {
 			tiedNote.hitEvents[i].ySwitches ||= [];
+			tiedNote.hitEvents[i].xEnd = note.xEnd;
 			tiedNote.hitEvents[i].timeEnd = note.timeEnd;
-			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y0 + i*10});
+			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y0 + i*10, "lineno": bitmap.lineno});
 		}
 		note.hold = tiedNote.hold;
 	}
