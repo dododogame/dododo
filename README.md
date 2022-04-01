@@ -19,11 +19,13 @@ If there is no audio file specified, the game will use that specified by
 
 ### Playing through browsing the store
 
-(Under development)
+The function is *under development*.
+
+There will be a store (under development) for beatmappers to publish their beatmaps.
 
 ### Playing through selecting from history
 
-(Under development)
+The function is *under development*.
 
 ## How to adjust beatmap offset
 
@@ -326,7 +328,7 @@ A zero multiplicity means that the note is a rest.
 
 Because there are totally 10 digits and 26 letters,
 the shortest possible note is `2**35`th note,
-and the largest multiplicity is `2**35`.
+and the largest multiplicity is 35.
 
 If a note's previous note is tied to this note, this note's `multiplicity` and `hold`
 are useless and are kept consistent with the previous note.
@@ -344,9 +346,12 @@ The ratio consists of two characters, each of which is within `[0-9a-z]` represe
 The first number divided by the second number is
 the ratio of the seeming length of the grouping and the actual length of the grouping.
 The second number can be omitted, and the default value of it is
-`2**(floor(log2(ratio1)))/ratio1`, where `ratio1` is the first number.
+```js
+ratio2 = 2**(floor(log2(ratio1))) / ratio1
+```
+where `ratio1` is the first number.
 
-Here is an example of some notes and the rhythm they represents.
+Here is an example of some notes and the rhythm they represent:
 
 ```text
 2 (3 3 3)3 2 (4 4 4 4 4)5 | 2
@@ -369,3 +374,8 @@ It is recommended to write a bar line at the end of each voice.
 
 Every bar line will extend all across the voices in the row
 but not just the voice where it is written.
+
+## How to publish a beatmap
+
+There is currently no official way of publishing a beatmap.
+Beatmappers have to publish their beatmaps on their own.
