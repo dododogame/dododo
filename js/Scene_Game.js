@@ -12,9 +12,9 @@ Scene_Game.prototype.initialize = function (musicUrl, beatmapUrl) {
 };
 
 Scene_Game.prototype.start = function () {
-	this._loading = new Sprite(new Bitmap(120, TyphmConstants.TEXT_HEIGHT));
+	this._loading = new Sprite(new Bitmap(256, TyphmConstants.TEXT_HEIGHT));
 	this._center(this._loading, 300);
-	this._loading.bitmap.drawText('Loading...', 0, 0, 120, TyphmConstants.TEXT_HEIGHT, 'white');
+	this._loading.bitmap.drawText('Loading...', 0, 0, 256, TyphmConstants.TEXT_HEIGHT, 'white');
 	this.addChild(this._loading);
 
 	this._pauseButton = new Button(new Bitmap(30, 32), () => { this._pause(); });
@@ -24,21 +24,21 @@ Scene_Game.prototype.start = function () {
 	this._pauseButton.visible = false;
 	this.addChild(this._pauseButton);
 
-	this._back = new Button(new Bitmap(128, TyphmConstants.TEXT_HEIGHT),
+	this._back = new Button(new Bitmap(192, TyphmConstants.TEXT_HEIGHT),
 			() => { this._shouldBack = true; });
-	this._back.bitmap.drawText('Back (b)', 0, 0, 128, TyphmConstants.TEXT_HEIGHT, 'center');
+	this._back.bitmap.drawText('Back (b)', 0, 0, 192, TyphmConstants.TEXT_HEIGHT, 'center');
 	this._back.x = 30;
 	this.addChild(this._back);
 
-	this._restart = new Button(new Bitmap(128, TyphmConstants.TEXT_HEIGHT),
+	this._restart = new Button(new Bitmap(192, TyphmConstants.TEXT_HEIGHT),
 			() => { this._shouldRestart = true });
-	this._restart.bitmap.drawText('Restart (r)', 0, 0, 128, TyphmConstants.TEXT_HEIGHT, 'center');
-	this._restart.x = 30+128;
+	this._restart.bitmap.drawText('Restart (r)', 0, 0, 192, TyphmConstants.TEXT_HEIGHT, 'center');
+	this._restart.x = 30+192;
 	this.addChild(this._restart);
 
-	this._title = new Sprite(new Bitmap(Graphics.width - (32+128+128+64),
+	this._title = new Sprite(new Bitmap(Graphics.width - (32+192+192+64),
 			TyphmConstants.TEXT_HEIGHT));
-	this._title.x = 32+128+128;
+	this._title.x = 32+192+192;
 	this.addChild(this._title);
 
 	this._setButtonsVisible(false);
@@ -639,6 +639,8 @@ Scene_Game.prototype._finish = function () {
 	if (this._combo === this._beatmap.notes.length)
 		this._fullCombo.visible = true;
 	this._judgeLine.visible = false;
+	this._line1.visible = false;
+	this._line2.visible = false;
 	if (this._inaccuraciesArray)
 		preferences.offset -= this._inaccuraciesArray.reduce((a, b) => a + b) / this._inaccuraciesArray.length;
 	this._pause();
