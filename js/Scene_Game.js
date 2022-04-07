@@ -36,8 +36,9 @@ Scene_Game.prototype.start = function () {
 	this._restart.x = 30+192;
 	this.addChild(this._restart);
 
-	this._title = new Sprite(new Bitmap(Graphics.width - (32+192+192+64),
-			TyphmConstants.TEXT_HEIGHT));
+	this._title = new Sprite();
+	this._title.width = Graphics.width - (32+192+192+128);
+	this._title.height = TyphmConstants.TEXT_HEIGHT;
 	this._title.x = 32+192+192;
 	this.addChild(this._title);
 
@@ -66,14 +67,16 @@ Scene_Game.prototype.start = function () {
 	this._judgeLine.visible = false;
 	this.addChild(this._judgeLine);
 
-	this._scoreSprite = new Sprite(new Bitmap(256, TyphmConstants.TEXT_HEIGHT));
+	this._scoreSprite = new Sprite(new Bitmap(128, TyphmConstants.TEXT_HEIGHT));
 	this._scoreSprite.anchor.x = 1;
 	this._scoreSprite.x = Graphics.width;
+	this._scoreSprite.visible = false;
 	this.addChild(this._scoreSprite);
 
-	this._comboSprite = new Sprite(new Bitmap(128, TyphmConstants.TEXT_HEIGHT));
+	this._comboSprite = new Sprite(new Bitmap(64, TyphmConstants.TEXT_HEIGHT));
 	this._comboSprite.anchor.y = 1;
 	this._comboSprite.y = Graphics.height;
+	this._comboSprite.visible = false;
 	this.addChild(this._comboSprite);
 
 	this._markSprite = new Sprite(new Bitmap(100, 200));
@@ -100,6 +103,7 @@ Scene_Game.prototype.start = function () {
 	this._inaccuracyBar.anchor.y = 0.5;
 	this._center(this._inaccuracyBar, Graphics.height - 20);
 	this._drawInaccuracyBar(TyphmConstants.DEFAULT_PERFECT, TyphmConstants.DEFAULT_GOOD, TyphmConstants.DEFAULT_BAD);
+	this._inaccuracyBar.visible = false;
 	this.addChild(this._inaccuracyBar);
 
 	this._inaccuracyBitmap = new Bitmap(3, 16);
@@ -154,7 +158,6 @@ Scene_Game.prototype.start = function () {
 	this._resumingCountdown = null;
 
 	this._loadingFinished = false;
-	this._offsetWizard = false;
 	this._onLoad();
 
 	this._shouldRestart = false;
@@ -168,9 +171,20 @@ Scene_Game.prototype._drawInaccuracyBar = function (perfect, good, bad) {
 }
 
 Scene_Game.prototype.update = function () {
+	const now = this._now();
+	if (!this._musicEnded) {
+		let progress = (now - this._beatmap.start) / this._length;
+		if (progress >= 1) {
+			progress = 1;
+			this._musicEnded = true;
+			if (this._audioPlayer && this._audioPlayer.isPlaying())
+				this._audioPlayer.stop();
+		}
+		this._progressIndicator.x = Graphics.width * progress;
+	} else {
+		this._progressIndicator.x = Graphics.width;
+	}
 	if (!this._resumingCountdown && !this._paused && !this._ended) {
-		const now = this._now();
-		this._progressIndicator.x = Graphics.width*Math.min((now-this._beatmap.start)/this._length,1);
 		this._judgeLine.x = this._getXFromTime(now);
 		this._judgeLine.y = this._line1.y;
 		let i = 0;
@@ -230,12 +244,13 @@ Scene_Game.prototype.update = function () {
 			this._line2.bitmap = this._beatmap.lines[this._line2Index];
 			this._setUpNewLine();
 		}
-		if (this._hasMusic) {
-			if (this._beatmap.end && now >= this._beatmap.end)
-				this._finish();
-		} else {
-			if (this._unclearedEvents.length === 0)
-				this._finish();
+		if (!this._ended && now >= this._beatmap.start + this._length) {
+			this._musicEnded = true;
+			this._finish();
+		}
+		if (!this._ended && this._unclearedEvents.length === 0) {
+			this._finish();
+			this._audioPlayer.addStopListener(() => { this._musicEnded = true; });
 		}
 	}
 	if (this._shouldRestart) {
@@ -269,6 +284,8 @@ Scene_Game.prototype._setUpNewLine = function () {
 }
 
 Scene_Game.prototype.stop = function () {
+	this._audioPlayer.stop();
+	this._audioPlayer.clear();
 	document.removeEventListener('keydown', this._keydownEventListener);
 	window.removeEventListener('blur', this._blurEventListener);
 	document.removeEventListener('touchstart', this._touchStartEventListener);
@@ -286,8 +303,7 @@ Scene_Game.prototype._onLoad = async function () {
 	if (this._beatmap.title === 'offset_wizard' && this._hasMusic)
 		this._inaccuraciesArray = [];
 	this._lastPos = this._beatmap.start;
-	this._title.bitmap.drawText(this._beatmap.title, 0, 0, this._title.width,
-			TyphmConstants.TEXT_HEIGHT, 'center');
+	this._makeTitle();
 	this._updateScore();
 	this._updateCombo();
 	this._unclearedEvents = [...this._beatmap.notes];
@@ -299,16 +315,57 @@ Scene_Game.prototype._onLoad = async function () {
 					this._beatmap.length : this._audioPlayer._totalTime*1000;
 			this._postLoadingAudio();
 		});
-		this._audioPlayer.addStopListener(this._onStop.bind(this));
 	} else {
-		this._length = this._beatmap.events[this._beatmap.events.length - 1].time - this._beatmap.start;
+		this._length = this._unclearedEvents.last().timeEnd - this._beatmap.start;
 		this._postLoadingAudio();
+	}
+};
+
+Scene_Game.prototype._makeTitle = function () {
+	const trueTitle = new Sprite(new Bitmap(this._restart.bitmap.measureTextWidth(this._beatmap.title), TyphmConstants.TEXT_HEIGHT));
+	trueTitle.bitmap.drawText(this._beatmap.title, 0, 0, trueTitle.width, TyphmConstants.TEXT_HEIGHT, 'center');
+	const maskSprite = new Sprite(new Bitmap(this._title.x + this._title.width, this._title.y + this._title.height));
+	maskSprite.bitmap.fillRect(this._title.x, this._title.y, this._title.width, this._title.height, 'white');
+	trueTitle.filters = [new PIXI.SpriteMaskFilter(maskSprite)];
+	this._title.addChild(trueTitle);
+	if (trueTitle.width > this._title.width) {
+		let speed = 0.06; // pixels per milliseconds
+		let leftward = true;
+		let rightward = false;
+		let stayTime = 0;
+		this._title.update = () => {
+			if (leftward) {
+				trueTitle.x -= speed * 1000 / Graphics._fpsMeter.fps;
+				if (trueTitle.x + trueTitle.width <= this._title.width) {
+					trueTitle.x = this._title.width - trueTitle.width;
+					leftward = false;
+				}
+			} else if (rightward) {
+				trueTitle.x += speed * 1000 / Graphics._fpsMeter.fps;
+				if (trueTitle.x >= 0) {
+					trueTitle.x = 0;
+					rightward = false;
+				}
+			} else {
+				stayTime++;
+				if (stayTime / Graphics._fpsMeter.fps >= 1) { // stayed for over 1s
+					stayTime = 0;
+					if (trueTitle.x === 0)
+						leftward = true;
+					else
+						rightward = true;
+				}
+			}
+		};
 	}
 };
 
 Scene_Game.prototype._postLoadingAudio = function () {
 	this._pauseButton.visible = true;
 	this._loading.visible = false;
+	this._inaccuracyBar.visible = true;
+	this._scoreSprite.visible = true;
+	this._comboSprite.visible = true;
 	this._line1.bitmap = this._beatmap.lines[this._line1Index];
 	this._line2.bitmap = this._beatmap.lines[this._line2Index];
 	this._loadingFinished = true;
@@ -317,15 +374,8 @@ Scene_Game.prototype._postLoadingAudio = function () {
 }
 
 Scene_Game.prototype._onBlur = function () {
-	if (!this._paused)
+	if (!this._paused && !this._ended)
 		this._pause();
-};
-
-Scene_Game.prototype._onStop = function () {
-	if (this._activeEnding) {
-		this._activeEnding = false;
-	} else
-		this._finish();
 };
 
 Scene_Game.prototype._pause = function () {
@@ -335,13 +385,10 @@ Scene_Game.prototype._pause = function () {
 		this._lastPos = this._now();
 		this._paused = true;
 		this._setButtonsVisible(true);
-		this._activeEnding = true;
 		if (this._resumingCountdown)
 			this.removeChild(this._resumingCountdown);
-		if (this._hasMusic) {
+		if (this._hasMusic)
 			this._audioPlayer.stop();
-			this._audioPlayer.addStopListener(this._onStop.bind(this));
-		}
 	}
 };
 
@@ -373,9 +420,9 @@ Scene_Game.prototype._onKeydown = function (event) {
 	if (this._pressings[event.key])
 		return;
 	this._pressings[event.key] = true;
-	if (event.key ==='Escape') {
+	if (!this._ended && event.key === 'Escape') {
 		this._pause();
-	} else if (this._paused) {
+	} else if (this._restart.visible) {
 		if (event.key === 'r') {
 			this._shouldRestart = true;
 		} else if (event.key === 'b') {
@@ -494,7 +541,7 @@ Scene_Game.prototype._processLoosen = function () {
 Scene_Game.prototype._updateScore = function () {
 	this._scoreSprite.bitmap.clear();
 	this._score = Math.round((this._perfectNumber + this._goodNumber/4 - this._excessNumber)*1000000/this._beatmap.notes.length);
-	this._scoreSprite.bitmap.drawText(this._score, 0, 0, 256, TyphmConstants.TEXT_HEIGHT, 'right');
+	this._scoreSprite.bitmap.drawText(this._score, 0, 0, this._scoreSprite.width, TyphmConstants.TEXT_HEIGHT, 'right');
 };
 
 Scene_Game.prototype._updateCombo = function () {
@@ -502,7 +549,7 @@ Scene_Game.prototype._updateCombo = function () {
 		this._maxCombo = this._combo;
 	}
 	this._comboSprite.bitmap.clear();
-	this._comboSprite.bitmap.drawText(this._combo, 0, 0, 128, TyphmConstants.TEXT_HEIGHT, 'left');
+	this._comboSprite.bitmap.drawText(this._combo, 0, 0, this._comboSprite.width, TyphmConstants.TEXT_HEIGHT, 'left');
 	if (this._combo > 0 && this._combo % 25 === 0) {
 		const comboIndicator = new Sprite(new Bitmap(512, 128));
 		comboIndicator.bitmap.fontSize = 108;
@@ -603,6 +650,8 @@ Scene_Game.prototype._setButtonsVisible = function (visibility) {
 };
 
 Scene_Game.prototype._finish = function () {
+	if (this._ended)
+		return;
 	this._ended = true;
 	let mark;
 	if (this._score >= 1000000) {
@@ -643,7 +692,8 @@ Scene_Game.prototype._finish = function () {
 	this._line2.visible = false;
 	if (this._inaccuraciesArray)
 		preferences.offset -= this._inaccuraciesArray.reduce((a, b) => a + b) / this._inaccuraciesArray.length;
-	this._pause();
+	this._setButtonsVisible(true);
+	this._pauseButton.visible = false;
 };
 
 Scene_Game.Sprite_ResumingCountdown = function () {
