@@ -250,7 +250,10 @@ Scene_Game.prototype.update = function () {
 		}
 		if (!this._ended && this._unclearedEvents.length === 0) {
 			this._finish();
-			this._audioPlayer.addStopListener(() => { this._musicEnded = true; });
+			this._audioPlayer.addFinishListener(() => {
+				this._musicEnded = true;
+				this._pauseButton.visible = false;
+			});
 		}
 	}
 	if (this._shouldRestart) {
@@ -371,7 +374,7 @@ Scene_Game.prototype._postLoadingAudio = function () {
 	this._loadingFinished = true;
 	this._setUpNewLine();
 	this._resume();
-}
+};
 
 Scene_Game.prototype._onBlur = function () {
 	if (!this._paused && !this._ended)
@@ -381,7 +384,7 @@ Scene_Game.prototype._onBlur = function () {
 Scene_Game.prototype._pause = function () {
 	if (this._paused) {
 		this._resume();
-	} else {
+	} else if (!this._musicEnded) {
 		this._lastPos = this._now();
 		this._paused = true;
 		this._setButtonsVisible(true);
@@ -396,18 +399,21 @@ Scene_Game.prototype._resume = function () {
 	if (!this._loadingFinished)
 		return;
 	this._paused = false;
-	this._setButtonsVisible(false);
 	if (!this._ended) {
+		this._setButtonsVisible(false);
 		if (preferences.countdown)
 			this._resumingCountdown = new Scene_Game.Sprite_ResumingCountdown(this);
 		else
 			this.actualResume();
+	} else {
+		this.actualResume();
 	}
 };
 
 Scene_Game.prototype.actualResume = function () {
 	this._resumingCountdown = null;
-	this._judgeLine.visible = true;
+	if (!this._ended)
+		this._judgeLine.visible = true;
 	if (this._hasMusic) {
 		this._audioPlayer.play(false, this._lastPos/1000);
 		this._audioPlayer.pitch = preferences.playRate;
@@ -420,7 +426,7 @@ Scene_Game.prototype._onKeydown = function (event) {
 	if (this._pressings[event.key])
 		return;
 	this._pressings[event.key] = true;
-	if (!this._ended && event.key === 'Escape') {
+	if (event.key === 'Escape') {
 		this._pause();
 	} else if (this._restart.visible) {
 		if (event.key === 'r') {
@@ -693,7 +699,6 @@ Scene_Game.prototype._finish = function () {
 	if (this._inaccuraciesArray)
 		preferences.offset -= this._inaccuraciesArray.reduce((a, b) => a + b) / this._inaccuraciesArray.length;
 	this._setButtonsVisible(true);
-	this._pauseButton.visible = false;
 };
 
 Scene_Game.Sprite_ResumingCountdown = function () {

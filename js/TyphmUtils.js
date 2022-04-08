@@ -65,3 +65,29 @@ TyphmUtils.isCapitalized = function (string) {
 Array.prototype.last = function () {
 	return this[this.length - 1];
 }
+
+WebAudio.prototype._createEndTimer = function() {
+	if (this._sourceNode && !this._sourceNode.loop) {
+		var endTime = this._startTime + this._totalTime / this._pitch;
+		var delay =  endTime - WebAudio._context.currentTime;
+		this._endTimer = setTimeout(function() {
+			this.stop();
+			if (this._finishListeners) {
+				while (this._finishListeners.length > 0) {
+					var listner = this._finishListeners.shift();
+					listner();
+				}
+			}
+		}.bind(this), delay * 1000);
+	}
+};
+
+const oldClear = WebAudio.prototype.clear;
+WebAudio.prototype.clear = function() {
+	oldClear.call(this);
+	this._finishListeners = [];
+};
+
+WebAudio.prototype.addFinishListener = function(listner) {
+	this._finishListeners.push(listner);
+};
