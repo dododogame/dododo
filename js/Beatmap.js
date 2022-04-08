@@ -108,31 +108,28 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 				// end parsing a note here!
 				voices.last().push(noteEvent);
 				
-				if (line[position] === ')') { // group end
+				while (line[position] === ')') { // group end
 					position++
-				} else
-					continue;
-				
-				// parse group end
-				const group = voices.pop();
-				const groupEvent = {"event": "group", "notes": group};
-				if (TyphmUtils.isDigit(line[position])) {
-					groupEvent.ratio1 = TyphmUtils.parseDigit(line[position]);
-					position++;
+					const group = voices.pop();
+					const groupEvent = {"event": "group", "notes": group};
 					if (TyphmUtils.isDigit(line[position])) {
-						groupEvent.ratio2 = TyphmUtils.parseDigit(line[position]);
-						groupEvent.ratio = groupEvent.ratio2 / groupEvent.ratio1;
+						groupEvent.ratio1 = TyphmUtils.parseDigit(line[position]);
 						position++;
-					}  else { // default value of ratio2 is 2 ** floor(log2(ratio1))
+						if (TyphmUtils.isDigit(line[position])) {
+							groupEvent.ratio2 = TyphmUtils.parseDigit(line[position]);
+							groupEvent.ratio = groupEvent.ratio2 / groupEvent.ratio1;
+							position++;
+						} else { // default value of ratio2 is 2 ** floor(log2(ratio1))
+							groupEvent.ratio2 = null;
+							groupEvent.ratio = new Fraction(2).pow(Math.floor(Math.log2(groupEvent.ratio1))).div(groupEvent.ratio1);
+						}
+					} else {
+						groupEvent.ratio1 = null;
 						groupEvent.ratio2 = null;
-						groupEvent.ratio = new Fraction(2).pow(Math.floor(Math.log2(groupEvent.ratio1))).div(groupEvent.ratio1);
+						groupEvent.ratio = new Fraction(1);
 					}
-				} else {
-					groupEvent.ratio1 = null;
-					groupEvent.ratio2 = null;
-					groupEvent.ratio = new Fraction(1);
+					voices.last().push(groupEvent);
 				}
-				voices.last().push(groupEvent);
 			}
 		}
 	}
