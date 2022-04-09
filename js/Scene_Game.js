@@ -248,7 +248,7 @@ Scene_Game.prototype.update = function () {
 			this._musicEnded = true;
 			this._finish();
 		}
-		if (!this._ended && this._unclearedEvents.length === 0) {
+		if (!this._ended && this._unclearedEvents.length === 0 && this._holdings.length === 0) {
 			this._finish();
 			this._audioPlayer.addFinishListener(() => {
 				this._musicEnded = true;
@@ -266,7 +266,7 @@ Scene_Game.prototype.update = function () {
 };
 
 Scene_Game.prototype._setUpNewLine = function () {
-	this._lastX = TyphmConstants.MARGIN;
+	this._lastX = preferences.margin;
 	const line = this._line1.bitmap;
 	this._lastTime = line.startTime;
 	const lineLengthInMilliseconds = line.endTime - line.startTime;
@@ -282,7 +282,7 @@ Scene_Game.prototype._setUpNewLine = function () {
 		this._badTolerance = line.bad * lineLengthInMilliseconds;
 	else
 		this._badTolerance ||= TyphmConstants.DEFAULT_BAD * lineLengthInMilliseconds;
-	this._millisecondsPerPixel = lineLengthInMilliseconds / (Graphics.width - 2*TyphmConstants.MARGIN);
+	this._millisecondsPerPixel = lineLengthInMilliseconds / (Graphics.width - 2*preferences.margin);
 	this._drawInaccuracyBar(this._perfectTolerance, this._goodTolerance, this._badTolerance);
 }
 
@@ -360,6 +360,8 @@ Scene_Game.prototype._makeTitle = function () {
 				}
 			}
 		};
+	} else {
+		trueTitle.x = (this._title.width - trueTitle.width) / 2;
 	}
 };
 
@@ -415,8 +417,8 @@ Scene_Game.prototype.actualResume = function () {
 	if (!this._ended)
 		this._judgeLine.visible = true;
 	if (this._hasMusic) {
-		this._audioPlayer.play(false, this._lastPos/1000);
 		this._audioPlayer.pitch = preferences.playRate;
+		this._audioPlayer.play(false, this._lastPos/1000);
 	} else {
 		this._starting = performance.now() - this._lastPos/preferences.playRate;
 	}
@@ -614,7 +616,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 		color = 'green';
 	else if (judge === 'miss')
 		color = 'red';
-	hitEffect.bitmap.drawCircle(32, 32, 5, color);
+	hitEffect.bitmap.drawCircle(32, 32, preferences.headsRadius, color);
 	hitEffect.anchor.x = 0.5;
 	hitEffect.anchor.y = 0.5;
 	hitEffect.x = event.x;
@@ -624,7 +626,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 	let n = 1;
 	hitEffect.update = () => {
 		hitEffect.opacity = 255*0.9**(n*60/Graphics._fpsMeter.fps);
-		hitEffect.bitmap.drawCircle(32, 32, 32-27/n, color);
+		hitEffect.bitmap.drawCircle(32, 32, 32-(32 - preferences.headsRadius)/n, color);
 		n++;
 		if (hitEffect.opacity <= 5)
 			this.removeChild(hitEffect);
@@ -633,7 +635,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 
 Scene_Game.prototype._createWrongNote = function (time) {
 	const wrongNote = new Sprite(new Bitmap(32, 32));
-	wrongNote.bitmap.drawCircle(16, 16, 6, 'red');
+	wrongNote.bitmap.drawCircle(16, 16, preferences.headsRadius, 'red');
 	wrongNote.anchor.x = 0.5;
 	wrongNote.anchor.y = 0.5;
 	wrongNote.x = this._getXFromTime(time);
