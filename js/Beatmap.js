@@ -641,8 +641,8 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 					for (let i = 0; i < note.length - 2; i++) {
 						context.beginPath();
 						context.moveTo(note.x, y0 - a - b * i);
-						context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
-						context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
+						context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
+						context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
 						context.fill();
 					}
 				}
@@ -676,8 +676,8 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 						for (let i = 0; i < note.length - 2; i++) {
 							context.beginPath();
 							context.moveTo(note.x, y0 - a - b * i);
-							context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
-							context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
+							context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
+							context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
 							context.fill();
 						}
 					}
@@ -695,8 +695,8 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 					for (let i = 0; i < note.length - 2; i++) {
 						context.beginPath();
 						context.moveTo(note.x, y0 - a - b * i);
-						context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
-						context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
+						context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
+						context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
 						context.fill();
 					}
 				}
@@ -714,8 +714,8 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 				for (let i = 0; i < note.length - 2; i++) {
 					context.beginPath();
 					context.moveTo(note.x, y0 - a - b*i);
-					context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
-					context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
+					context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
+					context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
 					context.fill();
 				}
 			}
@@ -749,8 +749,8 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 					for (let i = 0; i < note.length - 2; i++) {
 						context.beginPath();
 						context.moveTo(note.x, y0 - a - b*i);
-						context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
-						context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
+						context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
+						context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
 						context.fill();
 					}
 				}
@@ -768,8 +768,8 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 				for (let i = 0; i < note.length - 2; i++) {
 					context.beginPath();
 					context.moveTo(note.x, y0 - a - b*i);
-					context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
-					context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
+					context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
+					context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
 					context.fill();
 				}
 			}
@@ -787,8 +787,8 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 			for (let i = 0; i < note.length - 2; i++) {
 				context.beginPath();
 				context.moveTo(note.x, y0 - a - b*i);
-				context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
-				context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
+				context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
+				context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
 				context.fill();
 			}
 		}

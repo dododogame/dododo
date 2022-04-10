@@ -250,10 +250,12 @@ Scene_Game.prototype.update = function () {
 		}
 		if (!this._ended && this._unclearedEvents.length === 0 && this._holdings.length === 0) {
 			this._finish();
-			this._audioPlayer.addFinishListener(() => {
-				this._musicEnded = true;
-				this._pauseButton.visible = false;
-			});
+			if (this._audioPlayer) {
+				this._audioPlayer.addFinishListener(() => {
+					this._musicEnded = true;
+					this._pauseButton.visible = false;
+				});
+			}
 		}
 	}
 	if (this._shouldRestart) {
@@ -287,8 +289,10 @@ Scene_Game.prototype._setUpNewLine = function () {
 }
 
 Scene_Game.prototype.stop = function () {
-	this._audioPlayer.stop();
-	this._audioPlayer.clear();
+	if (this._audioPlayer) {
+		this._audioPlayer.stop();
+		this._audioPlayer.clear();
+	}
 	document.removeEventListener('keydown', this._keydownEventListener);
 	window.removeEventListener('blur', this._blurEventListener);
 	document.removeEventListener('touchstart', this._touchStartEventListener);
