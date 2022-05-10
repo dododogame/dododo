@@ -21,8 +21,11 @@ TyphmInput.prototype.initialize = function () {
 		z-index: 10;
 	`;
 	document.body.appendChild(this._input);
+	this.visible = true;
+	this._value = this._input.value;
 	this._resizeEventListener = this.refresh.bind(this);
 	window.addEventListener('resize', this._resizeEventListener);
+	this._input.addEventListener('change', () => { this._value = this._input.value; });
 };
 
 TyphmInput.prototype.focus = function () {
@@ -33,24 +36,32 @@ TyphmInput.prototype.blur = function () {
 	this._input.blur();
 };
 
+TyphmInput.prototype.select = function () {
+	this._input.select();
+};
+
 TyphmInput.prototype.setType = function (type) {
 	this._input.type = type;
-};
-
-TyphmInput.prototype.setPlaceholder = function (placeholder) {
-	this._input.placeholder = placeholder;
-};
-
-TyphmInput.prototype.setValue = function (value) {
-	this._input.value = value;
 };
 
 TyphmInput.prototype.setAttribute = function (attribute, value) {
 	this._input[attribute] = value;
 };
 
+TyphmInput.prototype.getAttribute = function (attribute, value) {
+	return this._input[attribute];
+};
+
 TyphmInput.prototype.setTextAlign = function (textAlign) {
 	this._input.style.textAlign = textAlign;
+};
+
+TyphmInput.prototype.click = function () {
+	this._input.click();
+};
+
+TyphmInput.prototype.setOpacity = function (opacity) {
+	this._input.style.opacity = opacity;
 };
 
 TyphmInput.prototype.destroy = function () {
@@ -68,3 +79,27 @@ TyphmInput.prototype.refresh = function () {
 TyphmInput.prototype.value = function () {
 	return this._input.value;
 };
+
+Object.defineProperty(TyphmInput.prototype, 'value', {
+	get: function () {
+		return this._value;
+	},
+	set: function (value) {
+		this._value = value;
+		this._input.value = value;
+	}
+});
+
+Object.defineProperty(TyphmInput.prototype, 'visible', {
+	get: function () {
+		return this._visible;
+	},
+	set: function (visibility) {
+		this._visible = visibility;
+		if (visibility) {
+			this._input.style.visibility = 'visible';
+		} else {
+			this._input.style.visibility = 'hidden';
+		}
+	}
+});

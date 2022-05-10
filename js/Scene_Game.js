@@ -165,9 +165,9 @@ Scene_Game.prototype.start = function () {
 };
 
 Scene_Game.prototype._drawInaccuracyBar = function (perfect, good, bad) {
-	this._inaccuracyBar.bitmap.fillRect(0, 0, 512, 10, 'green');
-	this._inaccuracyBar.bitmap.fillRect(256*(1-good/bad), 0, 512*good/bad, 10, 'blue');
-	this._inaccuracyBar.bitmap.fillRect(256*(1-perfect/bad), 0, 512*perfect/bad, 10, 'yellow');
+	this._inaccuracyBar.bitmap.fillRect(0, 0, 512, 10, preferences.badColor);
+	this._inaccuracyBar.bitmap.fillRect(256*(1-good/bad), 0, 512*good/bad, 10, preferences.goodColor);
+	this._inaccuracyBar.bitmap.fillRect(256*(1-perfect/bad), 0, 512*perfect/bad, 10, preferences.perfectColor);
 }
 
 Scene_Game.prototype.update = function () {
@@ -262,7 +262,7 @@ Scene_Game.prototype.update = function () {
 		window.scene = new Scene_Game(this._musicUrl, this._beatmapUrl);
 	}
 	if (this._shouldBack) {
-		window.scene = new Scene_Title();
+		window.scene = this._inaccuraciesArray ? new Scene_Preferences() : new Scene_Title();
 	}
 	Scene_Base.prototype.update.call(this);
 };
@@ -613,13 +613,13 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 	const hitEffect = new Sprite(new Bitmap(64, 64));
 	let color;
 	if (judge === 'perfect')
-		color = 'yellow';
+		color = preferences.perfectColor;
 	else if (judge === 'good')
-		color = 'blue';
+		color = preferences.goodColor;
 	else if (judge === 'bad')
-		color = 'green';
+		color = preferences.badColor;
 	else if (judge === 'miss')
-		color = 'red';
+		color = preferences.missColor;
 	hitEffect.bitmap.drawCircle(32, 32, preferences.headsRadius, color);
 	hitEffect.anchor.x = 0.5;
 	hitEffect.anchor.y = 0.5;
@@ -639,7 +639,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 
 Scene_Game.prototype._createWrongNote = function (time) {
 	const wrongNote = new Sprite(new Bitmap(32, 32));
-	wrongNote.bitmap.drawCircle(16, 16, preferences.headsRadius, 'red');
+	wrongNote.bitmap.drawCircle(16, 16, preferences.headsRadius, preferences.excessColor);
 	wrongNote.anchor.x = 0.5;
 	wrongNote.anchor.y = 0.5;
 	wrongNote.x = this._getXFromTime(time);
@@ -685,15 +685,15 @@ Scene_Game.prototype._finish = function () {
 	}
 	this._markSprite.bitmap.fontSize = 108;
 	this._markSprite.bitmap.drawText(mark, 0, 0, this._markSprite.width, this._markSprite.height, 'right');
-	this._summarySprite.bitmap.textColor = 'yellow';
+	this._summarySprite.bitmap.textColor = preferences.perfectColor;
 	this._summarySprite.bitmap.drawText(`Perfect: ${this._perfectNumber}`, 0, 0, this._summarySprite.bitmap.width, TyphmConstants.TEXT_HEIGHT, 'left');
-	this._summarySprite.bitmap.textColor = 'blue';
+	this._summarySprite.bitmap.textColor = preferences.goodColor;
 	this._summarySprite.bitmap.drawText(`Good: ${this._goodNumber}`, 0, TyphmConstants.TEXT_HEIGHT, this._summarySprite.bitmap.width, TyphmConstants.TEXT_HEIGHT, 'left');
-	this._summarySprite.bitmap.textColor = 'green';
+	this._summarySprite.bitmap.textColor = preferences.badColor;
 	this._summarySprite.bitmap.drawText(`Bad: ${this._badNumber}`, 0, TyphmConstants.TEXT_HEIGHT*2, this._summarySprite.bitmap.width, TyphmConstants.TEXT_HEIGHT, 'left');
-	this._summarySprite.bitmap.textColor = 'red';
+	this._summarySprite.bitmap.textColor = preferences.missColor;
 	this._summarySprite.bitmap.drawText(`Miss: ${this._missNumber}`, 0, TyphmConstants.TEXT_HEIGHT*3, this._summarySprite.bitmap.width, TyphmConstants.TEXT_HEIGHT, 'left');
-	this._summarySprite.bitmap.textColor = 'red';
+	this._summarySprite.bitmap.textColor = preferences.excessColor;
 	this._summarySprite.bitmap.drawText(`Excess: ${this._excessNumber}`, 0, TyphmConstants.TEXT_HEIGHT*4, this._summarySprite.bitmap.width, TyphmConstants.TEXT_HEIGHT, 'left');
 	this._summarySprite.bitmap.textColor = 'white';
 	this._summarySprite.bitmap.drawText(`Max combo: ${this._maxCombo}`, 0, TyphmConstants.TEXT_HEIGHT*5, this._summarySprite.bitmap.width, TyphmConstants.TEXT_HEIGHT, 'left');
@@ -702,7 +702,7 @@ Scene_Game.prototype._finish = function () {
 	this._judgeLine.visible = false;
 	this._line1.visible = false;
 	this._line2.visible = false;
-	if (this._inaccuraciesArray)
+	if (this._inaccuraciesArray && this._inaccuraciesArray.length > 0)
 		preferences.offset -= this._inaccuraciesArray.reduce((a, b) => a + b) / this._inaccuraciesArray.length;
 	this._setButtonsVisible(true);
 };

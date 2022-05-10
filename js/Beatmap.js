@@ -184,7 +184,7 @@ Beatmap.prototype.drawLines = function () {
 };
 
 Beatmap.prototype.drawStaffLine = function (bitmap, y) {
-	bitmap.fillRect(0, y, Graphics.width, 1, this.auxiliariesColor());
+	bitmap.fillRect(0, y, Graphics.width, 1, preferences.auxiliariesColor);
 }
 
 Beatmap.prototype.drawVoiceAndGetLastNote = function (bitmap, voice, y, lastNote) {
@@ -290,7 +290,7 @@ Beatmap.prototype.drawStemIfHas = function (bitmap, note, y, height) {
 	const context = bitmap._context;
 	context.save();
 	context.lineWidth = 2;
-	context.strokeStyle = this.auxiliariesColor();
+	context.strokeStyle = preferences.auxiliariesColor;
 	context.beginPath();
 	context.moveTo(note.x, y0 - preferences.headsRadius);
 	const a = preferences.headsRadius + preferences.stemsLength;
@@ -312,7 +312,7 @@ Beatmap.prototype.drawFlagIfHas = function (bitmap, note, y) {
 	y -= (note.multiplicity - 1) * preferences.headsRadius;
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
 	context.beginPath();
 	context.moveTo(note.x, y - preferences.headsRadius);
 	const a = preferences.headsRadius + preferences.stemsLength;
@@ -335,8 +335,8 @@ Beatmap.prototype.drawNoteHeadsAndDots = function (bitmap, note, y, shouldHit) {
 	y -= (note.multiplicity - 1) * preferences.headsRadius;
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
-	context.strokeStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
+	context.strokeStyle = preferences.auxiliariesColor;
 	context.lineWidth = 2;
 	for (let i = 0; i < note.dots; i++) {
 		for (let j = 0; j < note.multiplicity; j++) {
@@ -347,7 +347,7 @@ Beatmap.prototype.drawNoteHeadsAndDots = function (bitmap, note, y, shouldHit) {
 	}
 	context.restore();
 	for (let i = 0; i < note.multiplicity; i++) {
-		this.drawNoteHead(bitmap, note.x, y + i*preferences.headsRadius*2, note.length > 1, shouldHit ? 'white' : this.auxiliariesColor());
+		this.drawNoteHead(bitmap, note.x, y + i*preferences.headsRadius*2, note.length > 1, shouldHit ? preferences.notesColor : preferences.auxiliariesColor);
 	}
 };
 
@@ -372,7 +372,7 @@ Beatmap.prototype.drawHoldBarIfHas = function (bitmap, note, y, shouldHit) {
 Beatmap.prototype.drawRightHalfTie = function (bitmap, x, y) {
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
 	context.beginPath();
 	context.moveTo(x, y + 10);
 	context.bezierCurveTo(x*2/3, y+20, x/3, y+20, 0, y+20);
@@ -386,7 +386,7 @@ Beatmap.prototype.drawRightHalfTie = function (bitmap, x, y) {
 Beatmap.prototype.drawLeftHalfTie = function (bitmap, x, y) {
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
 	const d = Graphics.width - x;
 	context.beginPath();
 	context.moveTo(x, y + 10);
@@ -401,7 +401,7 @@ Beatmap.prototype.drawLeftHalfTie = function (bitmap, x, y) {
 Beatmap.prototype.drawTie = function (bitmap, x1, x2, y) {
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
 	context.beginPath();
 	context.moveTo(x1, y+10);
 	context.bezierCurveTo(x1*2/3+x2/3, y+24, x1/3+x2*2/3, y+24, x2, y+10);
@@ -461,13 +461,13 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 		const oldFontSize = bitmap.fontSize;
 		const oldColor = bitmap.textColor;
 		bitmap.fontSize = 16;
-		bitmap.textColor = this.auxiliariesColor();
+		bitmap.textColor = preferences.auxiliariesColor;
 		const width = bitmap.measureTextWidth(group.ratio1);
 		const x = (group.x + lastNote.x) / 2;
 		if (!this.isGroupBeamedRecursive(group)) {
 			const context = bitmap._context;
 			context.save();
-			context.strokeStyle = this.auxiliariesColor();
+			context.strokeStyle = preferences.auxiliariesColor;
 			context.lineWidth = 1;
 			context.beginPath();
 			context.moveTo(group.x - preferences.headsRadius, y - height);
@@ -517,9 +517,9 @@ Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, lineno) {
 	context.lineWidth = preferences.holdWidth;
 	let color;
 	if (judge === 'perfect')
-		color = 'yellow';
+		color = preferences.perfectColor;
 	else if (judge === 'good')
-		color = 'blue';
+		color = preferences.goodColor;
 	context.strokeStyle = color;
 	context.stroke();
 	context.restore();
@@ -563,7 +563,7 @@ Beatmap.prototype.getBeamsNumber = function (note) {
 Beatmap.prototype.drawBeams = function (bitmap, note, y, height, beginIndex, endIndex) {
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
 	const b = preferences.beamsSpacing + preferences.beamsWidth;
 	const c = preferences.beamsWidth;
 	for (let i = beginIndex; i < endIndex; i++) {
@@ -578,7 +578,7 @@ Beatmap.prototype.drawBeams = function (bitmap, note, y, height, beginIndex, end
 Beatmap.prototype.drawUnconnectedBeams = function (bitmap, note, y, height, beginIndex, endIndex, leftOrRight) {
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
 	const b = preferences.beamsSpacing + preferences.beamsWidth;
 	const c = preferences.beamsWidth;
 	const d = preferences.unconnectedBeamsLength;
@@ -587,6 +587,8 @@ Beatmap.prototype.drawUnconnectedBeams = function (bitmap, note, y, height, begi
 		context.rect(leftOrRight ? note.x - d : note.x, y - height + b * i, d, c);
 		context.fill();
 	}
+	context.restore();
+	bitmap._setDirty();
 }
 
 Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, shouldHit, height, timeLengthPassed) {
@@ -612,18 +614,20 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 			this.drawBeams(bitmap, note, y, height, 0, beams);
 		} else {
 			this.drawBeams(bitmap, note, y, height, 0, nextBeams);
-			if (previous && previousBeams > 0)
+			if (previous && previousBeams > 0) {
 				if (previousBeams < nextBeams)
 					this.drawBeams(bitmap, note, y, height, nextBeams, beams);
-				else if (previousBeams < beams)
-					if (previousBeams > nextBeams)
+				else if (previousBeams < beams) {
+					if (previousBeams > nextBeams) {
 						this.drawUnconnectedBeams(bitmap, note, y, height, previousBeams, beams, true);
-					else // previousBeams === nextBeams
+					} else {// previousBeams === nextBeams
 						if (timeLengthPassed.add(note.trueLength).mod(note.trueLength).d < note.trueLength.d)
 							this.drawUnconnectedBeams(bitmap, note, y, height, previousBeams, beams, true);
 						else
 							this.drawUnconnectedBeams(bitmap, note, y, height, nextBeams, beams, false);
-			else
+					}
+				}
+			} else
 				this.drawUnconnectedBeams(bitmap, note, y, height, nextBeams, beams, false);
 		}
 	} else if (previous && previousBeams > 0) {
@@ -641,19 +645,19 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 Beatmap.prototype.drawBarline = function (bitmap, x) {
 	const context = bitmap._context;
 	context.globalCompositeOperation = 'destination-over';
-	bitmap.fillRect(x, TyphmConstants.LINES_HEIGHT / 4, 1, TyphmConstants.LINES_HEIGHT/2, this.auxiliariesColor());
+	bitmap.fillRect(x, TyphmConstants.LINES_HEIGHT / 4, 1, TyphmConstants.LINES_HEIGHT/2, preferences.auxiliariesColor);
 	context.globalCompositeOperation = 'source-over';
 };
 
 Beatmap.prototype.drawRest = function (bitmap, note, y) {
 	if (note.length === 0) {
-		bitmap.fillRect(note.x - 6, y, 12, 6, this.auxiliariesColor());
+		bitmap.fillRect(note.x - 6, y, 12, 6, preferences.auxiliariesColor);
 	} else if (note.length === 1) {
-		bitmap.fillRect(note.x - 6, y - 6, 12, 6, this.auxiliariesColor());
+		bitmap.fillRect(note.x - 6, y - 6, 12, 6, preferences.auxiliariesColor);
 	} else if (note.length === 2) {
 		const context = bitmap._context;
 		context.save();
-		context.strokeStyle = this.auxiliariesColor();
+		context.strokeStyle = preferences.auxiliariesColor;
 		context.lineWidth = 2;
 		context.beginPath();
 		context.moveTo(note.x - 4, y - 16);
@@ -667,11 +671,11 @@ Beatmap.prototype.drawRest = function (bitmap, note, y) {
 		const heads = note.length - 2;
 		const y0 = y - Math.ceil(heads/2)*10 + preferences.headsRadius;
 		for (let i = 0; i < heads; i++) {
-			bitmap.drawCircle(note.x - preferences.headsRadius, y0 + i*10, 3, this.auxiliariesColor());
+			bitmap.drawCircle(note.x - preferences.headsRadius, y0 + i*10, 3, preferences.auxiliariesColor);
 		}
 		const context = bitmap._context;
 		context.save();
-		context.strokeStyle = this.auxiliariesColor();
+		context.strokeStyle = preferences.auxiliariesColor;
 		context.lineWidth = 2;
 		context.beginPath();
 		for (let i = 0; i < heads; i++) {
@@ -687,7 +691,7 @@ Beatmap.prototype.drawRest = function (bitmap, note, y) {
 	}
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
 	for (let i = 0; i < note.dots; i++) {
 		context.beginPath();
 		context.arc(note.x+preferences.headsRadius+5*(i+1), y, 2, 0, 2*Math.PI);
@@ -731,8 +735,8 @@ Beatmap.prototype._calculateLengthRecursive = function (event) {
 Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm) {
 	const context = bitmap._context;
 	context.save();
-	context.fillStyle = this.auxiliariesColor();
-	context.strokeStyle = this.auxiliariesColor();
+	context.fillStyle = preferences.auxiliariesColor;
+	context.strokeStyle = preferences.auxiliariesColor;
 	const x = 32;
 	const y = TyphmConstants.LINES_HEIGHT/2-96 + (beatNote - 3)*preferences.headsRadius*2;
 	for (let i = 0; i < dots; i++) {
@@ -763,25 +767,21 @@ Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm) {
 	}
 	context.restore();
 	const oldTextColor = bitmap.textColor;
-	bitmap.textColor = this.auxiliariesColor();
+	bitmap.textColor = preferences.auxiliariesColor;
 	bitmap.drawText(`= ${bpm}`, x+preferences.headsRadius+5*(dots+3), y-30, 200, TyphmConstants.TEXT_HEIGHT, 'left');
 	bitmap.textColor = oldTextColor;
 	bitmap._setDirty();
 };
 
-Beatmap.prototype.auxiliariesColor = function () {
-	return '#' + Math.round(0xff * preferences.auxiliariesBrightness).toString(16).padStart(2, '0').repeat(3);
-};
-
 Beatmap.prototype.clearNote = function (event, judge) {
 	let color;
 	if (judge === 'perfect')
-		color = 'yellow';
+		color = preferences.perfectColor;
 	else if (judge === 'good')
-		color = 'blue';
+		color = preferences.goodColor;
 	else if (judge === 'bad')
-		color = 'green';
+		color = preferences.badColor;
 	else if (judge === 'miss')
-		color = 'red';
+		color = preferences.missColor;
 	this.drawNoteHead(this.lines[event.lineno], event.x, event.y, event.solid, color);
 };

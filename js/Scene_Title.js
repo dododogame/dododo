@@ -6,6 +6,8 @@ Scene_Title.prototype = Object.create(Scene_Base.prototype);
 Scene_Title.prototype.constructor = Scene_Title;
 
 Scene_Title.prototype.start = function () {
+	this._loadPreferences();
+	
 	this._title = new Sprite(new Bitmap(150, 60));
 	this._center(this._title, 200);
 	this._title.bitmap.fontSize = 50;
@@ -47,6 +49,12 @@ Scene_Title.prototype.start = function () {
 
 	this._keydownEventListener = this._onKeydown.bind(this);
 	document.addEventListener('keydown', this._keydownEventListener);
+};
+
+Scene_Title.prototype._loadPreferences = function () {
+	const string = localStorage.getItem('preferences');
+	if (string)
+		Object.assign(preferences, JSON.parse(LZString.decompressFromBase64(string)));
 };
 
 Scene_Title.prototype._onKeydown = function (event) {

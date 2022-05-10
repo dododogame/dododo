@@ -17,7 +17,7 @@ Scene_BrowseStore.prototype.start = function () {
 
 	this._input = new TyphmInput();
 	this._input.setType('text');
-	this._input.setPlaceholder('Filename without extension');
+	this._input.setAttribute('placeholder', 'Filename without extension');
 	this._input.y = TyphmConstants.TEXT_HEIGHT*7
 	this._input.width = Graphics.width;
 	this._input.setTextAlign('center');
