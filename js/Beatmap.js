@@ -253,12 +253,20 @@ Beatmap.prototype.drawIndividualNote = function (bitmap, note, y, shouldHit) {
 		this.drawRest(bitmap, note, y);
 		return;
 	}
+	this.recordHitEvent(bitmap.lineno, note, y, shouldHit);
+	this.drawStemIfHas(bitmap, note, y);
+	this.drawFlagIfHas(bitmap, note, y);
+	this.drawNoteHeadsAndDots(bitmap, note, y, shouldHit);
+	this.drawHoldBarIfHas(bitmap, note, y, shouldHit);
+};
+
+Beatmap.prototype.recordHitEvent = function (lineno, note, y, shouldHit) {
 	y -= (note.multiplicity - 1) * preferences.headsRadius;
 	if (shouldHit) {
 		note.hitEvents = [];
 		for (let i = 0; i < note.multiplicity; i++) {
 			const hitEvent = {"x": note.x, "y": y+i*preferences.headsRadius*2, "xEnd": note.xEnd, "time": note.time, "timeEnd": note.timeEnd,
-					"hold": note.hold, "solid": note.length > 1, "lineno": bitmap.lineno};
+				"hold": note.hold, "solid": note.length > 1, "lineno": lineno};
 			note.hitEvents.push(hitEvent);
 			this.notes.push(hitEvent);
 		}
@@ -271,10 +279,60 @@ Beatmap.prototype.drawIndividualNote = function (bitmap, note, y, shouldHit) {
 			tiedNote.hitEvents[i].ySwitches ||= [];
 			tiedNote.hitEvents[i].timeEnd = note.timeEnd;
 			tiedNote.hitEvents[i].xEnd = note.xEnd;
-			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y + i*preferences.headsRadius*2, "lineno": bitmap.lineno});
+			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y + i*preferences.headsRadius*2, "lineno": lineno});
 		}
 		note.hold = tiedNote.hold;
 	}
+};
+
+Beatmap.prototype.drawStemIfHas = function (bitmap, note, y, height) {
+	const y0 = y - (note.multiplicity - 1) * preferences.headsRadius;
+	const context = bitmap._context;
+	context.save();
+	context.lineWidth = 2;
+	context.strokeStyle = this.auxiliariesColor();
+	context.beginPath();
+	context.moveTo(note.x, y0 - preferences.headsRadius);
+	const a = preferences.headsRadius + preferences.stemsLength;
+	const b = preferences.beamsSpacing + preferences.beamsWidth;
+	if (height) {
+		context.lineTo(note.x, y - height);
+	} else {
+		if (note.length > 0)
+			context.lineTo(note.x, y0 - a);
+		if (note.length > 3)
+			context.lineTo(note.x, y0 - a - b * (note.length - 3))
+	}
+	context.stroke();
+	context.restore();
+	bitmap._setDirty();
+};
+
+Beatmap.prototype.drawFlagIfHas = function (bitmap, note, y) {
+	y -= (note.multiplicity - 1) * preferences.headsRadius;
+	const context = bitmap._context;
+	context.save();
+	context.fillStyle = this.auxiliariesColor();
+	context.beginPath();
+	context.moveTo(note.x, y - preferences.headsRadius);
+	const a = preferences.headsRadius + preferences.stemsLength;
+	const b = preferences.beamsSpacing + preferences.beamsWidth;
+	const c = preferences.beamsWidth;
+	if (note.length > 2) {
+		for (let i = 0; i < note.length - 2; i++) {
+			context.beginPath();
+			context.moveTo(note.x, y - a - b*i);
+			context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
+			context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
+			context.fill();
+		}
+	}
+	context.restore();
+	bitmap._setDirty();
+};
+
+Beatmap.prototype.drawNoteHeadsAndDots = function (bitmap, note, y, shouldHit) {
+	y -= (note.multiplicity - 1) * preferences.headsRadius;
 	const context = bitmap._context;
 	context.save();
 	context.fillStyle = this.auxiliariesColor();
@@ -287,30 +345,17 @@ Beatmap.prototype.drawIndividualNote = function (bitmap, note, y, shouldHit) {
 			context.fill();
 		}
 	}
-	context.beginPath();
-	context.moveTo(note.x, y - preferences.headsRadius);
-	const a = preferences.headsRadius + preferences.stemsLength;
-	const b = preferences.beamsSpacing + preferences.beamsWidth;
-	const c = preferences.beamsWidth;
-	if (note.length > 0)
-		context.lineTo(note.x, y - a);
-	if (note.length > 3)
-		context.lineTo(note.x, y - a - b*(note.length - 3))
-	context.stroke();
-	if (note.length > 2) {
-		for (let i = 0; i < note.length - 2; i++) {
-			context.beginPath();
-			context.moveTo(note.x, y - a - b*i);
-			context.bezierCurveTo(note.x+6, y-a-b*i, note.x+16, y-a-b*i+c, note.x+12, y-a-b*i+c*3);
-			context.bezierCurveTo(note.x+12, y-a-b*i+c*2, note.x+6, y-a-b*i+c, note.x, y-a-b*i+c);
-			context.fill();
-		}
-	}
 	context.restore();
 	for (let i = 0; i < note.multiplicity; i++) {
 		this.drawNoteHead(bitmap, note.x, y + i*preferences.headsRadius*2, note.length > 1, shouldHit ? 'white' : this.auxiliariesColor());
 	}
+};
+
+Beatmap.prototype.drawHoldBarIfHas = function (bitmap, note, y, shouldHit) {
+	y -= (note.multiplicity - 1) * preferences.headsRadius;
 	if (note.hold) {
+		const context = bitmap._context;
+		context.save();
 		context.strokeStyle = 'white';
 		context.lineWidth = preferences.holdWidth;
 		for (let i = 0; i < note.multiplicity; i++) {
@@ -319,8 +364,9 @@ Beatmap.prototype.drawIndividualNote = function (bitmap, note, y, shouldHit) {
 			context.lineTo(note.xEnd - preferences.headsRadius, y+i*preferences.headsRadius*2);
 			context.stroke();
 		}
+		context.restore();
+		bitmap._setDirty();
 	}
-	bitmap._setDirty();
 };
 
 Beatmap.prototype.drawRightHalfTie = function (bitmap, x, y) {
@@ -396,7 +442,7 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 				nextIndex++;
 			}
 			this.drawBeamedNote(bitmap, event, y, notes[previousIndex], notes[nextIndex], !lastTie,
-					height, isLast && i === notes.length-1, timeLengthPassed);
+					height, timeLengthPassed);
 			lastNote = event;
 		} else if (event.event === "group") {
 			if (lastTie) {
@@ -514,7 +560,36 @@ Beatmap.prototype.getBeamsNumber = function (note) {
 	}
 };
 
-Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, shouldHit, height, isLast, timeLengthPassed) {
+Beatmap.prototype.drawBeams = function (bitmap, note, y, height, beginIndex, endIndex) {
+	const context = bitmap._context;
+	context.save();
+	context.fillStyle = this.auxiliariesColor();
+	const b = preferences.beamsSpacing + preferences.beamsWidth;
+	const c = preferences.beamsWidth;
+	for (let i = beginIndex; i < endIndex; i++) {
+		context.beginPath();
+		context.rect(note.x, y - height + b * i, note.xEnd - note.x, c);
+		context.fill();
+	}
+	context.restore();
+	bitmap._setDirty();
+};
+
+Beatmap.prototype.drawUnconnectedBeams = function (bitmap, note, y, height, beginIndex, endIndex, leftOrRight) {
+	const context = bitmap._context;
+	context.save();
+	context.fillStyle = this.auxiliariesColor();
+	const b = preferences.beamsSpacing + preferences.beamsWidth;
+	const c = preferences.beamsWidth;
+	const d = preferences.unconnectedBeamsLength;
+	for (let i = beginIndex; i < endIndex; i++) {
+		context.beginPath();
+		context.rect(leftOrRight ? note.x - d : note.x, y - height + b * i, d, c);
+		context.fill();
+	}
+}
+
+Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, shouldHit, height, timeLengthPassed) {
 	if (!shouldHit) {
 		note.multiplicity = note.tiedNote.multiplicity;
 	}
@@ -522,294 +597,45 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 		this.drawRest(bitmap, note, y);
 		return;
 	}
-	const y0 = y - (note.multiplicity - 1) * preferences.headsRadius;
-	if (shouldHit) {
-		note.hitEvents = [];
-		for (let i = 0; i < note.multiplicity; i++) {
-			const hitEvent = {"x": note.x, "y": y0+i*preferences.headsRadius*2, "xEnd": note.xEnd, "time": note.time, "timeEnd": note.timeEnd,
-					"hold": note.hold, "solid": note.length > 1, "lineno": bitmap.lineno};
-			note.hitEvents.push(hitEvent);
-			this.notes.push(hitEvent);
-		}
-	} else {
-		let tiedNote = note.tiedNote;
-		while (tiedNote.tiedNote) {
-			tiedNote = tiedNote.tiedNote;
-		}
-		for (let i = 0; i < note.multiplicity; i++) {
-			tiedNote.hitEvents[i].ySwitches ||= [];
-			tiedNote.hitEvents[i].xEnd = note.xEnd;
-			tiedNote.hitEvents[i].timeEnd = note.timeEnd;
-			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y0 + i*preferences.headsRadius*2, "lineno": bitmap.lineno});
-		}
-		note.hold = tiedNote.hold;
-	}
-	const context = bitmap._context;
-	context.save();
-	context.fillStyle = this.auxiliariesColor();
-	for (let i = 0; i < note.dots; i++) {
-		for (let j = 0; j < note.multiplicity; j++) {
-			context.beginPath();
-			context.arc(note.x + preferences.headsRadius + 5*(i+1), y0 + preferences.headsRadius*(2*j-1), 2, 0, 2 * Math.PI);
-			context.fill();
-		}
-	}
-	context.strokeStyle = this.auxiliariesColor();
+	this.recordHitEvent(bitmap.lineno, note, y, shouldHit);
 	const beams = this.getBeamsNumber(note);
-	const a = preferences.headsRadius + preferences.stemsLength;
-	const b = preferences.beamsSpacing + preferences.beamsWidth;
-	const c = preferences.beamsWidth;
-	// 屎山 if 语句，下次动的时候重构
-	if (next) {
-		const nextBeams = this.getBeamsNumber(this.getFirstNoteRecursive(next))
-		if (nextBeams > 0) {
-			if (beams > 0) {
-				context.lineWidth = 2;
-				context.beginPath();
-				context.moveTo(note.x, y - preferences.headsRadius);
-				context.lineTo(note.x, y - height)
-				context.stroke();
-				if (nextBeams >= beams) {
-					for (let i = 0; i < beams; i++) {
-						context.beginPath();
-						context.rect(note.x, y - height + b * i, note.xEnd - note.x, c);
-						context.fill();
-					}
-				} else {
-					for (let i = 0; i < nextBeams; i++) {
-						context.beginPath();
-						context.rect(note.x, y - height + b * i, note.xEnd - note.x, c);
-						context.fill();
-					}
-					if (previous) {
-						const previousBeams = this.getBeamsNumber(this.getLastNoteRecursive(previous));
-						if (previousBeams > 0) {
-							if (previousBeams < nextBeams) {
-								for (let i = nextBeams; i < beams; i++) {
-									context.beginPath();
-									context.rect(note.x, y - height + b * i, note.xEnd - note.x, c);
-									context.fill();
-								}
-							} else if (previousBeams < beams) {
-								if (previousBeams > nextBeams) {
-									for (let i = previousBeams; i < beams; i++) {
-										context.beginPath();
-										context.rect(note.x - 20, y - height + b * i, 20, c);
-										context.fill();
-									}
-								} else { // previousBeams === nextBeams
-									if (timeLengthPassed.add(note.trueLength).mod(note.trueLength).d < note.trueLength.d) {
-										for (let i = previousBeams; i < beams; i++) {
-											context.beginPath();
-											context.rect(note.x - 20, y - height + b * i, 20, c);
-											context.fill();
-										}
-									} else {
-										for (let i = nextBeams; i < beams; i++) {
-											context.beginPath();
-											context.rect(note.x, y - height + b * i, 20, c);
-											context.fill();
-										}
-									}
-								}
-							}
-						} else {
-							for (let i = nextBeams; i < beams; i++) {
-								context.beginPath();
-								context.rect(note.x, y - height + b * i, 20, c);
-								context.fill();
-							}
-						}
-					} else {
-						for (let i = nextBeams; i < beams; i++) {
-							context.beginPath();
-							context.rect(note.x, y - height + b * i, 20, c);
-							context.fill();
-						}
-					}
-				}
-			} else {
-				context.lineWidth = 2;
-				context.beginPath();
-				context.moveTo(note.x, y0 - preferences.headsRadius);
-				if (note.length > 0)
-					context.lineTo(note.x, y0 - a);
-				if (note.length > 3)
-					context.lineTo(note.x, y0 - a - b * (note.length - 3))
-				context.stroke();
-				if (note.length > 2) {
-					for (let i = 0; i < note.length - 2; i++) {
-						context.beginPath();
-						context.moveTo(note.x, y0 - a - b * i);
-						context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
-						context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
-						context.fill();
-					}
-				}
-			}
-		} else if (previous) {
-			if (beams > 0) {
-				const previousBeams = this.getBeamsNumber(this.getLastNoteRecursive(previous));
-				if (previousBeams > 0) {
-					context.lineWidth = 2;
-					context.beginPath();
-					context.moveTo(note.x, y - preferences.headsRadius);
-					context.lineTo(note.x, y - height)
-					context.stroke();
-					if (previousBeams < beams) {
-						for (let i = previousBeams; i < beams; i++) {
-							context.beginPath();
-							context.rect(note.x - 20, y - height + b * i, 20, c);
-							context.fill();
-						}
-					}
-				} else {
-					context.lineWidth = 2;
-					context.beginPath();
-					context.moveTo(note.x, y0 - preferences.headsRadius);
-					if (note.length > 0)
-						context.lineTo(note.x, y0 - a);
-					if (note.length > 3)
-						context.lineTo(note.x, y0 - a - b * (note.length - 3))
-					context.stroke();
-					if (note.length > 2) {
-						for (let i = 0; i < note.length - 2; i++) {
-							context.beginPath();
-							context.moveTo(note.x, y0 - a - b * i);
-							context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
-							context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
-							context.fill();
-						}
-					}
-				}
-			} else {
-				context.lineWidth = 2;
-				context.beginPath();
-				context.moveTo(note.x, y0 - preferences.headsRadius);
-				if (note.length > 0)
-					context.lineTo(note.x, y0 - a);
-				if (note.length > 3)
-					context.lineTo(note.x, y0 - a - b * (note.length - 3))
-				context.stroke();
-				if (note.length > 2) {
-					for (let i = 0; i < note.length - 2; i++) {
-						context.beginPath();
-						context.moveTo(note.x, y0 - a - b * i);
-						context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
-						context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
-						context.fill();
-					}
-				}
-			}
+	const nextBeams = next && this.getBeamsNumber(this.getFirstNoteRecursive(next))
+	const previousBeams = previous && this.getBeamsNumber(this.getLastNoteRecursive(previous));
+	// 20220409: 屎山 if 语句, 下次动的时候重构
+	// 20220510: 居然真的重构了
+	if (beams === 0) {
+		this.drawStemIfHas(bitmap, note, y);
+		this.drawFlagIfHas(bitmap, note, y);
+	} else if (next && nextBeams > 0) {
+		this.drawStemIfHas(bitmap, note, y, height);
+		if (nextBeams >= beams) {
+			this.drawBeams(bitmap, note, y, height, 0, beams);
 		} else {
-			context.lineWidth = 2;
-			context.beginPath();
-			context.moveTo(note.x, y0 - preferences.headsRadius);
-			if (note.length > 0)
-				context.lineTo(note.x, y0 - a);
-			if (note.length > 3)
-				context.lineTo(note.x, y0 - a - b*(note.length - 3))
-			context.stroke();
-			if (note.length > 2) {
-				for (let i = 0; i < note.length - 2; i++) {
-					context.beginPath();
-					context.moveTo(note.x, y0 - a - b*i);
-					context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
-					context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
-					context.fill();
-				}
-			}
+			this.drawBeams(bitmap, note, y, height, 0, nextBeams);
+			if (previous && previousBeams > 0)
+				if (previousBeams < nextBeams)
+					this.drawBeams(bitmap, note, y, height, nextBeams, beams);
+				else if (previousBeams < beams)
+					if (previousBeams > nextBeams)
+						this.drawUnconnectedBeams(bitmap, note, y, height, previousBeams, beams, true);
+					else // previousBeams === nextBeams
+						if (timeLengthPassed.add(note.trueLength).mod(note.trueLength).d < note.trueLength.d)
+							this.drawUnconnectedBeams(bitmap, note, y, height, previousBeams, beams, true);
+						else
+							this.drawUnconnectedBeams(bitmap, note, y, height, nextBeams, beams, false);
+			else
+				this.drawUnconnectedBeams(bitmap, note, y, height, nextBeams, beams, false);
 		}
-	} else if (previous) {
-		if (beams > 0) {
-			const previousBeams = this.getBeamsNumber(this.getLastNoteRecursive(previous));
-			if (previousBeams > 0) {
-				context.lineWidth = 2;
-				context.beginPath();
-				context.moveTo(note.x, y - preferences.headsRadius);
-				context.lineTo(note.x, y - height)
-				context.stroke();
-				if (previousBeams < beams) {
-					for (let i = previousBeams; i < beams; i++) {
-						context.beginPath();
-						context.rect(note.x - 20, y - height + b * i, 20, c);
-						context.fill();
-					}
-				}
-			} else {
-				context.lineWidth = 2;
-				context.beginPath();
-				context.moveTo(note.x, y0 - preferences.headsRadius);
-				if (note.length > 0)
-					context.lineTo(note.x, y0 - a);
-				if (note.length > 3)
-					context.lineTo(note.x, y0 - a - b*(note.length - 3))
-				context.stroke();
-				if (note.length > 2) {
-					for (let i = 0; i < note.length - 2; i++) {
-						context.beginPath();
-						context.moveTo(note.x, y0 - a - b*i);
-						context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
-						context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
-						context.fill();
-					}
-				}
-			}
-		} else {
-			context.lineWidth = 2;
-			context.beginPath();
-			context.moveTo(note.x, y0 - preferences.headsRadius);
-			if (note.length > 0)
-				context.lineTo(note.x, y0 - a);
-			if (note.length > 3)
-				context.lineTo(note.x, y0 - a - b*(note.length - 3))
-			context.stroke();
-			if (note.length > 2) {
-				for (let i = 0; i < note.length - 2; i++) {
-					context.beginPath();
-					context.moveTo(note.x, y0 - a - b*i);
-					context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
-					context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
-					context.fill();
-				}
-			}
-		}
+	} else if (previous && previousBeams > 0) {
+		this.drawStemIfHas(bitmap, note, y, height);
+		if (previousBeams < beams)
+			this.drawUnconnectedBeams(bitmap, note, y, height, previousBeams, beams, true);
 	} else {
-		context.lineWidth = 2;
-		context.beginPath();
-		context.moveTo(note.x, y0 - preferences.headsRadius);
-		if (note.length > 0)
-			context.lineTo(note.x, y0 - a);
-		if (note.length > 3)
-			context.lineTo(note.x, y0 - a - b*(note.length - 3))
-		context.stroke();
-		if (note.length > 2) {
-			for (let i = 0; i < note.length - 2; i++) {
-				context.beginPath();
-				context.moveTo(note.x, y0 - a - b*i);
-				context.bezierCurveTo(note.x+6, y0-a-b*i, note.x+16, y0-a-b*i+c, note.x+12, y0-a-b*i+c*3);
-				context.bezierCurveTo(note.x+12, y0-a-b*i+c*2, note.x+6, y0-a-b*i+c, note.x, y0-a-b*i+c);
-				context.fill();
-			}
-		}
+		this.drawStemIfHas(bitmap, note, y);
+		this.drawFlagIfHas(bitmap, note, y);
 	}
-	context.restore();
-	for (let i = 0; i < note.multiplicity; i++) {
-		this.drawNoteHead(bitmap, note.x, y0 + i*preferences.headsRadius*2, note.length > 1, shouldHit ? 'white' : this.auxiliariesColor());
-	}
-	if (note.hold) {
-		context.save();
-		context.lineWidth = preferences.holdWidth;
-		context.strokeStyle = 'white';
-		for (let i = 0; i < note.multiplicity; i++) {
-			context.beginPath();
-			context.moveTo(shouldHit ? note.x + preferences.headsRadius : note.x - preferences.headsRadius-1, y0 + preferences.headsRadius*2*i);
-			context.lineTo(note.xEnd - preferences.headsRadius, y0+preferences.headsRadius*2*i)
-			context.stroke();
-		}
-		context.restore();
-	}
-	bitmap._setDirty();
+	this.drawNoteHeadsAndDots(bitmap, note, y, shouldHit);
+	this.drawHoldBarIfHas(bitmap, note, y, shouldHit);
 };
 
 Beatmap.prototype.drawBarline = function (bitmap, x) {

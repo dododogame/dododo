@@ -10,7 +10,8 @@ window.preferences = {
 	headsRadius: 5,
 	holdWidth: 5,
 	beamsWidth: 6,
-	beamsSpacing: 4
+	beamsSpacing: 4,
+	unconnectedBeamsLength: 20
 };
 
 function Scene_Preferences() {
@@ -109,6 +110,14 @@ Scene_Preferences.PREFERENCES_LIST = [
 	{
 		name: 'beamsSpacing',
 		text: 'Spacings between note beams',
+		type: 'number',
+		args: {
+			min: 0
+		}
+	},
+	{
+		name: 'unconnectedBeamsLength',
+		text: 'Lengths of unconnected note beams',
 		type: 'number',
 		args: {
 			min: 0
