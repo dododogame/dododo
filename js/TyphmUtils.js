@@ -41,30 +41,34 @@ TyphmUtils.parseDigit = function (digitString) {
 	if (charCode >= 97 && charCode < 123) // a--z
 		return charCode - 97 + 10;
 	return null;
-}
+};
 
 TyphmUtils.isDigit = function (string) {
 	if (string.length !== 1)
 		return false;
 	const charCode = string.charCodeAt(0);
 	return charCode >= 48 && charCode < 58 || charCode >= 97 && charCode < 123;
-}
+};
 
 TyphmUtils.isArabicDigit = function (string) {
 	if (string.length !== 1)
 		return false;
 	const charCode = string.charCodeAt(0);
 	return charCode >= 48 && charCode < 58;
-}
+};
 
 TyphmUtils.isCapitalized = function (string) {
 	const charCode = string.charCodeAt(0);
 	return charCode >= 65 && charCode < 91;
-}
+};
+
+TyphmUtils.fromRGBAToHex = function () {
+	return '#' + Array.from(arguments, x => Math.round(x * 0xff).toString(16).padStart(2, '0')).join('');
+};
 
 Array.prototype.last = function () {
 	return this[this.length - 1];
-}
+};
 
 WebAudio.prototype._createEndTimer = function() {
 	if (this._sourceNode && !this._sourceNode.loop) {
@@ -91,3 +95,8 @@ WebAudio.prototype.clear = function() {
 WebAudio.prototype.addFinishListener = function(listner) {
 	this._finishListeners.push(listner);
 };
+
+window.frac = math.fraction.bind(math);
+window.fracmath = math.create({number: 'Fraction'});
+window.fraceval = fracmath.evaluate.bind(fracmath);
+window.matheval = math.evaluate.bind(math);

@@ -61,7 +61,7 @@ Scene_Game.prototype.start = function () {
 	this._center(this._line2, Graphics.height * 3/4);
 	this.addChild(this._line2);
 
-	this._judgeLine = new Sprite(new Bitmap(1, 256));
+	this._judgeLine = new Sprite(new Bitmap(1, preferences.voicesHeight));
 	this._judgeLine.bitmap.fillAll('white');
 	this._judgeLine.anchor.y = 0.5;
 	this._judgeLine.visible = false;
@@ -138,9 +138,6 @@ Scene_Game.prototype.start = function () {
 	this._holdings = [];
 	this._pressings = {};
 
-	this._lastX = 16;
-	this._lastTime = 0.0;
-
 	this._line1Index = 0;
 	this._line2Index = 1;
 
@@ -172,6 +169,7 @@ Scene_Game.prototype._drawInaccuracyBar = function (perfect, good, bad) {
 
 Scene_Game.prototype.update = function () {
 	const now = this._now();
+	const lengthPosition = this._getLengthPositionFromTime(now);
 	if (!this._musicEnded) {
 		let progress = (now - this._beatmap.start) / this._length;
 		if (progress >= 1) {
@@ -185,8 +183,12 @@ Scene_Game.prototype.update = function () {
 		this._progressIndicator.x = Graphics.width;
 	}
 	if (!this._resumingCountdown && !this._paused && !this._ended) {
-		this._judgeLine.x = this._getXFromTime(now);
-		this._judgeLine.y = this._line1.y;
+		const line = this._line1.bitmap;
+		this._judgeLine.x = this._getXFromLengthPosition(lengthPosition);
+		this._judgeLine.y = this._line1.y - line.space_yFormula(lengthPosition) * preferences.voicesHeight;
+		this._judgeLine.scale.x = line.widthFormula(lengthPosition);
+		this._judgeLine.scale.y = line.heightFormula(lengthPosition);
+		this._judgeLine.bitmap.fillAll(TyphmUtils.fromRGBAToHex(line.redFormula(lengthPosition), line.greenFormula(lengthPosition), line.blueFormula(lengthPosition), line.alphaFormula(lengthPosition)));
 		let i = 0;
 		while (true) {
 			const event = this._unclearedEvents[i];
@@ -270,7 +272,6 @@ Scene_Game.prototype.update = function () {
 Scene_Game.prototype._setUpNewLine = function () {
 	this._lastX = preferences.margin;
 	const line = this._line1.bitmap;
-	this._lastTime = line.startTime;
 	const lineLengthInMilliseconds = line.endTime - line.startTime;
 	if (line.perfect)
 		this._perfectTolerance = line.perfect * lineLengthInMilliseconds;
@@ -552,7 +553,7 @@ Scene_Game.prototype._processLoosen = function () {
 
 Scene_Game.prototype._updateScore = function () {
 	this._scoreSprite.bitmap.clear();
-	this._score = Math.round((this._perfectNumber + this._goodNumber/4 - this._excessNumber)*1000000/this._beatmap.notes.length);
+	this._score = Math.floor((this._perfectNumber + this._goodNumber/4 - this._excessNumber)*1000000/this._beatmap.notes.length);
 	this._scoreSprite.bitmap.drawText(this._score, 0, 0, this._scoreSprite.width, TyphmConstants.TEXT_HEIGHT, 'right');
 };
 
@@ -652,8 +653,32 @@ Scene_Game.prototype._createWrongNote = function (time) {
 	};
 };
 
+Scene_Game.prototype._getLengthPositionFromTime = function (time) {
+	const line = this._line1.bitmap;
+	if (!line || !line.timeFormula)
+		return 0;
+	const timePosition = (time - line.startTime) / line.totalTime;
+	let min = 0, max = 1;
+	let lengthPosition;
+	while (max - min > 1e-6) {
+		lengthPosition = (min + max) / 2;
+		if (line.timeFormula(lengthPosition) > timePosition) {
+			max = lengthPosition;
+		} else if (line.timeFormula(lengthPosition) === timePosition) {
+			break;
+		} else {
+			min = lengthPosition;
+		}
+	}
+	return lengthPosition;
+};
+
+Scene_Game.prototype._getXFromLengthPosition = function (lengthPosition) {
+	return preferences.margin + this._line1.bitmap.space_xFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
+};
+
 Scene_Game.prototype._getXFromTime = function (time) {
-	return this._lastX + (time - this._lastTime) / this._millisecondsPerPixel;
+	return this._getXFromLengthPosition(this._getLengthPositionFromTime(time));
 };
 
 Scene_Game.prototype._setButtonsVisible = function (visibility) {

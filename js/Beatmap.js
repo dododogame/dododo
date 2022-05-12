@@ -2,6 +2,9 @@ function Beatmap () {
 	this.initialize.apply(this, arguments);
 }
 
+Beatmap.TRUE_LENGTH_CALC = fracmath.parse('(1/2)^length*(2-(1/2)^dots)').compile();
+Beatmap.TRUE_LENGTH_CALC = Beatmap.TRUE_LENGTH_CALC.evaluate.bind(Beatmap.TRUE_LENGTH_CALC);
+
 Beatmap.prototype.initialize = function (url) {
 	this.url = url;
 };
@@ -117,16 +120,18 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 						position++;
 						if (TyphmUtils.isDigit(line[position])) {
 							groupEvent.ratio2 = TyphmUtils.parseDigit(line[position]);
-							groupEvent.ratio = groupEvent.ratio2 / groupEvent.ratio1;
+							groupEvent.ratio = frac(groupEvent.ratio2, groupEvent.ratio1);
 							position++;
 						} else { // default value of ratio2 is 2 ** floor(log2(ratio1))
 							groupEvent.ratio2 = null;
-							groupEvent.ratio = new Fraction(2).pow(Math.floor(Math.log2(groupEvent.ratio1))).div(groupEvent.ratio1);
+							let i = 0;
+							for (let x = groupEvent.ratio1; x >>= 1; i++);
+							groupEvent.ratio = frac(2).pow(i).div(groupEvent.ratio1);
 						}
 					} else {
 						groupEvent.ratio1 = null;
 						groupEvent.ratio2 = null;
-						groupEvent.ratio = new Fraction(1);
+						groupEvent.ratio = frac(1);
 					}
 					voices.last().push(groupEvent);
 				}
@@ -140,44 +145,130 @@ Beatmap.prototype.drawLines = function () {
 	this.notes = [];
 	let lastLineNotes = [];
 	let lastLineEndTime = this.offset;
-	let lastLineMillisecondsPerWhole = TyphmConstants.DEFAULT_MILLISECONDS_PER_WHOLE;
+	let lastBPM = undefined;
+	let lastBeatLength = 2;
+	let lastBeatDots = 0;
+	let lastMillisecondsPerWhole = 2000;
 	for (let i = 0; i < this.events.length; i++) {
 		const event = this.events[i];
 		const line = this.lines.last();
-		if (event.event === "bpm") {
-			let [note, bpm] = event.parameters;
-			let dots = note.length - 1;
-			note = TyphmUtils.parseDigit(note[0]);
-			this.drawBPM(line, note, dots, bpm);
-			line.millisecondsPerWhole = 60000/bpm / (0.5**note*(2-0.5**dots));
-		} else if (event.event === "perfect") {
-			line.perfect = parseFloat(event.parameters[0]);
-		} else if (event.event === "good") {
-			line.good = parseFloat(event.parameters[0]);
-		} else if (event.event === "bad") {
-			line.bad = parseFloat(event.parameters[0]);
-		} else if (event.event === "line") {
-			line.lineno = this.lines.length - 1;
-			line.startTime = lastLineEndTime;
-			line.millisecondsPerWhole ||= lastLineMillisecondsPerWhole;
-			const voices = event.voices;
-			line.totalLength = new Fraction(0);
-			for (let i = 0; i < voices[0].length; i++) {
-				line.totalLength = line.totalLength.add(this._calculateLengthRecursive(voices[0][i]));
-			}
-			const y0 = (TyphmConstants.LINES_HEIGHT - preferences.voicesHeight*(voices.length-1))/2;
-			for (let i = 0; i < voices.length; i++) {
-				if (i > 0)
-					for (let j = 0; j < voices[i].length; j++)
-						this._calculateLengthRecursive(voices[i][j]);
-				const y = y0+preferences.voicesHeight*i;
-				this.drawStaffLine(line, y);
-				lastLineNotes[i] = this.drawVoiceAndGetLastNote(line, voices[i], y, lastLineNotes[i]);
-			}
-			line.endTime = line.startTime + line.totalLength.valueOf() * line.millisecondsPerWhole;
-			lastLineEndTime = line.endTime;
-			lastLineMillisecondsPerWhole = line.millisecondsPerWhole;
-			this.lines.push(new Bitmap(Graphics.width, TyphmConstants.LINES_HEIGHT));
+		switch (event.event) {
+			case 'bpm':
+				let normalizationDenominator = 0;
+				const positions = [frac(0)];
+				const durations = [0];
+				line.BPMMarkers = [];
+				
+				for (let i = 0; i < event.parameters.length; i += 3) {
+					const beatNote = event.parameters[i];
+					const length = TyphmUtils.parseDigit(beatNote[0]);
+					const dots = beatNote.length - 1;
+					const bpm = event.parameters[i + 1];
+					const position = frac(event.parameters[i + 2] || 0);
+					line.BPMMarkers.push({'length': length, 'dots': dots, 'bpm': bpm, 'position': position});
+					if (i === 0 && position.compare(0) <= 0) {
+						lastBPM = bpm;
+						lastBeatLength = length;
+						lastBeatDots = dots;
+						continue;
+					}
+					const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({'length': lastBeatLength, 'dots': lastBeatDots});
+					const duration = math.evaluate('bignumber((position-lastPosition)/trueLength)/lastBPM',
+						{'lastBPM':lastBPM,'trueLength':beatTrueLength,'position':position,'lastPosition':positions.last()||0});
+					durations.push(normalizationDenominator = normalizationDenominator + duration);
+					positions.push(position);
+					lastBPM = bpm;
+					lastBeatLength = length;
+					lastBeatDots = dots;
+				}
+				const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({'length': lastBeatLength, 'dots': lastBeatDots});
+				const duration = math.evaluate('bignumber((position-lastPosition)/trueLength)/lastBPM',
+					{'lastBPM':lastBPM,'trueLength':beatTrueLength,'position':frac(1),'lastPosition':positions.last()||0});
+				durations.push(normalizationDenominator = normalizationDenominator + duration);
+				positions.push(frac(1));
+				line.millisecondsPerWhole = 60000*Number(normalizationDenominator);
+				
+				line.timeFormula = x => {
+					let i = 0;
+					for (; i < positions.length-1; i++) {
+						if  (Number(x) <= Number(positions[i+1]))
+							break;
+					}
+					return Number(math.evaluate('((d2 - d1)*(x - p1)/(p2 - p1) + d1)/d',
+							{'x':Number(x),p1:Number(positions[i]),p2:Number(positions[i+1]),d1:durations[i],d2:durations[i+1],d:normalizationDenominator}));
+				};
+				break;
+			case 'ms_per_whole':
+				line.millisecondsPerWhole = parseFloat(event.parameters[0]);
+				break;
+			case 'perfect':
+			case 'good':
+			case 'bad':
+				line[event.event] = parseFloat(event.parameters[0]);
+				break;
+			case 'space_x':
+			case 'space_y': // unit: preferences.voicesHeight
+			case 'time':
+			case 'red':
+			case 'green':
+			case 'blue':
+			case 'alpha':
+			case 'width':
+			case 'height': // unit: preferences.voicesHeight
+				const property = event.event + 'Formula'
+				const expression = math.parse(event.parameters.join(' ')).compile();
+				line[property] = x => Number(expression.evaluate({'x': Number(x)}));
+				break;
+			case 'line':
+				line.lineno = this.lines.length - 1;
+				line.startTime = lastLineEndTime;
+				if (line.millisecondsPerWhole === undefined) {
+					if (lastBPM) {
+						const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({
+							'length': lastBeatLength,
+							'dots': lastBeatDots
+						});
+						const duration = Number(math.evaluate('1/(bignumber(lastBPM)*bignumber(trueLength))',
+							{'lastBPM': lastBPM, 'trueLength': beatTrueLength}));
+						line.millisecondsPerWhole = 60000 * duration;
+					} else {
+						line.millisecondsPerWhole = lastMillisecondsPerWhole;
+					}
+				}
+				line.space_xFormula ||= x => Number(x);
+				line.space_yFormula ||= x => 0;
+				line.timeFormula ||= x => Number(x);
+				line.redFormula ||= x => 1;
+				line.greenFormula ||= x => 1;
+				line.blueFormula ||= x => 1;
+				line.alphaFormula ||= x => 1;
+				line.widthFormula ||= x => 1;
+				line.heightFormula ||= x => event.voices.length;
+				if (line.BPMMarkers) {
+					for (let i = 0; i < line.BPMMarkers.length; i++) {
+						const {length, dots, bpm, position} = line.BPMMarkers[i];
+						this.drawBPM(line, length, dots, bpm, position);
+					}
+				}
+				const voices = event.voices;
+				line.totalLength = frac(0);
+				for (let i = 0; i < voices[0].length; i++) {
+					line.totalLength = line.totalLength.add(this._calculateLengthRecursive(voices[0][i]));
+				}
+				const y0 = (TyphmConstants.LINES_HEIGHT - preferences.voicesHeight*(voices.length-1))/2;
+				for (let i = 0; i < voices.length; i++) {
+					if (i > 0)
+						for (let j = 0; j < voices[i].length; j++)
+							this._calculateLengthRecursive(voices[i][j]);
+					const y = y0+preferences.voicesHeight*i;
+					this.drawStaffLine(line, y);
+					lastLineNotes[i] = this.drawVoiceAndGetLastNote(line, voices[i], y, lastLineNotes[i]);
+				}
+				line.endTime = line.startTime + line.totalLength.valueOf() * line.millisecondsPerWhole;
+				lastLineEndTime = line.endTime;
+				lastMillisecondsPerWhole = line.millisecondsPerWhole;
+				this.lines.push(new Bitmap(Graphics.width, TyphmConstants.LINES_HEIGHT));
+				break;
 		}
 	}
 	this.notes.sort((n1, n2) => n1.time - n2.time);
@@ -188,13 +279,14 @@ Beatmap.prototype.drawStaffLine = function (bitmap, y) {
 }
 
 Beatmap.prototype.drawVoiceAndGetLastNote = function (bitmap, voice, y, lastNote) {
-	let timeLengthPassed = new Fraction(0);
+	bitmap.totalTime = bitmap.totalLength.valueOf() * bitmap.millisecondsPerWhole;
+	let timeLengthPassed = frac(0);
 	for (let i = 0; i < voice.length; i++) {
 		const event = voice[i];
-		event.x = timeLengthPassed.div(bitmap.totalLength).valueOf() * (Graphics.width - preferences.margin*2) + preferences.margin;
-		event.xEnd = timeLengthPassed.add(event.trueLength).div(bitmap.totalLength).valueOf() * (Graphics.width - preferences.margin*2) + preferences.margin;
-		event.time = bitmap.startTime + timeLengthPassed.valueOf() * bitmap.millisecondsPerWhole;
-		event.timeEnd = bitmap.startTime + timeLengthPassed.add(event.trueLength).valueOf() * bitmap.millisecondsPerWhole;
+		event.x = bitmap.space_xFormula(timeLengthPassed.div(bitmap.totalLength)) * (Graphics.width - preferences.margin*2) + preferences.margin;
+		event.xEnd = bitmap.space_xFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * (Graphics.width - preferences.margin*2) + preferences.margin;
+		event.time = bitmap.startTime + bitmap.timeFormula(timeLengthPassed.div(bitmap.totalLength)) * bitmap.totalTime;
+		event.timeEnd = bitmap.startTime + bitmap.timeFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * bitmap.totalTime;
 		const lastTie = lastNote && lastNote.tie;
 		if (event.event === "note") {
 			if (lastTie) {
@@ -217,7 +309,7 @@ Beatmap.prototype.drawVoiceAndGetLastNote = function (bitmap, voice, y, lastNote
 				firstNote.multiplicity = lastNote.multiplicity;
 			}
 			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, event, y, lastNote,
-					i === 0, i === voice.length - 1, this.getGroupHeightRecursive(event), 1);
+					i === 0, i === voice.length - 1, this.getGroupHeightRecursive(event), timeLengthPassed, 1);
 		} else if (event.event === 'barline') {
 			this.drawBarline(bitmap, event.x);
 		}
@@ -411,15 +503,15 @@ Beatmap.prototype.drawTie = function (bitmap, x1, x2, y) {
 	bitmap._setDirty();
 };
 
-Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y, lastNote, isFirst, isLast, height, layer) {
+Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y, lastNote, isFirst, isLast, height, lengthStart, layer) {
 	const notes = group.notes;
-	let timeLengthPassed = new Fraction(0);
+	let timeLengthPassed = lengthStart;
 	for (let i = 0; i < notes.length; i++) {
 		const event = notes[i];
-		event.x = timeLengthPassed.div(group.trueLength).valueOf() * (group.xEnd - group.x) + group.x;
-		event.xEnd = timeLengthPassed.add(event.trueLength).div(group.trueLength).valueOf() * (group.xEnd - group.x) + group.x;
-		event.time = group.time + timeLengthPassed.valueOf() * bitmap.millisecondsPerWhole;
-		event.timeEnd = group.time + timeLengthPassed.add(event.trueLength).valueOf() * bitmap.millisecondsPerWhole;
+		event.x = bitmap.space_xFormula(timeLengthPassed.div(bitmap.totalLength)) * (Graphics.width-2*preferences.margin) + preferences.margin;
+		event.xEnd = bitmap.space_xFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * (Graphics.width-2*preferences.margin) + preferences.margin;
+		event.time = bitmap.timeFormula(timeLengthPassed.div(bitmap.totalLength)) * bitmap.totalTime + bitmap.startTime;
+		event.timeEnd = bitmap.timeFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * bitmap.totalTime + bitmap.startTime;
 		const lastTie = lastNote && lastNote.tie;
 		if (event.event === "note") {
 			if (lastTie) {
@@ -451,7 +543,7 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 				firstNote.multiplicity = lastNote.multiplicity;
 			}
 			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, event, y, lastNote,
-				i === 0, i === notes.length - 1, height, layer + 1);
+				i === 0, i === notes.length - 1, height, timeLengthPassed, layer + 1);
 		} else if (event.event === 'barline') {
 			this.drawBarline(bitmap, event.x);
 		}
@@ -718,26 +810,26 @@ Beatmap.prototype.drawNoteHead = function (bitmap, x, y, solid, color) {
 
 Beatmap.prototype._calculateLengthRecursive = function (event) {
 	if (event.event === "note") {
-		event.trueLength = new Fraction(1,2).pow(event.length).mul(new Fraction(2).sub(new Fraction(1,2).pow(event.dots)));
+		event.trueLength = Beatmap.TRUE_LENGTH_CALC(event);
 	} else if (event.event === "group") {
-		event.trueLength = new Fraction(0);
+		event.trueLength = frac(0);
 		for (let i = 0; i < event.notes.length; i++) {
 			this._calculateLengthRecursive(event.notes[i]);
 			event.notes[i].trueLength = event.notes[i].trueLength.mul(event.ratio);
 			event.trueLength = event.trueLength.add(event.notes[i].trueLength);
 		}
 	} else if (event.event === "barline") {
-		event.trueLength = new Fraction(0);
+		event.trueLength = frac(0);
 	}
 	return event.trueLength;
 }
 
-Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm) {
+Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm, position) {
 	const context = bitmap._context;
 	context.save();
 	context.fillStyle = preferences.auxiliariesColor;
 	context.strokeStyle = preferences.auxiliariesColor;
-	const x = 32;
+	const x = preferences.margin + (Graphics.width - 2*preferences.margin)*bitmap.space_xFormula(position);
 	const y = TyphmConstants.LINES_HEIGHT/2-96 + (beatNote - 3)*preferences.headsRadius*2;
 	for (let i = 0; i < dots; i++) {
 		context.beginPath();
