@@ -10,6 +10,9 @@ Scene_Base.prototype.initialize = function () {
 };
 
 Scene_Base.prototype.start = function () {
+	this._backgroundSprite = new Sprite(new Bitmap(Graphics.width, Graphics.height));
+	this._backgroundSprite.bitmap.fillAll(preferences.backgroundColor);
+	this.addChild(this._backgroundSprite);
 };
 
 Scene_Base.prototype.update = function() {

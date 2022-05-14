@@ -70,6 +70,71 @@ Array.prototype.last = function () {
 	return this[this.length - 1];
 };
 
+const oldInitialize = Bitmap.prototype.initialize;
+Bitmap.prototype.initialize = function (width, height) {
+	oldInitialize.apply(this, arguments);
+	this.fontSize = preferences.fontSize;
+	this.outlineWidth = 0;
+	this.textColor = preferences.textColor;
+};
+
+Graphics._requestFullScreen = function() {
+	var element = document.documentElement;
+	if (element.requestFullscreen) {
+		element.requestFullscreen();
+	} else if (element.mozRequestFullScreen) {
+		element.mozRequestFullScreen();
+	} else if (element.webkitRequestFullScreen) {
+		element.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+	} else if (element.msRequestFullscreen) {
+		element.msRequestFullscreen();
+	}
+};
+
+WebAudio.clearBufferPool = function () {
+	WebAudio._bufferPool = {};
+};
+
+WebAudio.clearBufferPool();
+
+WebAudio.prototype._onXhrLoad = function(xhr) {
+	let array = xhr.response;
+	if(Decrypter.hasEncryptedAudio) array = Decrypter.decryptArrayBuffer(array);
+	this._readLoopComments(new Uint8Array(array));
+	WebAudio._context.decodeAudioData(array, buffer => {
+		WebAudio._bufferPool[this._url] = {'buffer': buffer, loopLength: this._loopLength, loopStart: this._loopStart, sampleRate: this._sampleRate};
+		this._processBuffer(buffer);
+	});
+};
+
+WebAudio.prototype._processBuffer = function (buffer) {
+	this._buffer = buffer;
+	this._totalTime = buffer.duration;
+	if (this._loopLength > 0 && this._sampleRate > 0) {
+		this._loopStart /= this._sampleRate;
+		this._loopLength /= this._sampleRate;
+	} else {
+		this._loopStart = 0;
+		this._loopLength = this._totalTime;
+	}
+	this._onLoad();
+};
+
+const oldLoad = WebAudio.prototype._load;
+WebAudio.prototype._load = function(url) {
+	if (WebAudio._context && WebAudio._bufferPool[url]) {
+		const {buffer, loopLength, loopStart, sampleRate} = WebAudio._bufferPool[url];
+		setTimeout(() => {
+			this._loopLength = loopLength;
+			this._loopStart = loopStart;
+			this._sampleRate = sampleRate;
+			this._processBuffer(buffer)
+		});
+	} else {
+		oldLoad.apply(this, arguments);
+	}
+};
+
 WebAudio.prototype._createEndTimer = function() {
 	if (this._sourceNode && !this._sourceNode.loop) {
 		var endTime = this._startTime + this._totalTime / this._pitch;

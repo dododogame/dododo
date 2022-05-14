@@ -6,36 +6,38 @@ Scene_BrowseStore.prototype = Object.create(Scene_Base.prototype);
 Scene_BrowseStore.prototype.constructor = Scene_BrowseStore;
 
 Scene_BrowseStore.prototype.start = function () {
+	Scene_Base.prototype.start.call(this);
+
 	this._storeAddress = 'https://github.com/UlyssesZh/typhm_store/';
 
-	this._prompt = new Button(new Bitmap(768, TyphmConstants.TEXT_HEIGHT),
+	this._prompt = new Button(new Bitmap(768, preferences.textHeight),
 			() => open(this._storeAddress));
-	this._center(this._prompt, TyphmConstants.TEXT_HEIGHT*6);
+	this._center(this._prompt, preferences.textHeight*6);
 	this._prompt.bitmap.drawText(`Find your beatmap on ${this._storeAddress}`, 0, 0,
-			768, TyphmConstants.TEXT_HEIGHT, 'center');
+			768, preferences.textHeight, 'center');
 	this.addChild(this._prompt);
 
 	this._input = new TyphmInput();
 	this._input.setType('text');
 	this._input.setAttribute('placeholder', 'Filename without extension');
-	this._input.y = TyphmConstants.TEXT_HEIGHT*7
+	this._input.y = preferences.textHeight*7
 	this._input.width = Graphics.width;
 	this._input.setTextAlign('center');
 	this._input.refresh();
 	this._input.focus();
 
-	this._ok = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
+	this._ok = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldOk = true; });
-	this._center(this._ok, TyphmConstants.TEXT_HEIGHT*9);
+	this._center(this._ok, preferences.textHeight*9);
 	this._ok.bitmap.drawText('OK (\\n)', 0, 0,
-			256, TyphmConstants.TEXT_HEIGHT, 'center');
+			256, preferences.textHeight, 'center');
 	this.addChild(this._ok);
 
-	this._back = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
+	this._back = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldBack = true; });
-	this._center(this._back, TyphmConstants.TEXT_HEIGHT*10);
+	this._center(this._back, preferences.textHeight*10);
 	this._back.bitmap.drawText('Back (Esc)', 0, 0,
-			256, TyphmConstants.TEXT_HEIGHT, 'center');
+			256, preferences.textHeight, 'center');
 	this.addChild(this._back);
 
 	this._shouldOk = false;

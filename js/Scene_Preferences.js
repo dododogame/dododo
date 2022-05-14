@@ -14,6 +14,14 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
+				name: 'offsetWizard',
+				text: 'Offset Wizard',
+				type: 'button',
+				args: {
+					onclick: () => { scene._shouldGotoOffsetWizard = true; }
+				}
+			},
+			{
 				name: 'playRate',
 				text: 'Play rate (speed of music)',
 				type: 'number',
@@ -37,11 +45,45 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
-				name: 'offsetWizard',
-				text: 'Offset Wizard',
-				type: 'button',
+				name: 'FCAPIndicator',
+				text: 'Full combo / all perfect indicator',
+				type: 'boolean',
 				args: {
-					onclick: () => { scene._shouldGotoOffsetWizard = true; }
+				}
+			},
+			{
+				name: 'autoRestartGood',
+				text: 'Automatically restart when failing to AP',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
+				name: 'autoRestartMiss',
+				text: 'Automatically restart when failing to FC',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
+				name: 'F7Pause',
+				text: 'Press F7 to pause',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
+				name: 'backtickRestart',
+				text: 'Press backtick to restart',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
+				name: 'autoPause',
+				text: 'Automatically pause when losing focus',
+				type: 'boolean',
+				args: {
 				}
 			}
 		]
@@ -49,6 +91,22 @@ Scene_Preferences.PREFERENCES_PAGES = [
 	{
 		title: 'Geometry',
 		list: [
+			{
+				name: 'fontSize',
+				text: 'Font size',
+				type: 'number',
+				args: {
+					min: 1
+				}
+			},
+			{
+				name: 'textHeight',
+				text: 'Height of text lines',
+				type: 'number',
+				args: {
+					min: 1
+				}
+			},
 			{
 				name: 'margin',
 				text: 'Margins',
@@ -166,6 +224,151 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				type: 'color',
 				args: {
 				}
+			},
+			{
+				name: 'textColor',
+				text: 'Color of foreground (texts etc)',
+				type: 'color',
+				args: {
+				}
+			},
+			{
+				name: 'backgroundColor',
+				text: 'Color of background',
+				type: 'color',
+				args: {
+				}
+			}
+		]
+	},
+	{
+		title: 'Graphics',
+		list: [
+			{
+				name: 'graphicsWidth',
+				text: 'Resolution (width)',
+				type: 'number',
+				args: {
+					min: 1,
+					step: 1
+				}
+			},
+			{
+				name: 'graphicsHeight',
+				text: 'Resolution (height)',
+				type: 'number',
+				args: {
+					min: 1,
+					step: 1
+				}
+			},
+			{
+				name: 'showFPS',
+				text: 'Switch view of FPS (F2)',
+				type: 'button',
+				args: {
+					onclick: () => { Graphics._switchFPSMeter(); }
+				}
+			},
+			{
+				name: 'stretchGraphics',
+				text: 'Stretch to fit the window (F3)',
+				type: 'button',
+				args: {
+					onclick: () => { Graphics._switchStretchMode(); }
+				}
+			},
+			{
+				name: 'fullscreen',
+				text: 'Toggle fullscreen (F4, F11)',
+				type: 'button',
+				args: {
+					onclick: () => { Graphics._switchFullScreen(); }
+				}
+			}
+		]
+	},
+	{
+		title: 'Audio',
+		list: [
+			{
+				name: 'enableHitSound',
+				text: 'Enable hit sound',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
+				name: 'hitSound',
+				text: 'Hit sound',
+				type: 'select',
+				args: {
+					selectItems: [
+						['agogo_bells.ogg', 'Agogo bells'],
+						['bass_drum.ogg', 'Bass drum'],
+						['bell_tree.ogg', 'Bell tree'],
+						['cabasa.ogg', 'Cabasa'],
+						['castanets.ogg', 'Castanets'],
+						['chinese_cymbal.ogg', 'Chinese cymbal'],
+						['chinese_hand_cymbals_1.ogg', 'Chinese hand cymbals 1'],
+						['chinese_hand_cymbals_2.ogg', 'Chinese hand cymbals 2'],
+						['clash_cymbals.ogg', 'Clash cymbals'],
+						['cowbell_1.ogg', 'Cowbell 1'],
+						['cowbell_2.ogg', 'Cowbell 2'],
+						['djembe.ogg', 'Djembe'],
+						['djundjun.ogg', 'Djundjun'],
+						['sheeps_toenails.ogg', 'Sheep\'s toenails'],
+						['sleigh_bells.ogg', 'Sleigh bells'],
+						['snare_drum_1.ogg', 'Snare drum 1'],
+						['snare_drum_2.ogg', 'Snare drum 2'],
+						['spring_coil.ogg', 'Spring coil'],
+						['surdo_1.ogg', 'Surdo 1'],
+						['surdo_2.ogg', 'Surdo 2'],
+						['tambourine_1.ogg', 'Tambourine 1'],
+						['tambourine_2.ogg', 'Tambourine 2'],
+						['whip.ogg', 'Whip'],
+						['woodblock.ogg', 'Woodblock']
+					],
+					oninput: event => {
+						const player = new WebAudio('/assets/audios/hit_sounds/' + event.target.value);
+						player.volume = preferences.hitSoundVolume * preferences.masterVolume;
+						player.addLoadListener(() => player.play());
+					}
+				}
+			},
+			{
+				name: 'hitSoundWithMusic',
+				text: 'Hit sound with music instead of input',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
+				name: 'musicVolume',
+				text: 'Volume of music',
+				type: 'number',
+				args: {
+					min: 0,
+					step: 0.01
+				}
+			},
+			{
+				name: 'hitSoundVolume',
+				text: 'Volume of hit sound',
+				type: 'number',
+				args: {
+					min: 0,
+					step: 0.01
+				}
+			},
+			{
+				name: 'masterVolume',
+				text: 'Master volume',
+				type: 'number',
+				args: {
+					min: 0,
+					step: 0.01
+				}
 			}
 		]
 	},
@@ -221,6 +424,14 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	playRate: 1.0,
 	autoPlay: false,
 	countdown: true,
+	FCAPIndicator: true,
+	autoRestartGood: false,
+	autoRestartMiss: false,
+	F7Pause: true,
+	backtickRestart: true,
+	autoPause: true,
+	fontSize: 28,
+	textHeight: 40,
 	margin: 16,
 	auxiliariesBrightness: 0.3,
 	voicesHeight: 64,
@@ -237,6 +448,16 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	badColor: '#008000',
 	missColor: '#ff0000',
 	excessColor: '#ff0000',
+	textColor: '#ffffff',
+	backgroundColor: '#000000',
+	graphicsWidth: 1024,
+	graphicsHeight: 768,
+	enableHitSound: true,
+	hitSound: 'snare_drum_1.ogg',
+	hitSoundWithMusic: false,
+	musicVolume: 1,
+	hitSoundVolume: 1,
+	masterVolume: 1,
 	save: false
 };
 
@@ -255,7 +476,7 @@ Scene_Preferences.prototype._switchPage = function (pageIndex) {
 	this._currentPage = pageIndex;
 	const page = Scene_Preferences.PREFERENCES_PAGES[this._currentPage];
 	this._titleSprite.bitmap.clear();
-	this._titleSprite.bitmap.drawText(page.title, 0, 0, this._titleSprite.bitmap.width, TyphmConstants.TEXT_HEIGHT, 'center');
+	this._titleSprite.bitmap.drawText(page.title, 0, 0, this._titleSprite.bitmap.width, preferences.textHeight, 'center');
 	if (this._pagesCached[this._currentPage]) {
 		for (let i = 0; i < page.list.length; i++) {
 			const name = page.list[i].name;
@@ -266,13 +487,13 @@ Scene_Preferences.prototype._switchPage = function (pageIndex) {
 		for (let i = 0; i < page.list.length; i++) {
 			const {name, text, type, args} = page.list[i];
 			const sprite = this._textSprites[name] = new Sprite(
-				new Bitmap(Graphics.width - 2 * TyphmConstants.PREFERENCES_MARGIN, TyphmConstants.TEXT_HEIGHT));
+				new Bitmap(Graphics.width - 2 * TyphmConstants.PREFERENCES_MARGIN, preferences.textHeight));
 			sprite.x = TyphmConstants.PREFERENCES_MARGIN;
-			sprite.y = TyphmConstants.TEXT_HEIGHT * (i+1);
+			sprite.y = preferences.textHeight * (i+1);
 			sprite.bitmap.drawText(`${text} (${String.fromCharCode(97+i)})`,
-					0, 0, sprite.bitmap.width, TyphmConstants.TEXT_HEIGHT, 'left');
+					0, 0, sprite.bitmap.width, preferences.textHeight, 'left');
 			this.addChild(sprite);
-			const input = this._inputs[name] = new TyphmInput();
+			const input = this._inputs[name] = new TyphmInput(args.selectItems);
 			if (type === 'number') {
 				input.setType('number');
 				input.width = 128;
@@ -290,16 +511,21 @@ Scene_Preferences.prototype._switchPage = function (pageIndex) {
 				input.setType('button');
 				input.width = Graphics.width - 2*TyphmConstants.PREFERENCES_MARGIN;
 				input.value = '';
+				input.setOpacity(0);
 			} else if (type === 'file') {
 				input.setType('file');
 				input.width = Graphics.width - 2*TyphmConstants.PREFERENCES_MARGIN;
 				input.value = '';
 				input.setOpacity(0);
 				input.setTextAlign('right');
+			} else if (type === 'select') {
+				input.width = 384;
+				input.value = preferences[name];
+				input.setTextAlign('right');
 			}
 			input.anchor.x = 1;
 			input.x = Graphics.width - TyphmConstants.PREFERENCES_MARGIN;
-			input.y = TyphmConstants.TEXT_HEIGHT * (i+1);
+			input.y = preferences.textHeight * (i+1);
 			for (const [argName, argValue] of Object.entries(args)) {
 				input.setAttribute(argName, argValue);
 			}
@@ -310,48 +536,50 @@ Scene_Preferences.prototype._switchPage = function (pageIndex) {
 };
 
 Scene_Preferences.prototype.start = function () {
+	Scene_Base.prototype.start.call(this);
+
 	this._textSprites = {};
 	this._inputs = {};
 	this._pagesCached = [];
 	
 	this._titleSprite = new Sprite(new Bitmap(
-		Graphics.width - 2*TyphmConstants.PREFERENCES_MARGIN, TyphmConstants.TEXT_HEIGHT));
+		Graphics.width - 2*TyphmConstants.PREFERENCES_MARGIN, preferences.textHeight));
 	this._titleSprite.x = TyphmConstants.PREFERENCES_MARGIN;
 	this.addChild(this._titleSprite);
 	
-	this._previous = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
+	this._previous = new Button(new Bitmap(256, preferences.textHeight),
 		() => { this._previousPage(); });
 	this._previous.x = TyphmConstants.PREFERENCES_MARGIN;
-	this._previous.bitmap.drawText('<-', 0, 0, 256, TyphmConstants.TEXT_HEIGHT, 'left');
+	this._previous.bitmap.drawText('<-', 0, 0, 256, preferences.textHeight, 'left');
 	this.addChild(this._previous);
 	
-	this._next = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
+	this._next = new Button(new Bitmap(256, preferences.textHeight),
 		() => { this._nextPage(); });
 	this._next.anchor.x = 1;
 	this._next.x = Graphics.width - TyphmConstants.PREFERENCES_MARGIN;
-	this._next.bitmap.drawText('->', 0, 0, 256, TyphmConstants.TEXT_HEIGHT, 'right');
+	this._next.bitmap.drawText('->', 0, 0, 256, preferences.textHeight, 'right');
 	this.addChild(this._next);
 
-	/*this._apply = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
+	/*this._apply = new Button(new Bitmap(256, preferences.textHeight),
 		() => { this._applySettings(); });
 	this._apply.bitmap.drawText('Apply (\\s)', 0, 0,
-		256, TyphmConstants.TEXT_HEIGHT, 'center');
+		256, preferences.textHeight, 'center');
 	this.addChild(this._apply);
-	this._center(this._apply, Graphics.height - TyphmConstants.TEXT_HEIGHT * 3);*/
+	this._center(this._apply, Graphics.height - preferences.textHeight * 3);*/
 	
-	this._ok = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
+	this._ok = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldOk = true; });
 	this._ok.bitmap.drawText('OK (\\n)', 0, 0,
-			256, TyphmConstants.TEXT_HEIGHT, 'center');
+			256, preferences.textHeight, 'center');
 	this.addChild(this._ok);
-	this._center(this._ok, Graphics.height - TyphmConstants.TEXT_HEIGHT * 2);
+	this._center(this._ok, Graphics.height - preferences.textHeight * 2);
 	
-	this._back = new Button(new Bitmap(256, TyphmConstants.TEXT_HEIGHT),
+	this._back = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldBack = true; });
 	this._back.bitmap.drawText('Back (Esc)', 0, 0,
-			256, TyphmConstants.TEXT_HEIGHT, 'center');
+			256, preferences.textHeight, 'center');
 	this.addChild(this._back);
-	this._center(this._back, Graphics.height - TyphmConstants.TEXT_HEIGHT);
+	this._center(this._back, Graphics.height - preferences.textHeight);
 	
 	this._switchPage(0);
 	
@@ -376,6 +604,8 @@ Scene_Preferences.prototype._applySettings = function () {
 				preferences[name] = this._inputs[name].value;
 			} else if (type === 'boolean') {
 				preferences[name] = this._inputs[name].getAttribute('checked');
+			} else if (type === 'select') {
+				preferences[name] = this._inputs[name].value;
 			}
 		}
 	}
@@ -447,6 +677,8 @@ Scene_Preferences.prototype._onKeydown = function (event) {
 				input.click();
 			} else if (item.type === 'file') {
 				input.click();
+			} else if (item.type === 'select') {
+				// Currently no means to open the dropdown using JS
 			}
 		}
 	}

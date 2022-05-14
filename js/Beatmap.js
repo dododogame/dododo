@@ -860,7 +860,7 @@ Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm, position) {
 	context.restore();
 	const oldTextColor = bitmap.textColor;
 	bitmap.textColor = preferences.auxiliariesColor;
-	bitmap.drawText(`= ${bpm}`, x+preferences.headsRadius+5*(dots+3), y-30, 200, TyphmConstants.TEXT_HEIGHT, 'left');
+	bitmap.drawText(`= ${bpm}`, x+preferences.headsRadius+5*(dots+3), y-30, 200, preferences.textHeight, 'left');
 	bitmap.textColor = oldTextColor;
 	bitmap._setDirty();
 };

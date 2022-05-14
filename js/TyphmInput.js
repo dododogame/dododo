@@ -2,22 +2,31 @@ function TyphmInput() {
 	this.initialize.apply(this, arguments);
 }
 
-TyphmInput.prototype.initialize = function () {
-	this._input = document.createElement('input');
+TyphmInput.prototype.initialize = function (selectItems) {
+	if (selectItems){
+		this._input = document.createElement('select');
+		this._input.innerHTML = selectItems.map(
+			([value, text]) => `<option value="${value}">${text}</option>`).join('');
+		for (const option of this._input.querySelectorAll('option')) {
+			option.style.backgroundColor = preferences.backgroundColor;
+		}
+	} else {
+		this._input = document.createElement('input');
+	}
 	this.x = 0;
 	this.y = 0;
 	this.width = 0;
-	this.height = TyphmConstants.TEXT_HEIGHT;
+	this.height = preferences.textHeight;
 	this.anchor = new Point(0, 0);
 	this._input.style = `
-		background-color: rgba(0,0,0,0);
+		background-color: ${preferences.backgroundColor};
 		border: none;
 		outline: 0;
 		box-shadow: none;
-		font-size: 28px;
+		font-size: ${preferences.fontSize}px;
 		position: absolute;
 		font-family: GameFont;
-		color: rgba(255,255,255,1);
+		color: ${preferences.textColor};
 		z-index: 10;
 	`;
 	document.body.appendChild(this._input);
