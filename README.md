@@ -41,9 +41,6 @@ If you are not satisfied with the new offset, you can repeat these steps.
 Alternatively, you can set the offset without using the offset wizard.
 You can directly set it in the preferences.
 
-Note that after you refresh the webpage, the set offset will be cleared,
-and you will need to set it again.
-
 ## Game mechanics
 
 In this section, a detailed illustration of the process of gameplay is delivered.
@@ -62,7 +59,8 @@ plus or minus the inaccuracy tolerance.
 There are three levels of inaccuracies: perfect, good, and bad.
 Their judge intervals are to be specified in the beatmap and can change throughout the gameplay.
 If a note fails to be hit, it is a miss judge.
-The number of perfects, goods, bads, and misses affect the [score](#score).
+The number of perfects, goods, bads, and misses affect
+the [score](#score) and the [accuracy rate](#accuracy-rate).
 
 Specially, to hit a hold, throughout its sustaining time
 (until its end time minus the inaccuracy tolerance of good judge),
@@ -70,13 +68,13 @@ there should be at least one key/touch being pressed.
 If there are multiple holds sustaining at the same time,
 there should also be multiple keys/touches being pressed at the same time.
 
-At first, notes are colored white.
+At first, notes are colored white (the color can be customized in preferences).
 After a note is cleared (hit or missed), the note will be re-colored.
-Perfect is yellow; good is blue; bad is green; miss is red.
+Perfect is yellow; good is blue; bad is green; miss is red (the colors can be customized in preferences).
 After a note is hit, there will appear an indicator in the [inaccuracy bar](#inaccuracy-bar).
 
 If a hit cannot correspond to any notes, it is regarded as an excess hit,
-which also affects the [score](#score) and the [combo](#combo).
+which also affects the [score](#score), the [accuracy rate](#accuracy-rate), and the [combo](#combo).
 
 ### Bar lines
 
@@ -87,20 +85,21 @@ They themselves do not affect the gameplay.
 
 ### Judge line
 
-The judge line (or scan line) moves throughout the gameplay.
+The **judge line** (or scan line) moves throughout the gameplay.
 The perfect time for the player to hit a note is exactly
 when the judge line moves to a position at the center of the note.
 
 The speed of the judge line can change throughout the gameplay,
-but its speed must be constant within a line.
+and it can even run from right to the left.
 
 ### Inaccuracy bar
 
-The inaccuracy bar is to help indicate how inaccurate the notes are hit.
+The **inaccuracy bar** is to help indicate how inaccurate the notes are hit.
 It is located at the bottom of the gameplay interface.
 It is colored symmetrically, with the perfect judge interval being yellow,
-the good judge interval being blue, and the bad judge interval being green.
-Note that the inaccuracy tolerance is specific to different beatmaps,
+the good judge interval being blue, and the bad judge interval being green
+(the colors can be customized in preferences).
+Note that the inaccuracy tolerances are specific to different beatmaps,
 and it can even change during the gameplay.
 
 When a note is hit, according to the inaccuracy,
@@ -114,7 +113,7 @@ will not cause a small rule to appear at the inaccuracy bar.
 
 ### Combo
 
-Combo refers to the number of consecutive notes the player hits.
+The **combo** refers to the number of consecutive notes the player hits.
 It is shown in the bottom-left corner of the gameplay interface.
 
 There are two cases when the combo is interrupted and reset to 0:
@@ -128,10 +127,21 @@ there are no notes corresponding to the key.
 After a gameplay is finished, an FC (full combo) note will appear next to the combo number
 if the combo has never been reset during the gameplay.
 
+### Accuracy rate
+
+The **accuracy rate** is set based on your performance in playing a beatmap.
+The accuracy rate is shown dynamically during the gameplay
+in the bottom-right corner of the gameplay interface.
+The calculation of the accuracy rate is
+```js
+AccuracyRate = (perfect + good/4 - excess) / (perfect + good + bad + miss);
+```
+
 ### Score
 
-The game will assign you a score based on your performance in playing a beatmap.
-The score is shown dynamically during the gameplay at the up-right corner of the gameplay interface.
+The game will assign you a **score** based on your performance in playing a beatmap.
+The score is shown dynamically during the gameplay, just like the accuracy rate,
+at the up-right corner of the gameplay interface.
 The calculation of the score involves the number of perfects, goods, bads, misses, and excesses:
 
 ```js
@@ -155,6 +165,13 @@ The mark is a letter. The mark scale is
 | E    | \>= 500000 |
 | F    | else       |
 
+The mark is also shown dynamically next to the accuracy rate during the gameplay
+based on your performance so far.
+There is a simple relation between the accuracy rate and the score when the gameplay has been finished:
+```js
+Score == 1000000 * AccuracyRate;
+```
+
 ## How to compose a beatmap
 
 A Dododo beatmap is a `.ddd` file in plain-text format.
@@ -163,9 +180,9 @@ The two parts are separated by a single `---` line.
 
 The following are just some specifications.
 
-### Head
+### Header
 
-The head consists of several key-value pairs, each of which lies in a line,
+The header consists of several key-value pairs, each of which lies in a line,
 and a key is separated from its corresponding value by `: ` (a colon and a whitespace).
 
 The following items are available:
@@ -207,14 +224,12 @@ numbers greater than 15 or "???" for extremely hard beatmaps.
 
 Difficulty is intended to be a brief indicator on an ordinal scale
 of how hard the beatmap is to beat.
-You can refer to [the store](https://github.com/ulysseszh/typhm_store/)
-to see how hard on earth a certain difficulty is.
 
 #### `audioUrl`
 
 The url of the audio file of the music.
 
-If it is no specified, the user have to upload an audio
+If it is not specified, the user has to upload an audio file
 (if playing through uploading files),
 or the user will not hear any music when playing.
 
@@ -248,7 +263,7 @@ because the file cannot be modified in that case.
 #### `offset`
 
 The time (position) in the played audio at which the beatmap starts.
-Should be positive.
+May be negative or positive.
 
 It is different from `start` in that the audio before `offset` will be played.
 Note that, if `start` and `offset` are both specified,
@@ -284,22 +299,189 @@ BAD <interval>
 ```
 
 These control sentences accept one parameter, indicating the judging interval.
-The `interval` is NOT in milliseconds but is the ratio of the maximum accepted distance between
-the judge line and the note to be hit for a perfect / good / bad judge and the total (spatial) length of the row.
-Therefore, judging will be stricter if the judging line moves faster.
+The `interval` is NOT in milliseconds but is the ratio of the tolerance for a perfect / good / bad judge
+and the total (temporal) length of the row.
+Therefore, judging will be stricter if the row is shorter (in time).
 
 ##### `BPM`
 
 Syntax:
 
 ```text
-BPM <beatNoteLength> <beatsPerMinute>
+BPM <beatNote1> <beatsPerMinute1>[ <position1>[ <beatNote2> <beatsPerMinute2> <position2>[ ... ]]]
 ```
 
-The `beatNoteLength` is a character denoting the note length of the beat note.
-See [how to write a note](#how-to-write-a-note) to know how to specify a note length.
+The `beatNote` is a note specified in the same manner in [how to write a note](#how-to-write-a-note).
 The `beatsPerMinute` is the number of beats per minute,
 meaning that one minute is exactly `beatsPerMinute` times as long as the beat note.
+The `position` is the position of the BPM change, specified as a rational number in [0, 1],
+with the start of the row being 0 and the end of the row being 1.
+The position is calculated according to notes' literal length but not their temporal length
+(e.g. a quavar in 180 BPM and one in 200 BPM has the same literal length because they are both quavars).
+
+##### `MS_PER_WHOLE`
+
+Syntax:
+
+```text
+MS_PER_WHOLE <millisecondsPerWhole>
+```
+
+This sets the average temporal length of a whole note in milliseconds.
+Usually this can be automatically calculated by the game according to the BPM specified by [`BPM`](#bpm),
+or inherit from last row.
+However, sometimes it is necessary to specify it manually, especially when using [`TIME`](#time).
+
+##### `TIME`
+
+Syntax:
+
+```text
+TIME <expression>
+```
+
+Here `<expression>` is a single-variable mathematical expression of variable `x`.
+See [math expressions](#math-expressions).
+
+The expression is a mapping from [0, 1] to [0, 1].
+It *must* be monotonically increasing (because you cannot travel to the past).
+It maps the position in the row to the time at which the position in the row is played.
+The position mapped to 0 is played exactly when the row starts being played,
+and the position mapped to 1 is played exactly when the row ends being played
+(and when the next row starts being played).
+For example, with the expression `sqrt(x)` you can have the tempo linearly
+(w.r.t. notes' literal lengths) increasing from 0.
+
+Default: `x`.
+
+##### `SPACE_X`
+
+Syntax:
+
+```text
+SPACE_X <expression>
+```
+
+Here `<expression>` is a single-variable mathematical expression of variable `x`.
+See [math expressions](#math-expressions).
+
+The expression is a mapping from [0, 1] to [0, 1].
+It maps the position ion the row to the spatial position.
+The position mapped to 0 is drawn at the leftmost place,
+and the position mapped to 1 is drawn at the rightmost place.
+It is not necessarily monotonically increasing (to possibly make the judge line move to the left)
+or being continuous (to possibly make the judge line jump suddenly).
+
+Default: `x`.
+
+##### `SPACE_Y`, `WIDTH`, `HEIGHT`
+
+Syntax:
+
+```text
+SPACE_Y <expression>
+WIDTH <expression>
+HEIGHT <expression>
+```
+
+Here `<expression>` is a single-variable mathematical expression of variable `x`.
+See [math expressions](#math-expressions).
+
+These control sentences are purely for ornamental performance of the judge line
+because they do not affect the (spatial and temporal) arrangement of notes.
+The expressions are mappings on [0, 1], and the mapped values are lengths in unit of pixels.
+
+`SPACE_Y` is the vertical position of the judge line.
+Positive values mean to place the judge line at specified number of pixels above the default position.
+Default: `0`.
+
+`WIDTH` is the width of the judge line. Default: `1`.
+
+`HEIGHT` is the height of the judge line. Default: `voicesHeight` times the number of voices.
+
+##### `RED`, `GREEN`, `BLUE`, `ALPHA`
+
+Syntax:
+
+```text
+RED <expression>
+GREEN <expression>
+BLUE <expression>
+ALPHA <expression>
+```
+
+Here `<expression>` is a single-variable mathematical expression of variable `x`.
+See [math expressions](#math-expressions).
+
+These control sentences are also purely for ornamental performance of the judge line.
+They are used to change the color of the judge line.
+These expressions are mappings from [0, 1] to [0, 1], and the default of them are all `1`
+(pure and non-transparent white).
+
+##### Math expressions
+
+Some of the control sentences above use math expressions as parameters.
+Parsing the math expressions are powered by [math.js](https://mathjs.org/).
+
+In these expressions, there should be only one variable `x`, denoting the position in the row.
+The position is measured according to notes' literal length but not their temporal length.
+
+There is an `if` function that can be used to help express piecewise functions.
+Its syntax is
+```text
+if(<condition1>, <value1>[, <condition2>, <value2>[, ... ]][, <elseValue>])
+```
+It is the same as
+```text
+condition1 ? value1 : condition2 ? value2 : ... : elseValue
+```
+All variables set by the gamer in preferences can be used in the math expressions:
+
+| Variable                 | Meaning                                   | Type     | Default              |
+|--------------------------|-------------------------------------------|----------|----------------------|
+| `offset`                 | Offset (in ms)                            | Number   | `0.0`                |
+| `playRate`               | Play rate (speed of music)                | Number   | `1.0`                |
+| `autoPlay`               | Auto-play                                 | Boolean  | `false`              |
+| `countdown`              | Show countdown before resuming            | Boolean  | `true`               |
+| `FCAPIndicator`          | Full combo / all perfect indicator        | Boolean  | `true`               |
+| `autoRestartGood`        | Automatically restart when failing to AP  | Boolean  | `false`              |
+| `autoRestartMiss`        | Automatically restart when failing to FC  | Boolean  | `false`              |
+| `F7Pause`                | Press <kbd>F7</kbd> to pause              | Boolean  | `true`               |
+| `backtickRestart`        | Press <kbd>`</kbd> to restart             | Boolean  | `true`               |
+| `autoPause`              | Automatically pause when losing focus     | Boolean  | `true`               |
+| `fontSize`               | Font size                                 | Number   | `28`                 |
+| `textHeight`             | Height of text lines                      | Number   | `40`                 |
+| `margin`                 | Margins                                   | Number   | `16`                 |
+| `voicesHeight`           | Height of voices                          | Number   | `64`                 |
+| `stemsLength`            | Lengths of note stems                     | Number   | `25`                 |
+| `headsRadius`            | Radius of note heads                      | Number   | `5`                  |
+| `holdWidth`              | Thickness of hold notes' tails (hold bar) | Number   | `5`                  |
+| `beamsWidth`             | Thickness of note beams                   | Number   | `6`                  |
+| `beamsSpacing`           | Spacing between note beams                | Number   | `4`                  |
+| `unconnectedBeamsLength` | Length of unconnected note beams          | Number   | `20`                 |
+| `barlinesHeight`         | Height of barlines                        | Number   | `256`                |
+| `notesColor`             | Color of notes                            | String   | `'#ffffff'`          |
+| `auxiliariesColor`       | Color of auxiliaries (barlines etc)       | String   | `'#4c4c4c'`          |
+| `perfectColor`           | Color of perfect hits                     | String   | `'#ffff00'`          |
+| `goodColor`              | Color of good hits                        | String   | `'#0000ff'`          |
+| `badColor`               | Color of bad hits                         | String   | `'#008000'`          |
+| `missColor`              | Color of missed hits                      | String   | `'#ff0000'`          |
+| `excessColor`            | Color of excess hits                      | String   | `'#ff0000'`          |
+| `textColor`              | Color of foreground (texts etc)           | String   | `'#ffffff'`          |
+| `backgroundColor`        | Color of background                       | String   | `'#000000'`          |
+| `graphicsWidth`          | Resolution (width)                        | Number   | `1024`               |
+| `graphicsHeight`         | Resolution (height)                       | Number   | `768`                |
+| `enableHitSound`         | Enable hit sound                          | Boolean  | `true`               |
+| `hitSound`               | Hit sound                                 | String   | `'snare_drum_1.ogg'` |
+| `hitSoundWithMusic`      | Hit sound with music instead of input     | Boolean  | `false`              |
+| `musicVolume`            | Volume of music                           | Number   | `1`                  |
+| `hitSoundVolume`         | Volume of hit sound                       | Number   | `1`                  |
+| `masterVolume`           | Master volume                             | Number   | `1`                  |
+| `save`                   | Save preferences in the web storage       | Boolean  | `false`              |
+
+Note that here the strings are 7-character lower-case hexadecimal notation of colors.
+To get the RGB values (in [0, 1]), you can use the methods `red()`, `green()`, `blue()`.
+For example, `'#4c8cff'.red()` returns approximately `0.298`, which is `0x4c / 0xff`. 
 
 #### How to write a note
 
@@ -347,7 +529,7 @@ The first number divided by the second number is
 the ratio of the seeming length of the grouping and the actual length of the grouping.
 The second number can be omitted, and the default value of it is
 ```js
-ratio2 = 2**(floor(log2(ratio1))) / ratio1
+ratio2 = 2**(floor(log2(ratio1)))
 ```
 where `ratio1` is the first number.
 

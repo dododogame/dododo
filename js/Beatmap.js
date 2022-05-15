@@ -207,17 +207,17 @@ Beatmap.prototype.drawLines = function () {
 				line[event.event] = parseFloat(event.parameters[0]);
 				break;
 			case 'space_x':
-			case 'space_y': // unit: preferences.voicesHeight
+			case 'space_y':
 			case 'time':
 			case 'red':
 			case 'green':
 			case 'blue':
 			case 'alpha':
 			case 'width':
-			case 'height': // unit: preferences.voicesHeight
+			case 'height':
 				const property = event.event + 'Formula'
 				const expression = math.parse(event.parameters.join(' ')).compile();
-				line[property] = x => Number(expression.evaluate({'x': Number(x)}));
+				line[property] = x => Number(expression.evaluate({'x': Number(x), ...preferences}));
 				break;
 			case 'line':
 				line.lineno = this.lines.length - 1;
@@ -243,7 +243,7 @@ Beatmap.prototype.drawLines = function () {
 				line.blueFormula ||= x => 1;
 				line.alphaFormula ||= x => 1;
 				line.widthFormula ||= x => 1;
-				line.heightFormula ||= x => event.voices.length;
+				line.heightFormula ||= x => event.voices.length * preferences.voicesHeight;
 				if (line.BPMMarkers) {
 					for (let i = 0; i < line.BPMMarkers.length; i++) {
 						const {length, dots, bpm, position} = line.BPMMarkers[i];
@@ -737,7 +737,8 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 Beatmap.prototype.drawBarline = function (bitmap, x) {
 	const context = bitmap._context;
 	context.globalCompositeOperation = 'destination-over';
-	bitmap.fillRect(x, TyphmConstants.LINES_HEIGHT / 4, 1, TyphmConstants.LINES_HEIGHT/2, preferences.auxiliariesColor);
+	bitmap.fillRect(x, (TyphmConstants.LINES_HEIGHT - preferences.barlinesHeight) / 2, 1,
+		preferences.barlinesHeight, preferences.auxiliariesColor);
 	context.globalCompositeOperation = 'source-over';
 };
 

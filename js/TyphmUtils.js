@@ -70,6 +70,22 @@ Array.prototype.last = function () {
 	return this[this.length - 1];
 };
 
+String.prototype.red = function () {
+	return parseInt(this.substring(1, 3), 16) / 255;
+};
+
+String.prototype.green = function () {
+	return parseInt(this.substring(3, 5), 16) / 255;
+};
+
+String.prototype.blue = function () {
+	return parseInt(this.substring(5, 7), 16) / 255;
+};
+
+String.prototype.alpha = function () {
+	return parseInt(this.substring(7, 9), 16) / 255 || 1;
+};
+
 const oldInitialize = Bitmap.prototype.initialize;
 Bitmap.prototype.initialize = function (width, height) {
 	oldInitialize.apply(this, arguments);
@@ -161,6 +177,17 @@ WebAudio.prototype.addFinishListener = function(listner) {
 	this._finishListeners.push(listner);
 };
 
+math.import({
+	if: (...arguments) => {
+		for (let i = 0; i < arguments.length; i += 2) {
+			if (i === arguments.length - 1) {
+				return arguments[i];
+			} else if (arguments[i]) {
+				return arguments[i + 1];
+			}
+		}
+	}
+});
 window.frac = math.fraction.bind(math);
 window.fracmath = math.create({number: 'Fraction'});
 window.fraceval = fracmath.evaluate.bind(fracmath);

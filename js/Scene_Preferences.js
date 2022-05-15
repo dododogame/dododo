@@ -170,6 +170,14 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {
 					min: 0
 				}
+			},
+			{
+				name: 'barlinesHeight',
+				text: 'Height of barlines',
+				type: 'number',
+				args: {
+					min: 0
+				}
 			}
 		]
 	},
@@ -433,7 +441,6 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	fontSize: 28,
 	textHeight: 40,
 	margin: 16,
-	auxiliariesBrightness: 0.3,
 	voicesHeight: 64,
 	stemsLength: 25,
 	headsRadius: 5,
@@ -441,6 +448,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	beamsWidth: 6,
 	beamsSpacing: 4,
 	unconnectedBeamsLength: 20,
+	barlinesHeight: 256,
 	notesColor: '#ffffff',
 	auxiliariesColor: '#4c4c4c',
 	perfectColor: '#ffff00',

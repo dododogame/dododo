@@ -64,7 +64,7 @@ Scene_Game.prototype.start = function () {
 	this._center(this._line2, Graphics.height * 3/4);
 	this.addChild(this._line2);
 
-	this._judgeLine = new Sprite(new Bitmap(1, preferences.voicesHeight));
+	this._judgeLine = new Sprite(new Bitmap(1, 1));
 	this._judgeLine.bitmap.fillAll('white');
 	this._judgeLine.anchor.x = 0.5;
 	this._judgeLine.anchor.y = 0.5;
@@ -197,7 +197,7 @@ Scene_Game.prototype.update = function () {
 	if (!this._resumingCountdown && !this._paused && !this._ended) {
 		const line = this._line1.bitmap;
 		this._judgeLine.x = this._getXFromLengthPosition(lengthPosition);
-		this._judgeLine.y = this._line1.y - line.space_yFormula(lengthPosition) * preferences.voicesHeight;
+		this._judgeLine.y = this._line1.y - line.space_yFormula(lengthPosition);
 		this._judgeLine.scale.x = line.widthFormula(lengthPosition);
 		this._judgeLine.scale.y = line.heightFormula(lengthPosition);
 		this._judgeLine.bitmap.fillAll(TyphmUtils.fromRGBAToHex(line.redFormula(lengthPosition), line.greenFormula(lengthPosition), line.blueFormula(lengthPosition), line.alphaFormula(lengthPosition)));
