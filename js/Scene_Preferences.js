@@ -463,9 +463,9 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	enableHitSound: true,
 	hitSound: 'snare_drum_1.ogg',
 	hitSoundWithMusic: false,
-	musicVolume: 1,
-	hitSoundVolume: 1,
-	masterVolume: 1,
+	musicVolume: 1.0,
+	hitSoundVolume: 2.0,
+	masterVolume: 1.0,
 	save: false
 };
 
@@ -545,7 +545,9 @@ Scene_Preferences.prototype._switchPage = function (pageIndex) {
 
 Scene_Preferences.prototype.start = function () {
 	Scene_Base.prototype.start.call(this);
-
+	
+	TouchInput.preventingDefault = false;
+	
 	this._textSprites = {};
 	this._inputs = {};
 	this._pagesCached = [];
@@ -648,6 +650,7 @@ Scene_Preferences.prototype.update = function () {
 };
 
 Scene_Preferences.prototype.stop = function () {
+	TouchInput.preventingDefault = true;
 	document.removeEventListener('keydown', this._keydownEventListener);
 	for (let j = 0; j < Scene_Preferences.PREFERENCES_PAGES.length; j++) {
 		if (!this._pagesCached[j])

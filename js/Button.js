@@ -20,7 +20,7 @@ Button.prototype.isInside = function (x, y) {
 	const xMax = xMin + this.width;
 	const yMin = this.y - this.height * this.anchor.y;
 	const yMax = yMin + this.height;
-	return TouchInput.x >= xMin && TouchInput.x < xMax && TouchInput.y >= yMin && TouchInput.y < yMax;
+	return x >= xMin && x < xMax && y >= yMin && y < yMax;
 }
 
 Button.prototype.onclick = function () {

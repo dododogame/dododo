@@ -519,7 +519,7 @@ Scene_Game.prototype._onTouchStart = function (event) {
 };
 
 Scene_Game.prototype._playHitSound = function () {
-	if (preferences.enableHitSound) {
+	if (preferences.enableHitSound && !this._inaccuraciesArray) {
 		const player = new WebAudio('/assets/audios/hit_sounds/' + preferences.hitSound);
 		player.volume = preferences.hitSoundVolume * preferences.masterVolume;
 		player.addLoadListener(player.play.bind(player));

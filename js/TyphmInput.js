@@ -23,7 +23,6 @@ TyphmInput.prototype.initialize = function (selectItems) {
 		border: none;
 		outline: 0;
 		box-shadow: none;
-		font-size: ${preferences.fontSize}px;
 		position: absolute;
 		font-family: GameFont;
 		color: ${preferences.textColor};
@@ -34,6 +33,10 @@ TyphmInput.prototype.initialize = function (selectItems) {
 	this._value = this._input.value;
 	this._resizeEventListener = this.refresh.bind(this);
 	window.addEventListener('resize', this._resizeEventListener);
+	this._fullscreenChangeListener = this.refresh.bind(this);
+	document.addEventListener('fullscreenchange', this._fullscreenChangeListener);
+	this._switchStretchModeListener = this.refresh.bind(this);
+	Graphics.addSwitchStretchModeListener(this._switchStretchModeListener);
 	this._input.addEventListener('change', () => { this._value = this._input.value; });
 };
 
@@ -75,14 +78,17 @@ TyphmInput.prototype.setOpacity = function (opacity) {
 
 TyphmInput.prototype.destroy = function () {
 	window.removeEventListener('resize', this._resizeEventListener);
+	document.removeEventListener('fullscreenchange', this._fullscreenChangeListener);
+	Graphics.removeSwitchStretchModeListener(this._switchStretchModeListener);
 	document.body.removeChild(this._input);
 };
 
 TyphmInput.prototype.refresh = function () {
-	this._input.style.top = `${Graphics._canvas.offsetTop + this.y - this.anchor.y * this.height}px`;
-	this._input.style.left = `${Graphics._canvas.offsetLeft + this.x - this.anchor.x * this.width}px`;
-	this._input.style.width = `${this.width - 4}px`;
-	this._input.style.height = `${this.height - 4}px`;
+	this._input.style.fontSize = `${preferences.fontSize * Graphics._realScale}px`;
+	this._input.style.top = `${Graphics._canvas.offsetTop + (this.y - this.anchor.y * this.height) * Graphics._realScale}px`;
+	this._input.style.left = `${Graphics._canvas.offsetLeft + (this.x - this.anchor.x * this.width) * Graphics._realScale}px`;
+	this._input.style.width = `${this.width * Graphics._realScale - 4}px`;
+	this._input.style.height = `${this.height * Graphics._realScale - 4}px`;
 };
 
 TyphmInput.prototype.value = function () {

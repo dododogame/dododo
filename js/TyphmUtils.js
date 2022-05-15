@@ -66,6 +66,64 @@ TyphmUtils.fromRGBAToHex = function () {
 	return '#' + Array.from(arguments, x => Math.round(x * 0xff).toString(16).padStart(2, '0')).join('');
 };
 
+const oldSwitchStretchMode = Graphics._switchStretchMode;
+Graphics._switchStretchMode = function() {
+	oldSwitchStretchMode.apply(this, arguments);
+	for (let i = this._switchStretchModeListeners.length - 1; i >= 0; i--) {
+		this._switchStretchModeListeners[i](this._stretchEnabled);
+	}
+};
+
+const oldGraphicsInitialize = Graphics.initialize;
+Graphics.initialize = function (width, height, type) {
+	oldGraphicsInitialize.apply(this, arguments);
+	this._switchStretchModeListeners = [];
+};
+
+Graphics.addSwitchStretchModeListener = function (listener) {
+	this._switchStretchModeListeners.push(listener);
+};
+
+Graphics.removeSwitchStretchModeListener = function (listener) {
+	this._switchStretchModeListeners.splice(this._switchStretchModeListeners.findIndex(listener), 1);
+};
+
+const oldShouldPreventDefault = Input._shouldPreventDefault;
+Input._shouldPreventDefault = function(keyCode) {
+	if (document.activeElement instanceof HTMLInputElement)
+		return false
+	else
+		return oldShouldPreventDefault.apply(this, arguments);
+};
+
+TouchInput.preventingDefault = true;
+
+TouchInput._onTouchStart = function(event) {
+	for (var i = 0; i < event.changedTouches.length; i++) {
+		var touch = event.changedTouches[i];
+		var x = Graphics.pageToCanvasX(touch.pageX);
+		var y = Graphics.pageToCanvasY(touch.pageY);
+		if (Graphics.isInsideCanvas(x, y)) {
+			this._screenPressed = true;
+			this._pressedTime = 0;
+			if (event.touches.length >= 2) {
+				this._onCancel(x, y);
+			} else {
+				this._onTrigger(x, y);
+			}
+			TouchInput._preventDefault(event);
+		}
+	}
+	if (window.cordova || window.navigator.standalone) {
+		TouchInput._preventDefault(event);
+	}
+};
+
+TouchInput._preventDefault = function (event) {
+	if (this.preventingDefault || Graphics.pageToCanvasY(event.changedTouches[0].pageY) < preferences.textHeight)
+		event.preventDefault();
+};
+
 Array.prototype.last = function () {
 	return this[this.length - 1];
 };
