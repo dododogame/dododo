@@ -18,71 +18,73 @@ Scene_Game.prototype.start = function () {
 	this._center(this._loading, 300);
 	this._loading.bitmap.drawText('Loading...', 0, 0, 256, preferences.textHeight, 'white');
 	this.addChild(this._loading);
-
-	this._pauseButton = new Button(new Bitmap(30, 32), () => { this._pause(); });
-	this._pauseButton.y = (preferences.textHeight - 32) / 2;
-	this._pauseButton.bitmap.fillRect(6, 4, 6, 24, 'white');
-	this._pauseButton.bitmap.fillRect(18, 4, 6, 24, 'white');
-	this._pauseButton.visible = false;
-	this.addChild(this._pauseButton);
-
-	this._back = new Button(new Bitmap(192, preferences.textHeight),
-			() => { this._shouldBack = true; });
-	this._back.bitmap.drawText('Back (b)', 0, 0, 192, preferences.textHeight, 'center');
-	this._back.x = 30;
-	this.addChild(this._back);
-
-	this._restart = new Button(new Bitmap(192, preferences.textHeight),
-			() => { this._shouldRestart = true });
-	this._restart.bitmap.drawText('Restart (r)', 0, 0, 192, preferences.textHeight, 'center');
-	this._restart.x = 30+192;
-	this.addChild(this._restart);
-
-	this._title = new Sprite();
-	this._title.width = Graphics.width - (32+192+192+128);
-	this._title.height = preferences.textHeight;
-	this._title.x = 32+192+192;
-	this._title.visible = false;
-	this.addChild(this._title);
-
-	this._setButtonsVisible(false);
-
+	
 	this._paused = true;
 	this._lastPos = 0.0;
 	this._activeEnding = false;
 	this._starting = performance.now();
-
+	
 	this._line1 = new Sprite();
 	this._line1.width = 1024;
 	this._line1.anchor.y = 0.5;
 	this._center(this._line1, Graphics.height / 4);
 	this.addChild(this._line1);
-
+	
 	this._line2 = new Sprite();
 	this._line2.width = Graphics.width;
 	this._line2.anchor.y = 0.5;
 	this._center(this._line2, Graphics.height * 3/4);
 	this.addChild(this._line2);
-
+	
 	this._judgeLine = new Sprite(new Bitmap(1, 1));
 	this._judgeLine.bitmap.fillAll('white');
 	this._judgeLine.anchor.x = 0.5;
 	this._judgeLine.anchor.y = 0.5;
 	this._judgeLine.visible = false;
 	this.addChild(this._judgeLine);
-
+	
+	this._pauseButton = new Button(new Bitmap(30, 32), () => { this._pause(); });
+	this._pauseButton.y = (preferences.textHeight - 32) / 2;
+	this._pauseButton.zIndex = 10;
+	this._pauseButton.bitmap.fillRect(6, 4, 6, 24, 'white');
+	this._pauseButton.bitmap.fillRect(18, 4, 6, 24, 'white');
+	this._pauseButton.visible = false;
+	this.addChild(this._pauseButton);
+	
+	this._back = new Button(new Bitmap(192, preferences.textHeight),
+		() => { this._shouldBack = true; });
+	this._back.bitmap.drawText('Back (b)', 0, 0, 192, preferences.textHeight, 'center');
+	this._back.x = 30;
+	this._back.zIndex = 10;
+	this.addChild(this._back);
+	
+	this._restart = new Button(new Bitmap(192, preferences.textHeight),
+		() => { this._shouldRestart = true });
+	this._restart.bitmap.drawText('Restart (r)', 0, 0, 192, preferences.textHeight, 'center');
+	this._restart.x = 30+192;
+	this.addChild(this._restart);
+	
+	this._title = new Sprite();
+	this._title.width = Graphics.width - (32+192+192+128);
+	this._title.height = preferences.textHeight;
+	this._title.x = 32+192+192;
+	this._title.visible = false;
+	this.addChild(this._title);
+	
+	this._setButtonsVisible(false);
+	
 	this._scoreSprite = new Sprite(new Bitmap(128, preferences.textHeight));
 	this._scoreSprite.anchor.x = 1;
 	this._scoreSprite.x = Graphics.width;
 	this._scoreSprite.visible = false;
 	this.addChild(this._scoreSprite);
-
+	
 	this._comboSprite = new Sprite(new Bitmap(64, preferences.textHeight));
 	this._comboSprite.anchor.y = 1;
 	this._comboSprite.y = Graphics.height;
 	this._comboSprite.visible = false;
 	this.addChild(this._comboSprite);
-
+	
 	this._markSprite = new Sprite(new Bitmap(100, 200));
 	this._markSprite.anchor.x = 1;
 	this._markSprite.anchor.y = 0.5;
@@ -94,7 +96,7 @@ Scene_Game.prototype.start = function () {
 	this._summarySprite.anchor.y = 0.5;
 	this._center(this._summarySprite, Graphics.height / 2);
 	this.addChild(this._summarySprite);
-
+	
 	this._fullCombo = new Sprite(new Bitmap(60, preferences.textHeight));
 	this._fullCombo.anchor.y = 1;
 	this._fullCombo.y = Graphics.height;
@@ -102,17 +104,17 @@ Scene_Game.prototype.start = function () {
 	this._fullCombo.bitmap.drawText('FC', 0, 0, 60, preferences.textHeight, 'center');
 	this._fullCombo.visible = false;
 	this.addChild(this._fullCombo);
-
+	
 	this._inaccuracyBar = new Sprite(new Bitmap(512, 10));
 	this._inaccuracyBar.anchor.y = 0.5;
 	this._center(this._inaccuracyBar, Graphics.height - 20);
 	this._drawInaccuracyBar(TyphmConstants.DEFAULT_PERFECT, TyphmConstants.DEFAULT_GOOD, TyphmConstants.DEFAULT_BAD);
 	this._inaccuracyBar.visible = false;
 	this.addChild(this._inaccuracyBar);
-
+	
 	this._inaccuracyBitmap = new Bitmap(3, 16);
 	this._inaccuracyBitmap.fillAll('white');
-
+	
 	this._progressIndicator = new Sprite(new Bitmap(Graphics.width, 1));
 	this._progressIndicator.bitmap.fillAll('white');
 	this._progressIndicator.anchor.x = 1;
@@ -124,7 +126,7 @@ Scene_Game.prototype.start = function () {
 	this._accuracyRateSprite.x = Graphics.width;
 	this._accuracyRateSprite.y = Graphics.height;
 	this.addChild(this._accuracyRateSprite);
-
+	
 	if (preferences.autoPlay) {
 		this._autoPlayIndicator = new Sprite(new Bitmap(256, preferences.textHeight));
 		this._autoPlayIndicator.anchor.y = 0.5;
@@ -133,12 +135,12 @@ Scene_Game.prototype.start = function () {
 		this._autoPlayIndicator.visible = false;
 		this.addChild(this._autoPlayIndicator);
 	}
-
+	
 	this._beatmap = new Beatmap(this._beatmapUrl);
-
+	
 	this._hasMusic = !!this._musicUrl;
 	this._ended = false;
-
+	
 	this._perfectNumber = 0;
 	this._goodNumber = 0;
 	this._badNumber = 0;
@@ -149,10 +151,10 @@ Scene_Game.prototype.start = function () {
 	
 	this._holdings = [];
 	this._pressings = {};
-
+	
 	this._line1Index = 0;
 	this._line2Index = 1;
-
+	
 	this._keydownEventListener = this._onKeydown.bind(this);
 	document.addEventListener('keydown', this._keydownEventListener);
 	this._blurEventListener = this._onBlur.bind(this);
@@ -163,12 +165,12 @@ Scene_Game.prototype.start = function () {
 	document.addEventListener('touchend', this._touchEndEventListener);
 	this._keyupEventListener = this._onKeyup.bind(this);
 	document.addEventListener('keyup', this._keyupEventListener);
-
+	
 	this._resumingCountdown = null;
-
+	
 	this._loadingFinished = false;
 	this._onLoad();
-
+	
 	this._shouldRestart = false;
 	this._shouldBack = false;
 };
@@ -200,6 +202,7 @@ Scene_Game.prototype.update = function () {
 		this._judgeLine.y = this._line1.y - line.space_yFormula(lengthPosition);
 		this._judgeLine.scale.x = line.widthFormula(lengthPosition);
 		this._judgeLine.scale.y = line.heightFormula(lengthPosition);
+		this._judgeLine.bitmap.clear();
 		this._judgeLine.bitmap.fillAll(TyphmUtils.fromRGBAToHex(line.redFormula(lengthPosition), line.greenFormula(lengthPosition), line.blueFormula(lengthPosition), line.alphaFormula(lengthPosition)));
 		if (preferences.autoPlay || preferences.hitSoundWithMusic) {
 			while (true) {

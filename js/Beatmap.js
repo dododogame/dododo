@@ -44,19 +44,27 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 	this.events = [];
 	for (let lineno = 0, voices = []; lineno < data.length; lineno++) {
 		let line = data[lineno];
-		if (TyphmUtils.isCapitalized(line)) { // control sequence
+		if (line[0] === '#') { // comments
+		} else if (TyphmUtils.isCapitalized(line)) { // control sequence
 			let [name, ...parameters] = line.split(' ');
-			this.events.push({"event": name.toLowerCase(), "parameters": parameters});
+			let i = 0;
+			for (; i < parameters.length && parameters[i][0] !== '#'; i++);
+			this.events.push({"event": name.toLowerCase(), "parameters": parameters.slice(0, i)});
 		} else if (line === '') { // new line
 			this.events.push({"event": "line", "voices": voices});
 			voices = [];
 		} else { // voice
 			voices.push([]);
+			let stackLevel = 0;
 			let position = 0;
 			while (position < line.length) {
+				if (line[position] === '#') {
+					break;
+				}
 				if (line[position] === '(') { // group start
 					voices.push([]); // use voices as a stack... will pop!
 					position++;
+					stackLevel++;
 					continue;
 				}
 				if (line[position] === '|') { // barline
@@ -112,7 +120,11 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 				voices.last().push(noteEvent);
 				
 				while (line[position] === ')') { // group end
-					position++
+					position++;
+					stackLevel--;
+					if (stackLevel < 0) {
+						throw new BeatmapError(lineno + dataLineno, position + 1, 'excess right parentheses');
+					}
 					const group = voices.pop();
 					const groupEvent = {"event": "group", "notes": group};
 					if (TyphmUtils.isDigit(line[position])) {
@@ -135,6 +147,9 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 					}
 					voices.last().push(groupEvent);
 				}
+			}
+			if (stackLevel > 0) {
+				throw new BeatmapError(lineno + dataLineno, position + 1, 'missed right parentheses');
 			}
 		}
 	}
