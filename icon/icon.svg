@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" version="1.1" viewBox="0 0 67.733332 67.733335" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:osb="http://www.openswatchbook.org/uri/2009/osb" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<defs>
+<clipPath id="c">
+<path d="m-2.1167 65.617a63.5 31.75 0 0 1 -54.993 -15.875 63.5 31.75 0 0 1 -1e-6 -31.75 63.5 31.75 0 0 1 54.993 -15.875v31.75z" fill="none" stroke="#000" stroke-width=".269"/>
+</clipPath>
+<clipPath id="b">
+<circle cx="49.742" cy="33.867" r="15.875" fill="none" stroke="#000" stroke-width="10.583"/>
+</clipPath>
+<clipPath id="a">
+<path d="m-2.1167 39.158a15.875 15.875 0 0 1 -13.748 -7.9375 15.875 15.875 0 0 1 0 -15.875 15.875 15.875 0 0 1 13.748 -7.9375v15.875z" fill="none" stroke="#000" stroke-width="10.583"/>
+</clipPath>
+<clipPath id="d">
+<path d="m36.391 9.7969a15.875 15.875 0 0 1 15.875 15.875 15.875 15.875 0 0 1 -15.875 15.875v-15.875z" fill="none" stroke="#000" stroke-width="10.583"/>
+</clipPath>
+</defs>
+<metadata>
+<rdf:RDF>
+<cc:Work rdf:about="">
+<dc:format>image/svg+xml</dc:format>
+<dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+<dc:title/>
+</cc:Work>
+</rdf:RDF>
+</metadata>
+<g fill="none" stroke="#000">
+<path transform="scale(-1,1)" d="m-2.1167 65.617a63.5 31.75 0 0 1 -54.993 -15.875 63.5 31.75 0 0 1 -1e-6 -31.75 63.5 31.75 0 0 1 54.993 -15.875v31.75z" clip-path="url(#c)" stroke-width="10.583"/>
+<circle cx="49.742" cy="33.867" r="15.875" clip-path="url(#b)" stroke-width="10.583"/>
+<path transform="matrix(-1 0 0 1 0 26.458)" d="m-2.1167 39.158a15.875 15.875 0 0 1 -13.748 -7.9375 15.875 15.875 0 0 1 0 -15.875 15.875 15.875 0 0 1 13.748 -7.9375v15.875z" clip-path="url(#a)" stroke-width="10.583"/>
+<path d="m2.1167 2.1167-2e-7 63.5" stroke-width=".26458px"/>
+<path transform="translate(-34.275 -7.6803)" d="m36.391 9.7969a15.875 15.875 0 0 1 15.875 15.875 15.875 15.875 0 0 1 -15.875 15.875v-15.875z" clip-path="url(#d)" stroke-width="10.583"/>
+</g>
+</svg>
