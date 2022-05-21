@@ -4,6 +4,8 @@ A rhythm game with musical rhythm notations!
 
 Get access to the game through [the webpage](https://ulysseszh.github.io/rpg/dododo/).
 
+Join our [Discord server](https://discord.gg/thg7yD2b).
+
 ## How to play
 
 There are 3 ways in which you can start playing,
