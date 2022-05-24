@@ -4,26 +4,24 @@ function Scene_Preferences() {
 
 Scene_Preferences.PREFERENCES_PAGES = [
 	{
-		title: 'Gameplay',
+		category: 'gameplay',
 		list: [
 			{
 				name: 'offset',
-				text: 'Offset (in ms)',
 				type: 'number',
-				args: {
-				}
+				args: {}
 			},
 			{
 				name: 'offsetWizard',
-				text: 'Offset Wizard',
 				type: 'button',
 				args: {
-					onclick: () => { scene._shouldGotoOffsetWizard = true; }
+					onclick: () => {
+						scene._shouldGotoOffsetWizard = true;
+					}
 				}
 			},
 			{
 				name: 'playRate',
-				text: 'Play rate (speed of music)',
 				type: 'number',
 				args: {
 					min: 0,
@@ -32,68 +30,51 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'autoPlay',
-				text: 'Auto-play',
 				type: 'boolean',
-				args: {
-				}
+				args: {}
 			},
 			{
 				name: 'countdown',
-				text: 'Show countdown before resuming',
 				type: 'boolean',
-				args: {
-				}
+				args: {}
 			},
 			{
 				name: 'FCAPIndicator',
-				text: 'Full combo / all perfect indicator',
 				type: 'boolean',
-				args: {
-				}
+				args: {}
 			},
 			{
 				name: 'autoRestartGood',
-				text: 'Automatically restart when failing to AP',
 				type: 'boolean',
-				args: {
-				}
+				args: {}
 			},
 			{
 				name: 'autoRestartMiss',
-				text: 'Automatically restart when failing to FC',
 				type: 'boolean',
-				args: {
-				}
+				args: {}
 			},
 			{
 				name: 'F7Pause',
-				text: 'Press F7 to pause',
 				type: 'boolean',
-				args: {
-				}
+				args: {}
 			},
 			{
 				name: 'backtickRestart',
-				text: 'Press backtick to restart',
 				type: 'boolean',
-				args: {
-				}
+				args: {}
 			},
 			{
 				name: 'autoPause',
-				text: 'Automatically pause when losing focus',
 				type: 'boolean',
-				args: {
-				}
+				args: {}
 			}
 		]
 	},
 	{
-		title: 'Geometry',
+		category: 'geometry',
 		list: [
 			{
 				name: 'fontSize',
-				text: 'Font size',
 				type: 'number',
 				args: {
 					min: 1
@@ -101,7 +82,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'textHeight',
-				text: 'Height of text lines',
 				type: 'number',
 				args: {
 					min: 1
@@ -109,7 +89,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'margin',
-				text: 'Margins',
 				type: 'number',
 				args: {
 					min: 0
@@ -117,7 +96,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'voicesHeight',
-				text: 'Height of voices',
 				type: 'number',
 				args: {
 					min: 0
@@ -125,7 +103,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'stemsLength',
-				text: 'Lengths of note stems',
 				type: 'number',
 				args: {
 					min: 0
@@ -133,7 +110,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'headsRadius',
-				text: 'Radius of note heads',
 				type: 'number',
 				args: {
 					min: 0
@@ -141,7 +117,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'holdWidth',
-				text: 'Thickness of hold notes\' tails (hold bar)',
 				type: 'number',
 				args: {
 					min: 0
@@ -149,7 +124,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'beamsWidth',
-				text: 'Thickness of note beams',
 				type: 'number',
 				args: {
 					min: 0,
@@ -157,7 +131,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'beamsSpacing',
-				text: 'Spacing between note beams',
 				type: 'number',
 				args: {
 					min: 0
@@ -165,7 +138,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'unconnectedBeamsLength',
-				text: 'Length of unconnected note beams',
 				type: 'number',
 				args: {
 					min: 0
@@ -173,7 +145,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'barlinesHeight',
-				text: 'Height of barlines',
 				type: 'number',
 				args: {
 					min: 0
@@ -182,67 +153,58 @@ Scene_Preferences.PREFERENCES_PAGES = [
 		]
 	},
 	{
-		title: 'Colors',
+		category: 'colors',
 		list: [
 			{
 				name: 'notesColor',
-				text: 'Color of notes',
 				type: 'color',
 				args: {
 				}
 			},
 			{
 				name: 'auxiliariesColor',
-				text: 'Color of auxiliaries (barlines etc)',
 				type: 'color',
 				args: {
 				}
 			},
 			{
 				name: 'perfectColor',
-				text: 'Color of perfect hits',
 				type: 'color',
 				args: {
 				}
 			},
 			{
 				name: 'goodColor',
-				text: 'Color of good hits',
 				type: 'color',
 				args: {
 				}
 			},
 			{
 				name: 'badColor',
-				text: 'Color of bad hits',
 				type: 'color',
 				args: {
 				}
 			},
 			{
 				name: 'missColor',
-				text: 'Color of missed hits',
 				type: 'color',
 				args: {
 				}
 			},
 			{
 				name: 'excessColor',
-				text: 'Color of excess hits',
 				type: 'color',
 				args: {
 				}
 			},
 			{
 				name: 'textColor',
-				text: 'Color of foreground (texts etc)',
 				type: 'color',
 				args: {
 				}
 			},
 			{
 				name: 'backgroundColor',
-				text: 'Color of background',
 				type: 'color',
 				args: {
 				}
@@ -250,11 +212,10 @@ Scene_Preferences.PREFERENCES_PAGES = [
 		]
 	},
 	{
-		title: 'Graphics',
+		category: 'graphics',
 		list: [
 			{
 				name: 'graphicsWidth',
-				text: 'Resolution (width)',
 				type: 'number',
 				args: {
 					min: 1,
@@ -263,7 +224,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'graphicsHeight',
-				text: 'Resolution (height)',
 				type: 'number',
 				args: {
 					min: 1,
@@ -272,7 +232,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'showFPS',
-				text: 'Switch view of FPS (F2)',
 				type: 'button',
 				args: {
 					onclick: () => { Graphics._switchFPSMeter(); }
@@ -280,7 +239,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'stretchGraphics',
-				text: 'Stretch to fit the window (F3)',
 				type: 'button',
 				args: {
 					onclick: () => { Graphics._switchStretchMode(); }
@@ -288,7 +246,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'fullscreen',
-				text: 'Toggle fullscreen (F4, F11)',
 				type: 'button',
 				args: {
 					onclick: () => { Graphics._switchFullScreen(); }
@@ -297,45 +254,43 @@ Scene_Preferences.PREFERENCES_PAGES = [
 		]
 	},
 	{
-		title: 'Audio',
+		category: 'audio',
 		list: [
 			{
 				name: 'enableHitSound',
-				text: 'Enable hit sound',
 				type: 'boolean',
 				args: {
 				}
 			},
 			{
 				name: 'hitSound',
-				text: 'Hit sound',
 				type: 'select',
 				args: {
 					selectItems: [
-						['agogo_bells.ogg', 'Agogo bells'],
-						['bass_drum.ogg', 'Bass drum'],
-						['bell_tree.ogg', 'Bell tree'],
-						['cabasa.ogg', 'Cabasa'],
-						['castanets.ogg', 'Castanets'],
-						['chinese_cymbal.ogg', 'Chinese cymbal'],
-						['chinese_hand_cymbals_1.ogg', 'Chinese hand cymbals 1'],
-						['chinese_hand_cymbals_2.ogg', 'Chinese hand cymbals 2'],
-						['clash_cymbals.ogg', 'Clash cymbals'],
-						['cowbell_1.ogg', 'Cowbell 1'],
-						['cowbell_2.ogg', 'Cowbell 2'],
-						['djembe.ogg', 'Djembe'],
-						['djundjun.ogg', 'Djundjun'],
-						['sheeps_toenails.ogg', 'Sheep\'s toenails'],
-						['sleigh_bells.ogg', 'Sleigh bells'],
-						['snare_drum_1.ogg', 'Snare drum 1'],
-						['snare_drum_2.ogg', 'Snare drum 2'],
-						['spring_coil.ogg', 'Spring coil'],
-						['surdo_1.ogg', 'Surdo 1'],
-						['surdo_2.ogg', 'Surdo 2'],
-						['tambourine_1.ogg', 'Tambourine 1'],
-						['tambourine_2.ogg', 'Tambourine 2'],
-						['whip.ogg', 'Whip'],
-						['woodblock.ogg', 'Woodblock']
+						['agogo_bells.ogg', 'agogoBells'],
+						['bass_drum.ogg', 'bassDrum'],
+						['bell_tree.ogg', 'bellTree'],
+						['cabasa.ogg', 'cabasa'],
+						['castanets.ogg', 'castanets'],
+						['chinese_cymbal.ogg', 'chineseCymbal'],
+						['chinese_hand_cymbals_1.ogg', 'chineseHandCymbals1'],
+						['chinese_hand_cymbals_2.ogg', 'chineseHandCymbals2'],
+						['clash_cymbals.ogg', 'clashCymbals'],
+						['cowbell_1.ogg', 'cowbell1'],
+						['cowbell_2.ogg', 'cowbell2'],
+						['djembe.ogg', 'djembe'],
+						['djundjun.ogg', 'djundjun'],
+						['sheeps_toenails.ogg', 'sheepsToenails'],
+						['sleigh_bells.ogg', 'sleighBells'],
+						['snare_drum_1.ogg', 'snareDrum1'],
+						['snare_drum_2.ogg', 'snareDrum2'],
+						['spring_coil.ogg', 'springCoil'],
+						['surdo_1.ogg', 'surdo1'],
+						['surdo_2.ogg', 'surdo2'],
+						['tambourine_1.ogg', 'tambourine1'],
+						['tambourine_2.ogg', 'tambourine2'],
+						['whip.ogg', 'whip'],
+						['woodblock.ogg', 'woodblock']
 					],
 					oninput: event => {
 						const player = new WebAudio('/assets/audios/hit_sounds/' + event.target.value);
@@ -346,14 +301,12 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'hitSoundWithMusic',
-				text: 'Hit sound with music instead of input',
 				type: 'boolean',
 				args: {
 				}
 			},
 			{
 				name: 'musicVolume',
-				text: 'Volume of music',
 				type: 'number',
 				args: {
 					min: 0,
@@ -362,7 +315,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'hitSoundVolume',
-				text: 'Volume of hit sound',
 				type: 'number',
 				args: {
 					min: 0,
@@ -371,7 +323,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'masterVolume',
-				text: 'Master volume',
 				type: 'number',
 				args: {
 					min: 0,
@@ -381,26 +332,30 @@ Scene_Preferences.PREFERENCES_PAGES = [
 		]
 	},
 	{
-		title: 'System',
+		category: 'system',
 		list: [
 			{
+				name: 'language',
+				type: 'select',
+				args: {
+					selectItems: Object.entries(Strings.LANGUAGES)
+				}
+			},
+			{
 				name: 'save',
-				text: 'Save preferences in the web storage',
 				type: 'boolean',
 				args: {
 				}
 			},
 			{
 				name: 'reset',
-				text: 'Reset all preferences to default',
 				type: 'button',
 				args: {
-					onclick: () => { if (confirm('Reset all preferences to default?')) scene._resetAll(); }
+					onclick: () => { if (confirm(Strings.confirmReset)) scene._resetAll(); }
 				}
 			},
 			{
 				name: 'export',
-				text: 'Export preferences as JSON file',
 				type: 'button',
 				args: {
 					onclick: () => { scene._exportJSON(); }
@@ -408,7 +363,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'import',
-				text: 'Import JSON file as preferences',
 				type: 'file',
 				args: {
 					accept: 'application/json',
@@ -417,7 +371,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'github',
-				text: 'Go to the GitHub repo of Dododo',
 				type: 'button',
 				args: {
 					onclick: () => { open('https://github.com/UlyssesZh/dododo'); }
@@ -466,6 +419,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	musicVolume: 1.0,
 	hitSoundVolume: 2.0,
 	masterVolume: 1.0,
+	language: navigator.languages.find(lang => Strings[lang]) || 'en-US',
 	save: false
 };
 
@@ -484,7 +438,7 @@ Scene_Preferences.prototype._switchPage = function (pageIndex) {
 	this._currentPage = pageIndex;
 	const page = Scene_Preferences.PREFERENCES_PAGES[this._currentPage];
 	this._titleSprite.bitmap.clear();
-	this._titleSprite.bitmap.drawText(page.title, 0, 0, this._titleSprite.bitmap.width, preferences.textHeight, 'center');
+	this._titleSprite.bitmap.drawText(Strings[page.category], 0, 0, this._titleSprite.bitmap.width, preferences.textHeight, 'center');
 	if (this._pagesCached[this._currentPage]) {
 		for (let i = 0; i < page.list.length; i++) {
 			const name = page.list[i].name;
@@ -493,15 +447,18 @@ Scene_Preferences.prototype._switchPage = function (pageIndex) {
 		}
 	} else {
 		for (let i = 0; i < page.list.length; i++) {
-			const {name, text, type, args} = page.list[i];
+			const {name, type, args} = page.list[i];
 			const sprite = this._textSprites[name] = new Sprite(
 				new Bitmap(Graphics.width - 2 * TyphmConstants.PREFERENCES_MARGIN, preferences.textHeight));
 			sprite.x = TyphmConstants.PREFERENCES_MARGIN;
 			sprite.y = preferences.textHeight * (i+1);
-			sprite.bitmap.drawText(`${text} (${String.fromCharCode(97+i)})`,
+			sprite.bitmap.drawText(`${Strings[name]} (${String.fromCharCode(97+i)})`,
 					0, 0, sprite.bitmap.width, preferences.textHeight, 'left');
 			this.addChild(sprite);
-			const input = this._inputs[name] = new TyphmInput(args.selectItems);
+			let selectItems = args.selectItems;
+			if (selectItems && name !== 'language')
+				selectItems = selectItems.map(([a, b]) => [a, Strings[b]]);
+			const input = this._inputs[name] = new TyphmInput(selectItems);
 			if (type === 'number') {
 				input.setType('number');
 				input.width = 128;
@@ -579,14 +536,14 @@ Scene_Preferences.prototype.start = function () {
 	
 	this._ok = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldOk = true; });
-	this._ok.bitmap.drawText('OK (\\n)', 0, 0,
+	this._ok.bitmap.drawText(`${Strings.ok} (Enter)`, 0, 0,
 			256, preferences.textHeight, 'center');
 	this.addChild(this._ok);
 	this._center(this._ok, Graphics.height - preferences.textHeight * 2);
 	
 	this._back = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldBack = true; });
-	this._back.bitmap.drawText('Back (Esc)', 0, 0,
+	this._back.bitmap.drawText(`${Strings.back} (Escape)`, 0, 0,
 			256, preferences.textHeight, 'center');
 	this.addChild(this._back);
 	this._center(this._back, Graphics.height - preferences.textHeight);
@@ -718,7 +675,7 @@ Scene_Preferences.prototype._importJSON = function (file) {
 			Object.assign(preferences, JSON.parse(text));
 			this._loadPreferences();
 		}, reason => {
-			alert(`Failed to import due to ${reason}.`);
+			alert(sprintf(Strings.importFailure, reason));
 		});
 	}
 };

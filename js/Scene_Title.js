@@ -13,34 +13,34 @@ Scene_Title.prototype.start = function () {
 	this._title = new Sprite(new Bitmap(150, 60));
 	this._center(this._title, 200);
 	this._title.bitmap.fontSize = preferences.fontSize*2;
-	this._title.bitmap.drawText('Dododo', 0, 0, 150, preferences.textHeight*2, 'center');
+	this._title.bitmap.drawText(Strings.gameTitle, 0, 0, 150, preferences.textHeight*2, 'center');
 	this.addChild(this._title);
 
 	this._files = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldGotoFiles = true; });
 	this._center(this._files, 400);
-	this._files.bitmap.drawText('Browse files (f)', 0, 0, 256,
+	this._files.bitmap.drawText(`${Strings.browseFiles} (f)`, 0, 0, 256,
 			preferences.textHeight, 'center');
 	this.addChild(this._files);
 
 	this._store = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldGotoStore = true; });
 	this._center(this._store, 400+preferences.textHeight);
-	this._store.bitmap.drawText('Browse store (s)', 0, 0, 256,
+	this._store.bitmap.drawText(`${Strings.browseStore} (s)`, 0, 0, 256,
 			preferences.textHeight, 'center');
 	this.addChild(this._store);
 
 	this._history = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldGotoHistory = true; });
 	this._center(this._history, 400+preferences.textHeight*2);
-	this._history.bitmap.drawText('Browse history (h)', 0, 0, 256,
+	this._history.bitmap.drawText(`${Strings.browseHistory} (h)`, 0, 0, 256,
 			preferences.textHeight, 'center');
 	this.addChild(this._history);
 
 	this._preferences = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldGotoPreferences = true; });
 	this._center(this._preferences, 400+preferences.textHeight*4);
-	this._preferences.bitmap.drawText('Preferences (p)', 0, 0, 256,
+	this._preferences.bitmap.drawText(`${Strings.preferences} (p)`, 0, 0, 256,
 			preferences.textHeight, 'center')
 	this.addChild(this._preferences)
 

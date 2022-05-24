@@ -25,7 +25,7 @@ Beatmap.prototype.load = async function () {
 	this.audioUrl = head.audioUrl;
 	this.musicAuthor = head.musicAuthor || '';
 	this.beatmapAuthor = head.beatmapAuthor || '';
-	this.difficulty = head.difficulty || 'unknown';
+	this.difficulty = head.difficulty || Strings.defaultDifficulty;
 	this.title = this.title.trim();
 	if (this.audioUrl)
 		this.audioUrl = this.audioUrl.trim();

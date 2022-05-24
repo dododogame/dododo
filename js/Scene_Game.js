@@ -16,7 +16,7 @@ Scene_Game.prototype.start = function () {
 
 	this._loading = new Sprite(new Bitmap(256, preferences.textHeight));
 	this._center(this._loading, 300);
-	this._loading.bitmap.drawText('Loading...', 0, 0, 256, preferences.textHeight, 'white');
+	this._loading.bitmap.drawText(Strings.loading, 0, 0, 256, preferences.textHeight, 'white');
 	this.addChild(this._loading);
 	
 	this._paused = true;
@@ -53,14 +53,14 @@ Scene_Game.prototype.start = function () {
 	
 	this._back = new Button(new Bitmap(192, preferences.textHeight),
 		() => { this._shouldBack = true; });
-	this._back.bitmap.drawText('Back (b)', 0, 0, 192, preferences.textHeight, 'center');
+	this._back.bitmap.drawText(`${Strings.quitGame} (b)`, 0, 0, 192, preferences.textHeight, 'center');
 	this._back.x = 30;
 	this._back.zIndex = 10;
 	this.addChild(this._back);
 	
 	this._restart = new Button(new Bitmap(192, preferences.textHeight),
 		() => { this._shouldRestart = true });
-	this._restart.bitmap.drawText('Restart (r)', 0, 0, 192, preferences.textHeight, 'center');
+	this._restart.bitmap.drawText(`${Strings.restartGame} (r)`, 0, 0, 192, preferences.textHeight, 'center');
 	this._restart.x = 30+192;
 	this.addChild(this._restart);
 	
@@ -101,7 +101,7 @@ Scene_Game.prototype.start = function () {
 	this._fullCombo.anchor.y = 1;
 	this._fullCombo.y = Graphics.height;
 	this._fullCombo.x = 80;
-	this._fullCombo.bitmap.drawText('FC', 0, 0, 60, preferences.textHeight, 'center');
+	this._fullCombo.bitmap.drawText(Strings.fullCombo, 0, 0, 60, preferences.textHeight, 'center');
 	this._fullCombo.visible = false;
 	this.addChild(this._fullCombo);
 	
@@ -131,7 +131,7 @@ Scene_Game.prototype.start = function () {
 		this._autoPlayIndicator = new Sprite(new Bitmap(256, preferences.textHeight));
 		this._autoPlayIndicator.anchor.y = 0.5;
 		this._autoPlayIndicator.y = Graphics.height / 2;
-		this._autoPlayIndicator.bitmap.drawText('Auto-playing', 0, 0, 256, preferences.textHeight, 'left');
+		this._autoPlayIndicator.bitmap.drawText(Strings.autoPlaying, 0, 0, 256, preferences.textHeight, 'left');
 		this._autoPlayIndicator.visible = false;
 		this.addChild(this._autoPlayIndicator);
 	}
@@ -615,7 +615,7 @@ Scene_Game.prototype._updateScore = function () {
 	this._accuracyRateSprite.bitmap.clear();
 	this._accuracyRate = (this._perfectNumber + this._goodNumber/4 - this._excessNumber)/(this._perfectNumber + this._goodNumber + this._badNumber + this._missNumber);
 	this._accuracyRateSprite.bitmap.textColor = this._getScoreColor();
-	this._accuracyRateSprite.bitmap.drawText((Math.floor(this._accuracyRate*10000)/100).toFixed(2) + '% ' + this._getMark(),
+	this._accuracyRateSprite.bitmap.drawText(sprintf('%.2f%% %s', this._accuracyRate*100, this._getMark()),
 		0, 0, this._accuracyRateSprite.width, preferences.textHeight, 'right');
 };
 
@@ -772,17 +772,17 @@ Scene_Game.prototype._finish = function () {
 	this._markSprite.bitmap.textColor = this._getScoreColor();
 	this._markSprite.bitmap.drawText(this._getMark(), 0, 0, this._markSprite.width, this._markSprite.height, 'right');
 	this._summarySprite.bitmap.textColor = preferences.perfectColor;
-	this._summarySprite.bitmap.drawText(`Perfect: ${this._perfectNumber}`, 0, 0, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.perfect}: ${this._perfectNumber}`, 0, 0, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = preferences.goodColor;
-	this._summarySprite.bitmap.drawText(`Good: ${this._goodNumber}`, 0, preferences.textHeight, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.good}: ${this._goodNumber}`, 0, preferences.textHeight, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = preferences.badColor;
-	this._summarySprite.bitmap.drawText(`Bad: ${this._badNumber}`, 0, preferences.textHeight*2, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.bad}: ${this._badNumber}`, 0, preferences.textHeight*2, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = preferences.missColor;
-	this._summarySprite.bitmap.drawText(`Miss: ${this._missNumber}`, 0, preferences.textHeight*3, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.miss}: ${this._missNumber}`, 0, preferences.textHeight*3, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = preferences.excessColor;
-	this._summarySprite.bitmap.drawText(`Excess: ${this._excessNumber}`, 0, preferences.textHeight*4, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.excess}: ${this._excessNumber}`, 0, preferences.textHeight*4, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = 'white';
-	this._summarySprite.bitmap.drawText(`Max combo: ${this._maxCombo}`, 0, preferences.textHeight*5, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.maxCombo}: ${this._maxCombo}`, 0, preferences.textHeight*5, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	if (this._combo === this._beatmap.notes.length)
 		this._fullCombo.visible = true;
 	this._judgeLine.visible = false;
@@ -795,21 +795,21 @@ Scene_Game.prototype._finish = function () {
 
 Scene_Game.prototype._getMark = function () {
 	if (this._accuracyRate >= 1) {
-		return 'P';
+		return Strings.markP;
 	} else if (this._accuracyRate >= 0.95) {
-		return 'S';
+		return Strings.markS;
 	} else if (this._accuracyRate >= 0.9) {
-		return 'A';
+		return Strings.markA;
 	} else if (this._accuracyRate >= 0.8) {
-		return 'B';
+		return Strings.markB;
 	} else if (this._accuracyRate >= 0.7) {
-		return 'C';
+		return Strings.markC;
 	} else if (this._accuracyRate >= 0.6) {
-		return 'D';
+		return Strings.markD;
 	} else if (this._accuracyRate >= 0.5) {
-		return 'E';
+		return Strings.markE;
 	} else {
-		return 'F';
+		return Strings.markF;
 	}
 }
 
