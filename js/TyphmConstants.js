@@ -10,3 +10,4 @@ TyphmConstants.DEFAULT_BAD = 0.06;
 TyphmConstants.DEFAULT_BPM = 120.0;
 TyphmConstants.DEFAULT_BEAT_NOTE = 2;
 TyphmConstants.HIT_SOUND_ADVANCE = 100;
+TyphmConstants.HITTABLE_KEYS = '`1234567890\\qwertyuiop[]asdfghjkl;\'zxcvbnm,./QWERTYUIOPASDFGHJKLZXCVBNM';

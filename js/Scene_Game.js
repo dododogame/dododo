@@ -150,6 +150,15 @@ Scene_Game.prototype.start = function () {
 		this._createFlashBitmap('excess');
 	}
 	
+	if (preferences.TPSIndicator) {
+		this._TPSIndicator = new Sprite(new Bitmap(256, preferences.textHeight));
+		this._TPSIndicator.anchor.x = 1;
+		this._TPSIndicator.x = Graphics.width;
+		this._TPSIndicator.y = preferences.textHeight;
+		this._TPSIndicator.visible = false;
+		this.addChild(this._TPSIndicator);
+	}
+	
 	this._beatmap = new Beatmap(this._beatmapUrl);
 	
 	this._hasMusic = !!this._musicUrl;
@@ -165,6 +174,7 @@ Scene_Game.prototype.start = function () {
 	
 	this._holdings = [];
 	this._pressings = {};
+	this._hitsLastSecond = [];
 	
 	this._line1Index = 0;
 	this._line2Index = 1;
@@ -235,10 +245,19 @@ Scene_Game.prototype.update = function () {
 			this._judgeLine.scale.x = line.widthFormula(lengthPosition);
 			this._judgeLine.scale.y = line.heightFormula(lengthPosition);
 			this._judgeLine.bitmap.clear();
-			this._judgeLine.bitmap.fillAll(TyphmUtils.fromRGBAToHex(line.redFormula(lengthPosition), line.greenFormula(lengthPosition), line.blueFormula(lengthPosition), line.alphaFormula(lengthPosition)));
+			this._judgeLine.bitmap.fillAll(TyphmUtils.fromRGBAToHex(
+				line.redFormula(lengthPosition), line.greenFormula(lengthPosition),
+				line.blueFormula(lengthPosition), line.alphaFormula(lengthPosition)));
 		} else {
 			this._judgeLine.y = this._line1.y;
 			this._judgeLine.scale.y = line.voicesNumber * preferences.voicesHeight;
+		}
+		if (preferences.TPSIndicator) {
+			while ((now - this._hitsLastSecond[0]) / preferences.playRate > 1000)
+				this._hitsLastSecond.shift();
+			this._TPSIndicator.bitmap.clear();
+			this._TPSIndicator.bitmap.drawText(`${this._hitsLastSecond.length} TPS`, 0, 0,
+				this._TPSIndicator.width, preferences.textHeight, 'right');
 		}
 		if (this._hitSoundEnabled() && (preferences.autoPlay || preferences.hitSoundWithMusic)) {
 			while (true) {
@@ -258,6 +277,8 @@ Scene_Game.prototype.update = function () {
 			if (event && now >= event.time) {
 				if (preferences.autoPlay && now <= event.time + this._perfectTolerance) {
 					this._createHitEffect(event, 'perfect');
+					if (preferences.TPSIndicator)
+						this._hitsLastSecond.push(now);
 					this._unclearedEvents.splice(0, 1);
 					if (event.hold) {
 						this._holdings.push([event, 'perfect']);
@@ -447,6 +468,8 @@ Scene_Game.prototype._postLoadingAudio = function () {
 	this._title.visible = true;
 	if (preferences.autoPlay)
 		this._autoPlayIndicator.visible = true;
+	if (preferences.TPSIndicator)
+		this._TPSIndicator.visible = true;
 	this._line1.bitmap = this._beatmap.lines[this._line1Index];
 	this._line2.bitmap = this._beatmap.lines[this._line2Index];
 	this._loadingFinished = true;
@@ -503,7 +526,7 @@ Scene_Game.prototype.actualResume = function () {
 Scene_Game.prototype._onKeydown = function (event) {
 	if (event.key === 'Escape' || event.key === 'F7' && preferences.F7Pause) {
 		this._pause();
-	} else if (!event.ctrlKey && !event.altKey && !event.metaKey && '`1234567890\\qwertyuiop[]asdfghjkl;\'zxcvbnm,./'.includes(event.key)) {
+	} else if (!event.ctrlKey && !event.altKey && !event.metaKey && TyphmConstants.HITTABLE_KEYS.includes(event.key)) {
 		if (this._pressings[event.key])
 			return;
 		this._pressings[event.key] = true;
@@ -574,6 +597,8 @@ Scene_Game.prototype._playHitSound = function () {
 
 Scene_Game.prototype._processHit = function () {
 	const now = this._now();
+	if (preferences.TPSIndicator)
+		this._hitsLastSecond.push(now);
 	if (!this._ended) {
 		const event = this._unclearedEvents[0];
 		if (event && now >= event.time - this._badTolerance) {
@@ -649,10 +674,18 @@ Scene_Game.prototype._processLoosen = function () {
 			if (preferences.autoRestartGood || preferences.autoRestartMiss)
 				this._shouldRestart = true;
 			if (preferences.flashWarningMiss)
-				this._flashWarn('miss')
-			this._updateScore();
-			this._updateCombo();
+				this._flashWarn('miss');
+		} else if (judge === 'perfect') {
+			this._beatmap.clearNote(event, 'perfect');
+			this._perfectNumber++;
+			this._combo++;
+		} else if (judge === 'good') {
+			this._beatmap.clearNote(event, 'good');
+			this._goodNumber++;
+			this._combo++;
 		}
+		this._updateScore();
+		this._updateCombo();
 	}
 };
 
@@ -739,7 +772,7 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 	if (preferences.showInaccuracyData) {
 		this._inaccuracyDataSprite.bitmap.clear();
 		this._inaccuracyDataSprite.bitmap.textColor = preferences[this._getJudgeFromInaccuracy(inaccuracy) + 'Color'];
-		this._inaccuracyDataSprite.bitmap.drawText(sprintf('%+dms', inaccuracy), 0, 0,
+		this._inaccuracyDataSprite.bitmap.drawText(sprintf('%+.0fms', inaccuracy), 0, 0,
 			this._inaccuracyDataSprite.width, preferences.textHeight, 'center');
 	}
 };
@@ -849,6 +882,8 @@ Scene_Game.prototype._finish = function () {
 	this._judgeLine.visible = false;
 	this._line1.visible = false;
 	this._line2.visible = false;
+	if (preferences.TPSIndicator)
+		this._TPSIndicator.visible = false;
 	if (this._inaccuraciesArray && this._inaccuraciesArray.length > 0)
 		preferences.offset -= this._inaccuraciesArray.reduce((a, b) => a + b) / this._inaccuraciesArray.length;
 	this._setButtonsVisible(true);
