@@ -83,6 +83,7 @@ Strings["en-US"] = {
 	"beamsSpacing": "Spacing between note beams",
 	"unconnectedBeamsLength": "Length of unconnected note beams",
 	"barlinesHeight": "Height of barlines",
+	"hitEffectRadius": "Radius of hit effects",
 	
 	// preferences: colors
 	"colors": "Colors",
@@ -226,6 +227,7 @@ Strings["zh-CN"] = {
 	"beamsSpacing": "符杠的间距",
 	"unconnectedBeamsLength": "孤符杠的长度",
 	"barlinesHeight": "小节线的长度",
+	"hitEffectRadius": "打击效果的半径",
 	
 	// preferences: colors
 	"colors": "颜色",
@@ -369,6 +371,7 @@ Strings["zh-TW"] = {
 	"beamsSpacing": "符槓的間距",
 	"unconnectedBeamsLength": "孤符槓的長度",
 	"barlinesHeight": "小節線的長度",
+	"hitEffectRadius": "打擊效果的半徑",
 	
 	// preferences: colors
 	"colors": "顏色",

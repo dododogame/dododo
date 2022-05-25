@@ -149,6 +149,13 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {
 					min: 0
 				}
+			},
+			{
+				name: 'hitEffectRadius',
+				type: 'number',
+				args: {
+					min: 0
+				}
 			}
 		]
 	},
@@ -402,6 +409,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	beamsSpacing: 4,
 	unconnectedBeamsLength: 20,
 	barlinesHeight: 256,
+	hitEffectRadius: 32,
 	notesColor: '#ffffff',
 	auxiliariesColor: '#4c4c4c',
 	perfectColor: '#ffff00',

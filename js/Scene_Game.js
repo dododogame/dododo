@@ -693,7 +693,8 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 };
 
 Scene_Game.prototype._createHitEffect = function (event, judge) {
-	const hitEffect = new Sprite(new Bitmap(64, 64));
+	const r = preferences.hitEffectRadius;
+	const hitEffect = new Sprite(new Bitmap(2*r, 2*r));
 	let color;
 	if (judge === 'perfect')
 		color = preferences.perfectColor;
@@ -703,7 +704,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 		color = preferences.badColor;
 	else if (judge === 'miss')
 		color = preferences.missColor;
-	hitEffect.bitmap.drawCircle(32, 32, preferences.headsRadius, color);
+	hitEffect.bitmap.drawCircle(r, r, preferences.headsRadius, color);
 	hitEffect.anchor.x = 0.5;
 	hitEffect.anchor.y = 0.5;
 	hitEffect.x = event.x;
@@ -713,7 +714,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 	let n = 1;
 	hitEffect.update = () => {
 		hitEffect.opacity = 255*0.9**(n*60/Graphics._fpsMeter.fps);
-		hitEffect.bitmap.drawCircle(32, 32, 32-(32 - preferences.headsRadius)/n, color);
+		hitEffect.bitmap.drawCircle(r, r, r-(r - preferences.headsRadius)/n, color);
 		n++;
 		if (hitEffect.opacity <= 5)
 			this.removeChild(hitEffect);
