@@ -237,6 +237,7 @@ Beatmap.prototype.drawLines = function () {
 			case 'line':
 				line.lineno = this.lines.length - 1;
 				line.startTime = lastLineEndTime;
+				line.voicesNumber = event.voices.length;
 				if (line.millisecondsPerWhole === undefined) {
 					if (lastBPM) {
 						const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({
@@ -258,7 +259,7 @@ Beatmap.prototype.drawLines = function () {
 				line.blueFormula ||= x => 1;
 				line.alphaFormula ||= x => 1;
 				line.widthFormula ||= x => 1;
-				line.heightFormula ||= x => event.voices.length * preferences.voicesHeight;
+				line.heightFormula ||= x => line.voicesNumber * preferences.voicesHeight;
 				if (line.BPMMarkers) {
 					for (let i = 0; i < line.BPMMarkers.length; i++) {
 						const {length, dots, bpm, position} = line.BPMMarkers[i];
@@ -270,7 +271,7 @@ Beatmap.prototype.drawLines = function () {
 				for (let i = 0; i < voices[0].length; i++) {
 					line.totalLength = line.totalLength.add(this._calculateLengthRecursive(voices[0][i]));
 				}
-				const y0 = (TyphmConstants.LINES_HEIGHT - preferences.voicesHeight*(voices.length-1))/2;
+				const y0 = (TyphmConstants.LINES_HEIGHT - preferences.voicesHeight*(line.voicesNumber-1))/2;
 				for (let i = 0; i < voices.length; i++) {
 					if (i > 0)
 						for (let j = 0; j < voices[i].length; j++)
@@ -882,14 +883,5 @@ Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm, position) {
 };
 
 Beatmap.prototype.clearNote = function (event, judge) {
-	let color;
-	if (judge === 'perfect')
-		color = preferences.perfectColor;
-	else if (judge === 'good')
-		color = preferences.goodColor;
-	else if (judge === 'bad')
-		color = preferences.badColor;
-	else if (judge === 'miss')
-		color = preferences.missColor;
-	this.drawNoteHead(this.lines[event.lineno], event.x, event.y, event.solid, color);
+	this.drawNoteHead(this.lines[event.lineno], event.x, event.y, event.solid, preferences[judge + 'Color']);
 };

@@ -105,9 +105,15 @@ Scene_Game.prototype.start = function () {
 	this._fullCombo.visible = false;
 	this.addChild(this._fullCombo);
 	
+	if (preferences.showInaccuracyData) {
+		this._inaccuracyDataSprite = new Sprite(new Bitmap(256, preferences.textHeight));
+		this._center(this._inaccuracyDataSprite, Graphics.height - 2 * preferences.textHeight);
+		this.addChild(this._inaccuracyDataSprite);
+	}
+	
 	this._inaccuracyBar = new Sprite(new Bitmap(512, 10));
 	this._inaccuracyBar.anchor.y = 0.5;
-	this._center(this._inaccuracyBar, Graphics.height - 20);
+	this._center(this._inaccuracyBar, Graphics.height - preferences.textHeight / 2);
 	this._drawInaccuracyBar(TyphmConstants.DEFAULT_PERFECT, TyphmConstants.DEFAULT_GOOD, TyphmConstants.DEFAULT_BAD);
 	this._inaccuracyBar.visible = false;
 	this.addChild(this._inaccuracyBar);
@@ -199,11 +205,16 @@ Scene_Game.prototype.update = function () {
 	if (!this._resumingCountdown && !this._paused && !this._ended) {
 		const line = this._line1.bitmap;
 		this._judgeLine.x = this._getXFromLengthPosition(lengthPosition);
-		this._judgeLine.y = this._line1.y - line.space_yFormula(lengthPosition);
-		this._judgeLine.scale.x = line.widthFormula(lengthPosition);
-		this._judgeLine.scale.y = line.heightFormula(lengthPosition);
-		this._judgeLine.bitmap.clear();
-		this._judgeLine.bitmap.fillAll(TyphmUtils.fromRGBAToHex(line.redFormula(lengthPosition), line.greenFormula(lengthPosition), line.blueFormula(lengthPosition), line.alphaFormula(lengthPosition)));
+		if (preferences.judgeLinePerformances) {
+			this._judgeLine.y = this._line1.y - line.space_yFormula(lengthPosition);
+			this._judgeLine.scale.x = line.widthFormula(lengthPosition);
+			this._judgeLine.scale.y = line.heightFormula(lengthPosition);
+			this._judgeLine.bitmap.clear();
+			this._judgeLine.bitmap.fillAll(TyphmUtils.fromRGBAToHex(line.redFormula(lengthPosition), line.greenFormula(lengthPosition), line.blueFormula(lengthPosition), line.alphaFormula(lengthPosition)));
+		} else {
+			this._judgeLine.y = this._line1.y;
+			this._judgeLine.scale.y = line.voicesNumber * preferences.voicesHeight;
+		}
 		if (this._hitSoundEnabled() && (preferences.autoPlay || preferences.hitSoundWithMusic)) {
 			while (true) {
 				const event = this._unclearedHitSounds[0];
@@ -578,10 +589,10 @@ Scene_Game.prototype._processHit = function () {
 			if (!event.hold || judge === 'bad') {
 				this._updateScore();
 				this._updateCombo();
-				this._createInaccuracyIndicator(inaccuracy);
 			} else {
 				this._holdings.sort((a, b) => a.timeEnd - b.timeEnd);
 			}
+			this._createInaccuracyIndicator(inaccuracy);
 			this._createHitEffect(event, judge);
 		} else {
 			this._createWrongNote(now);
@@ -690,20 +701,29 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 		if (inaccuracyIndicator.opacity <= 0)
 			this.removeChild(inaccuracyIndicator);
 	};
+	if (preferences.showInaccuracyData) {
+		this._inaccuracyDataSprite.bitmap.clear();
+		this._inaccuracyDataSprite.bitmap.textColor = preferences[this._getJudgeFromInaccuracy(inaccuracy) + 'Color'];
+		this._inaccuracyDataSprite.bitmap.drawText(sprintf('%+dms', inaccuracy), 0, 0,
+			this._inaccuracyDataSprite.width, preferences.textHeight, 'center');
+	}
+};
+
+Scene_Game.prototype._getJudgeFromInaccuracy = function (inaccuracy) {
+	const absInaccuracy = Math.abs(inaccuracy);
+	if (absInaccuracy <= this._perfectTolerance)
+		return 'perfect';
+	if (absInaccuracy <= this._goodTolerance)
+		return 'good';
+	if (absInaccuracy <= this._badTolerance)
+		return 'bad';
+	return 'miss';
 };
 
 Scene_Game.prototype._createHitEffect = function (event, judge) {
 	const r = preferences.hitEffectRadius;
 	const hitEffect = new Sprite(new Bitmap(2*r, 2*r));
-	let color;
-	if (judge === 'perfect')
-		color = preferences.perfectColor;
-	else if (judge === 'good')
-		color = preferences.goodColor;
-	else if (judge === 'bad')
-		color = preferences.badColor;
-	else if (judge === 'miss')
-		color = preferences.missColor;
+	const color = preferences[judge + 'Color'];
 	hitEffect.bitmap.drawCircle(r, r, preferences.headsRadius, color);
 	hitEffect.anchor.x = 0.5;
 	hitEffect.anchor.y = 0.5;

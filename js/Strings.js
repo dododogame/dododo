@@ -63,12 +63,20 @@ Strings["en-US"] = {
 	"playRate": "Play rate (speed of music)",
 	"autoPlay": "Auto-play",
 	"countdown": "Show countdown before resuming",
-	"FCAPIndicator": "Full combo / all perfect indicator",
 	"autoRestartGood": "Automatically restart when failing to AP",
 	"autoRestartMiss": "Automatically restart when failing to FC",
 	"F7Pause": "Press F7 to pause",
 	"backtickRestart": "Press backtick to restart",
 	"autoPause": "Automatically pause when losing focus",
+	
+	// preferences: visual
+	"visual": "Visual",
+	"FCAPIndicator": "Full combo / all perfect indicator",
+	"TPSIndicator": "Taps per second indicator",
+	"judgeLinePerformances": "Enable ornamental judge line effects",
+	"flashWarningGood": "Warn by flash the screen at good hits",
+	"flashWarningMiss": "Warn by flash the screen at combo breaks",
+	"showInaccuracyData": "Show inaccuracy data",
 	
 	// preferences: geometry
 	"geometry": "Geometry",
@@ -207,12 +215,20 @@ Strings["zh-CN"] = {
 	"playRate": "倍速",
 	"autoPlay": "自动",
 	"countdown": "继续前倒计时",
-	"FCAPIndicator": "全连/全完美指示器",
 	"autoRestartGood": "全完美失败时自动重开",
 	"autoRestartMiss": "全连失败时自动重开",
 	"F7Pause": "按 F7 暂停",
 	"backtickRestart": "按反引号重开",
 	"autoPause": "失焦时自动暂停",
+	
+	// preferences: visual
+	"visual": "视觉",
+	"FCAPIndicator": "全连/全完美指示器",
+	"TPSIndicator": "每秒点击数指示器",
+	"judgeLinePerformances": "启用装饰性判定线演出",
+	"flashWarningGood": "爆好时闪屏警告",
+	"flashWarningMiss": "断连时闪屏警告",
+	"showInaccuracyData": "显示误差数据",
 	
 	// preferences: geometry
 	"geometry": "几何",
@@ -351,12 +367,20 @@ Strings["zh-TW"] = {
 	"playRate": "倍速",
 	"autoPlay": "自動",
 	"countdown": "繼續前倒計時",
-	"FCAPIndicator": "全連/全完美指示器",
 	"autoRestartGood": "全完美失敗時自動重開",
 	"autoRestartMiss": "全連失敗時自動重開",
 	"F7Pause": "按 F7 暫停",
 	"backtickRestart": "按反引號重開",
 	"autoPause": "失焦時自動暫停",
+	
+	// preferences: visual
+	"visual": "視覺",
+	"FCAPIndicator": "全連/全完美指示器",
+	"TPSIndicator": "每秒點擊數指示器",
+	"judgeLinePerformances": "啟用裝飾性判定線演出",
+	"flashWarningGood": "爆好時閃屏警告",
+	"flashWarningMiss": "斷連時閃屏警告",
+	"showInaccuracyData": "顯示誤差數據",
 	
 	// preferences: geometry
 	"geometry": "幾何",

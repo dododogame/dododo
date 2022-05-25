@@ -39,11 +39,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {}
 			},
 			{
-				name: 'FCAPIndicator',
-				type: 'boolean',
-				args: {}
-			},
-			{
 				name: 'autoRestartGood',
 				type: 'boolean',
 				args: {}
@@ -65,6 +60,41 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'autoPause',
+				type: 'boolean',
+				args: {}
+			}
+		]
+	},
+	{
+		category: 'visual',
+		list: [
+			{
+				name: 'FCAPIndicator',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'TPSIndicator',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'judgeLinePerformances',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'flashWarningGood',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'flashWarningMiss',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'showInaccuracyData',
 				type: 'boolean',
 				args: {}
 			}
@@ -392,12 +422,17 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	playRate: 1.0,
 	autoPlay: false,
 	countdown: true,
-	FCAPIndicator: true,
 	autoRestartGood: false,
 	autoRestartMiss: false,
 	F7Pause: true,
 	backtickRestart: true,
 	autoPause: true,
+	FCAPIndicator: true,
+	TPSIndicator: true,
+	judgeLinePerformances: true,
+	flashWarningGood: false,
+	flashWarningMiss: true,
+	showInaccuracyData: true,
 	fontSize: 28,
 	textHeight: 40,
 	margin: 16,
