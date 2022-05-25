@@ -4,7 +4,7 @@ function Strings() {
 
 Strings.LANGUAGES = {
 	"en-US": "English (United States)",
-	"zh-CN": "中文 (中國)",
+	"zh-CN": "中文 (中国)",
 	"zh-TW": "中文 (台灣)"
 };
 
@@ -77,6 +77,7 @@ Strings["en-US"] = {
 	"flashWarningGood": "Warn by flash the screen at good hits",
 	"flashWarningMiss": "Warn by flash the screen at combo breaks",
 	"showInaccuracyData": "Show inaccuracy data",
+	"comboPopupInterval": "Interval of combo popups (set 0 to disable)",
 	
 	// preferences: geometry
 	"geometry": "Geometry",
@@ -229,6 +230,7 @@ Strings["zh-CN"] = {
 	"flashWarningGood": "爆好时闪屏警告",
 	"flashWarningMiss": "断连时闪屏警告",
 	"showInaccuracyData": "显示误差数据",
+	"comboPopupInterval": "连击数弹出间隔 (0 为不弹出)",
 	
 	// preferences: geometry
 	"geometry": "几何",
@@ -381,6 +383,7 @@ Strings["zh-TW"] = {
 	"flashWarningGood": "爆好時閃屏警告",
 	"flashWarningMiss": "斷連時閃屏警告",
 	"showInaccuracyData": "顯示誤差數據",
+	"comboPopupInterval": "連擊數彈出間隔 (0 為不彈出)",
 	
 	// preferences: geometry
 	"geometry": "幾何",

@@ -142,6 +142,14 @@ Scene_Game.prototype.start = function () {
 		this.addChild(this._autoPlayIndicator);
 	}
 	
+	if (preferences.flashWarningGood)
+		this._createFlashBitmap('good');
+	if (preferences.flashWarningMiss) {
+		this._createFlashBitmap('bad');
+		this._createFlashBitmap('miss');
+		this._createFlashBitmap('excess');
+	}
+	
 	this._beatmap = new Beatmap(this._beatmapUrl);
 	
 	this._hasMusic = !!this._musicUrl;
@@ -181,11 +189,28 @@ Scene_Game.prototype.start = function () {
 	this._shouldBack = false;
 };
 
+Scene_Game.prototype._createFlashBitmap = function (judge) {
+	this._flashBitmaps ||= {};
+	this._flashBitmaps[judge] = new Bitmap(Graphics.width, Graphics.height);
+	this._flashBitmaps[judge].fillAll(preferences[judge + 'Color']);
+};
+
+Scene_Game.prototype._flashWarn = function (judge) {
+	const sprite = new Sprite(this._flashBitmaps[judge]);
+	sprite.opacity = 50;
+	sprite.update = () => {
+		sprite.opacity -= 500 / Graphics._fpsMeter.fps;
+		if (sprite.opacity <= 0)
+			this.removeChild(sprite);
+	};
+	this.addChild(sprite);
+};
+
 Scene_Game.prototype._drawInaccuracyBar = function (perfect, good, bad) {
 	this._inaccuracyBar.bitmap.fillRect(0, 0, 512, 10, preferences.badColor);
 	this._inaccuracyBar.bitmap.fillRect(256*(1-good/bad), 0, 512*good/bad, 10, preferences.goodColor);
 	this._inaccuracyBar.bitmap.fillRect(256*(1-perfect/bad), 0, 512*perfect/bad, 10, preferences.perfectColor);
-}
+};
 
 Scene_Game.prototype.update = function () {
 	const now = this._now();
@@ -247,6 +272,8 @@ Scene_Game.prototype.update = function () {
 					this._beatmap.clearNote(event, 'miss');
 					this._missNumber++;
 					this._combo = 0;
+					if (preferences.flashWarningMiss)
+						this._flashWarn('miss')
 					if (preferences.autoRestartGood || preferences.autoRestartMiss)
 						this._shouldRestart = true;
 					this._updateCombo();
@@ -556,9 +583,9 @@ Scene_Game.prototype._processHit = function () {
 			const inaccuracy = now - event.time;
 			let judge;
 			if (Math.abs(inaccuracy) <= this._perfectTolerance) {
+				judge = 'perfect';
 				if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 					this._playHitSound();
-				judge = 'perfect';
 				if (!event.hold) {
 					this._perfectNumber++;
 					this._combo++;
@@ -566,9 +593,11 @@ Scene_Game.prototype._processHit = function () {
 					this._holdings.push([event, judge]);
 				}
 			} else if (Math.abs(inaccuracy) <= this._goodTolerance) {
+				judge = 'good';
 				if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 					this._playHitSound();
-				judge = 'good';
+				if (preferences.flashWarningGood)
+					this._flashWarn(judge)
 				if (!event.hold) {
 					this._goodNumber++;
 					this._combo++;
@@ -580,6 +609,8 @@ Scene_Game.prototype._processHit = function () {
 			} else {
 				judge = 'bad';
 				this._badNumber++;
+				if (preferences.flashWarningMiss)
+					this._flashWarn(judge)
 				if (preferences.autoRestartGood || preferences.autoRestartMiss)
 					this._shouldRestart = true;
 				this._combo = 0;
@@ -601,6 +632,8 @@ Scene_Game.prototype._processHit = function () {
 			this._excessNumber++;
 			if (preferences.autoRestartGood || preferences.autoRestartMiss)
 				this._shouldRestart = true;
+			if (preferences.flashWarningMiss)
+				this._flashWarn('excess')
 			this._updateScore();
 		}
 	}
@@ -615,6 +648,8 @@ Scene_Game.prototype._processLoosen = function () {
 			this._combo = 0;
 			if (preferences.autoRestartGood || preferences.autoRestartMiss)
 				this._shouldRestart = true;
+			if (preferences.flashWarningMiss)
+				this._flashWarn('miss')
 			this._updateScore();
 			this._updateCombo();
 		}
@@ -656,7 +691,7 @@ Scene_Game.prototype._updateCombo = function () {
 	this._comboSprite.bitmap.clear();
 	this._comboSprite.bitmap.textColor = this._getScoreColor();
 	this._comboSprite.bitmap.drawText(this._combo, 0, 0, this._comboSprite.width, preferences.textHeight, 'left');
-	if (this._combo > 0 && this._combo % 25 === 0) {
+	if (preferences.comboPopupInterval && this._combo > 0 && this._combo % preferences.comboPopupInterval === 0) {
 		const comboIndicator = new Sprite(new Bitmap(512, 128));
 		comboIndicator.bitmap.fontSize = 108;
 		comboIndicator.bitmap.textColor = preferences.textColor + '80';

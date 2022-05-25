@@ -71,32 +71,45 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			{
 				name: 'FCAPIndicator',
 				type: 'boolean',
-				args: {}
+				args: {
+				}
 			},
 			{
 				name: 'TPSIndicator',
 				type: 'boolean',
-				args: {}
+				args: {
+				}
 			},
 			{
 				name: 'judgeLinePerformances',
 				type: 'boolean',
-				args: {}
+				args: {
+				}
 			},
 			{
 				name: 'flashWarningGood',
 				type: 'boolean',
-				args: {}
+				args: {
+				}
 			},
 			{
 				name: 'flashWarningMiss',
 				type: 'boolean',
-				args: {}
+				args: {
+				}
 			},
 			{
 				name: 'showInaccuracyData',
 				type: 'boolean',
-				args: {}
+				args: {
+				}
+			},
+			{
+				name: 'comboPopupInterval',
+				type: 'number',
+				args: {
+					min: 0
+				}
 			}
 		]
 	},
@@ -433,6 +446,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	flashWarningGood: false,
 	flashWarningMiss: true,
 	showInaccuracyData: true,
+	comboPopupInterval: 25,
 	fontSize: 28,
 	textHeight: 40,
 	margin: 16,
