@@ -9,3 +9,4 @@ TyphmConstants.DEFAULT_GOOD = 0.04;
 TyphmConstants.DEFAULT_BAD = 0.06;
 TyphmConstants.DEFAULT_BPM = 120.0;
 TyphmConstants.DEFAULT_BEAT_NOTE = 2;
+TyphmConstants.HIT_SOUND_ADVANCE = 100;

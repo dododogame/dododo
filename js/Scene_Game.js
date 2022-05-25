@@ -204,13 +204,14 @@ Scene_Game.prototype.update = function () {
 		this._judgeLine.scale.y = line.heightFormula(lengthPosition);
 		this._judgeLine.bitmap.clear();
 		this._judgeLine.bitmap.fillAll(TyphmUtils.fromRGBAToHex(line.redFormula(lengthPosition), line.greenFormula(lengthPosition), line.blueFormula(lengthPosition), line.alphaFormula(lengthPosition)));
-		if (preferences.autoPlay || preferences.hitSoundWithMusic) {
+		if (this._hitSoundEnabled() && (preferences.autoPlay || preferences.hitSoundWithMusic)) {
 			while (true) {
 				const event = this._unclearedHitSounds[0];
 				const offsetNow = now - preferences.offset * preferences.playRate;
-				if (event && offsetNow >= event.time) {
-					if (offsetNow <= event.time + this._perfectTolerance)
-						this._playHitSound();
+				if (event && offsetNow >= event.time - TyphmConstants.HIT_SOUND_ADVANCE*preferences.playRate) {
+					if (offsetNow <= event.time + this._perfectTolerance) {
+						setTimeout(() => this._playHitSound(), (event.time - offsetNow)/preferences.playRate);
+					}
 					this._unclearedHitSounds.splice(0, 1);
 				} else
 					break;
@@ -523,12 +524,14 @@ Scene_Game.prototype._onTouchStart = function (event) {
 	}
 };
 
+Scene_Game.prototype._hitSoundEnabled = function () {
+	return !!(preferences.enableHitSound && !this._inaccuraciesArray);
+};
+
 Scene_Game.prototype._playHitSound = function () {
-	if (preferences.enableHitSound && !this._inaccuraciesArray) {
-		const player = new WebAudio('/assets/audios/hit_sounds/' + preferences.hitSound);
-		player.volume = preferences.hitSoundVolume * preferences.masterVolume;
-		player.addLoadListener(player.play.bind(player));
-	}
+	const player = new WebAudio('/assets/audios/hit_sounds/' + preferences.hitSound);
+	player.volume = preferences.hitSoundVolume * preferences.masterVolume;
+	player.addLoadListener(player.play.bind(player));
 };
 
 Scene_Game.prototype._processHit = function () {
@@ -542,7 +545,7 @@ Scene_Game.prototype._processHit = function () {
 			const inaccuracy = now - event.time;
 			let judge;
 			if (Math.abs(inaccuracy) <= this._perfectTolerance) {
-				if (!preferences.hitSoundWithMusic)
+				if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 					this._playHitSound();
 				judge = 'perfect';
 				if (!event.hold) {
@@ -552,7 +555,7 @@ Scene_Game.prototype._processHit = function () {
 					this._holdings.push([event, judge]);
 				}
 			} else if (Math.abs(inaccuracy) <= this._goodTolerance) {
-				if (!preferences.hitSoundWithMusic)
+				if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 					this._playHitSound();
 				judge = 'good';
 				if (!event.hold) {
