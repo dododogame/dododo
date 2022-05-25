@@ -829,23 +829,20 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene) {
 	this.x = Graphics.width / 2;
 	this.y = Graphics.height / 2;
 	this.bitmap.fontSize = preferences.fontSize*8;
-	this._countdown = 3;
-	this._lastCountdown = null;
 	this._scene = scene;
 	this._scene.addChild(this);
+	const maxCount = 3;
+	for (let i = 0; i <= maxCount; i++) {
+		setTimeout(sprite => sprite._countTo(i), (maxCount - i)*1000, this);
+	}
 };
 
-Scene_Game.Sprite_ResumingCountdown.prototype.update = function () {
-	const countdown = Math.ceil(this._countdown);
-	if (countdown === 0) {
+Scene_Game.Sprite_ResumingCountdown.prototype._countTo = function (n) {
+	if (n === 0) {
 		this._scene.removeChild(this);
 		this._scene.actualResume();
-		return;
-	}
-	if (this._lastCountdown !== countdown) {
+	} else {
 		this.bitmap.clear();
-		this.bitmap.drawText(Math.ceil(this._countdown), 0, 0, this.width, this.height, 'center');
-		this._lastCountdown = countdown;
+		this.bitmap.drawText(n, 0, 0, this.width, this.height, 'center');
 	}
-	this._countdown -= 1 / Graphics._fpsMeter.fps;
 };
