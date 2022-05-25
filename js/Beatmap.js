@@ -518,7 +518,7 @@ Beatmap.prototype.drawTie = function (bitmap, x1, x2, y) {
 	bitmap._setDirty();
 };
 
-Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y, lastNote, isFirst, isLast, height, lengthStart, layer) {
+Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y, lastNote, isFirst, isLast, height, lengthStart, previousEvent, nextEvent, layer) {
 	const notes = group.notes;
 	let timeLengthPassed = lengthStart;
 	for (let i = 0; i < notes.length; i++) {
@@ -528,6 +528,16 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 		event.time = bitmap.timeFormula(timeLengthPassed.div(bitmap.totalLength)) * bitmap.totalTime + bitmap.startTime;
 		event.timeEnd = bitmap.timeFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * bitmap.totalTime + bitmap.startTime;
 		const lastTie = lastNote && lastNote.tie;
+		let previousIndex = i - 1;
+		while (notes[previousIndex] && notes[previousIndex].event === "barline") {
+			previousIndex--;
+		}
+		const previousNote = previousIndex < 0 ? previousEvent : notes[previousIndex];
+		let nextIndex = i + 1;
+		while (notes[nextIndex] && notes[nextIndex].event === "barline") {
+			nextIndex++;
+		}
+		const nextNote = nextIndex >= notes.length ? nextEvent : notes[nextIndex];
 		if (event.event === "note") {
 			if (lastTie) {
 				event.tiedNote = lastNote;
@@ -540,15 +550,7 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 			if (event.tie && i === notes.length - 1 && isLast) {
 				this.drawLeftHalfTie(bitmap, event.x, y + (lastNote.multiplicity - 1) * preferences.headsRadius);
 			}
-			let previousIndex = i - 1;
-			while (notes[previousIndex] && notes[previousIndex].event === "barline") {
-				previousIndex--;
-			}
-			let nextIndex = i + 1;
-			while (notes[nextIndex] && notes[nextIndex].event === "barline") {
-				nextIndex++;
-			}
-			this.drawBeamedNote(bitmap, event, y, notes[previousIndex], notes[nextIndex], !lastTie,
+			this.drawBeamedNote(bitmap, event, y, previousNote, nextNote, !lastTie,
 					height, timeLengthPassed);
 			lastNote = event;
 		} else if (event.event === "group") {
@@ -558,7 +560,7 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 				firstNote.multiplicity = lastNote.multiplicity;
 			}
 			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, event, y, lastNote,
-				i === 0, i === notes.length - 1, height, timeLengthPassed, layer + 1);
+				i === 0, isLast && i === notes.length - 1, height, timeLengthPassed, previousNote, nextNote, layer + 1);
 		} else if (event.event === 'barline') {
 			this.drawBarline(bitmap, event.x);
 		}
@@ -710,8 +712,6 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 	const beams = this.getBeamsNumber(note);
 	const nextBeams = next && this.getBeamsNumber(this.getFirstNoteRecursive(next))
 	const previousBeams = previous && this.getBeamsNumber(this.getLastNoteRecursive(previous));
-	// 20220409: 屎山 if 语句, 下次动的时候重构
-	// 20220510: 居然真的重构了
 	if (beams === 0) {
 		this.drawStemIfHas(bitmap, note, y);
 		this.drawFlagIfHas(bitmap, note, y);
@@ -727,7 +727,7 @@ Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, sh
 				else if (previousBeams < beams) {
 					if (previousBeams > nextBeams) {
 						this.drawUnconnectedBeams(bitmap, note, y, height, previousBeams, beams, true);
-					} else {// previousBeams === nextBeams
+					} else { // previousBeams === nextBeams
 						if (timeLengthPassed.add(note.trueLength).mod(note.trueLength).d < note.trueLength.d)
 							this.drawUnconnectedBeams(bitmap, note, y, height, previousBeams, beams, true);
 						else

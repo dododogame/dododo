@@ -207,8 +207,10 @@ Scene_Game.prototype.update = function () {
 		if (preferences.autoPlay || preferences.hitSoundWithMusic) {
 			while (true) {
 				const event = this._unclearedHitSounds[0];
-				if (event && now >= event.time + preferences.offset) {
-					this._playHitSound();
+				const offsetNow = now - preferences.offset * preferences.playRate;
+				if (event && offsetNow >= event.time) {
+					if (offsetNow <= event.time + this._perfectTolerance)
+						this._playHitSound();
 					this._unclearedHitSounds.splice(0, 1);
 				} else
 					break;
@@ -217,7 +219,7 @@ Scene_Game.prototype.update = function () {
 		while (true) {
 			const event = this._unclearedEvents[0];
 			if (event && now >= event.time) {
-				if (preferences.autoPlay && now >= event.time) {
+				if (preferences.autoPlay && now <= event.time + this._perfectTolerance) {
 					this._createHitEffect(event, 'perfect');
 					this._unclearedEvents.splice(0, 1);
 					if (event.hold) {
