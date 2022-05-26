@@ -27,13 +27,13 @@ Scene_Game.prototype.start = function () {
 	this._line1 = new Sprite();
 	this._line1.width = 1024;
 	this._line1.anchor.y = 0.5;
-	this._center(this._line1, Graphics.height / 4);
+	this._center(this._line1, (Graphics.height - preferences.distanceBetweenLines)/2);
 	this.addChild(this._line1);
 	
 	this._line2 = new Sprite();
 	this._line2.width = Graphics.width;
 	this._line2.anchor.y = 0.5;
-	this._center(this._line2, Graphics.height * 3/4);
+	this._center(this._line2, (Graphics.height + preferences.distanceBetweenLines)/2);
 	this.addChild(this._line2);
 	
 	this._judgeLine = new Sprite(new Bitmap(1, 1));
@@ -517,7 +517,8 @@ Scene_Game.prototype.actualResume = function () {
 		this._judgeLine.visible = true;
 	if (this._hasMusic) {
 		this._audioPlayer.pitch = preferences.playRate;
-		this._audioPlayer.play(false, this._lastPos/1000);
+		this._audioPlayer.play(false,
+			Math.max(this._lastPos - preferences.offset*preferences.playRate, 0)/1000);
 	} else {
 		this._starting = performance.now() - this._lastPos/preferences.playRate;
 	}

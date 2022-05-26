@@ -199,6 +199,13 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {
 					min: 0
 				}
+			},
+			{
+				name: 'distanceBetweenLines',
+				type: 'number',
+				args: {
+					min: 0
+				}
 			}
 		]
 	},
@@ -425,6 +432,13 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {
 					onclick: () => { open('https://github.com/UlyssesZh/dododo'); }
 				}
+			},
+			{
+				name: 'discord',
+				type: 'button',
+				args: {
+					onclick: () => { open('https://discord.gg/yYdMw5hm2K'); }
+				}
 			}
 		]
 	}
@@ -459,6 +473,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	unconnectedBeamsLength: 20,
 	barlinesHeight: 256,
 	hitEffectRadius: 32,
+	distanceBetweenLines: 512,
 	notesColor: '#ffffff',
 	auxiliariesColor: '#4c4c4c',
 	perfectColor: '#ffff00',
