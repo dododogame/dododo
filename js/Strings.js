@@ -55,6 +55,9 @@ Strings["en-US"] = {
 	"markE": "E",
 	"markF": "F",
 	"fullCombo": "FC",
+	"viewRecording": "Watch replay",
+	"saveRecording": "Save replay",
+	"uploadRecording": "Upload replay",
 	
 	// preferences: gameplay
 	"gameplay": "Gameplay",
@@ -179,6 +182,7 @@ Strings["zh-CN"] = {
 	// browse files
 	"uploadAudio": "上传音频文件",
 	"uploadBeatmap": "上传谱面文件",
+	"uploadRecording": "上传回放",
 	"noBeatmapWarning": "请先上传谱面文件",
 	"title": "曲目",
 	"musicAuthor": "曲师",
@@ -210,6 +214,8 @@ Strings["zh-CN"] = {
 	"markE": "戊",
 	"markF": "拉",
 	"fullCombo": "全连",
+	"viewRecording": "看回放",
+	"saveRecording": "保存回放",
 	
 	// preferences: gameplay
 	"gameplay": "游戏",
@@ -334,6 +340,7 @@ Strings["zh-TW"] = {
 	// browse files
 	"uploadAudio": "上載音頻文件",
 	"uploadBeatmap": "上載譜面文件",
+	"uploadRecording": "上載回放",
 	"noBeatmapWarning": "請先上載譜面文件",
 	"title": "曲目",
 	"musicAuthor": "曲師",
@@ -365,6 +372,8 @@ Strings["zh-TW"] = {
 	"markE": "戊",
 	"markF": "拉",
 	"fullCombo": "全連",
+	"viewRecording": "看回放",
+	"saveRecording": "保存回放",
 	
 	// preferences: gameplay
 	"gameplay": "遊戲",

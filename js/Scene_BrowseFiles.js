@@ -11,11 +11,11 @@ Scene_BrowseFiles.prototype.start = function () {
 	this._musicPrompt = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldUploadAudio = true; });
 	this._musicPrompt.bitmap.drawText(`${Strings.uploadAudio} (a)`, 0, 0,
-			256, preferences.textHeight, 'center');
+			this._musicPrompt.width, preferences.textHeight, 'center');
 	this._center(this._musicPrompt, preferences.textHeight);
 	this.addChild(this._musicPrompt);
 
-	this._musicResult = new Sprite(new Bitmap(1024, 32));
+	this._musicResult = new Sprite(new Bitmap(1024, preferences.textHeight));
 	this._musicResult.opacity = 128;
 	this._center(this._musicResult, preferences.textHeight*2);
 	this.addChild(this._musicResult);
@@ -23,7 +23,7 @@ Scene_BrowseFiles.prototype.start = function () {
 	this._beatmapPrompt = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldUploadBeatmap = true; });
 	this._beatmapPrompt.bitmap.drawText(`${Strings.uploadBeatmap} (b)`, 0, 0,
-			256, preferences.textHeight, 'center');
+			this._beatmapPrompt.width, preferences.textHeight, 'center');
 	this._center(this._beatmapPrompt, preferences.textHeight*4);
 	this.addChild(this._beatmapPrompt);
 
@@ -31,6 +31,22 @@ Scene_BrowseFiles.prototype.start = function () {
 	this._beatmapResult.opacity = 128;
 	this._center(this._beatmapResult, preferences.textHeight*5);
 	this.addChild(this._beatmapResult);
+	
+	this._recordingPrompt = new Button(new Bitmap(256, preferences.textHeight),
+		() => this._shouldUploadRecording = true);
+	this._recordingPrompt.bitmap.drawText(`${Strings.uploadRecording} (r)`, 0, 0,
+		this._recordingPrompt.width, preferences.textHeight, 'right');
+	this._recordingPrompt.anchor.x = 1;
+	this._recordingPrompt.x = Graphics.width;
+	this._recordingPrompt.y = Graphics.height - preferences.textHeight*2;
+	this.addChild(this._recordingPrompt);
+	
+	this._recordingResult = new Sprite(new Bitmap(1024, preferences.textHeight));
+	this._recordingResult.anchor.x = 1;
+	this._recordingResult.x = Graphics.width;
+	this._recordingResult.y = Graphics.height - preferences.textHeight;
+	this._recordingResult.opacity = 128;
+	this.addChild(this._recordingResult);
 
 	this._ok = new Button(new Bitmap(256, preferences.textHeight),
 			() => { this._shouldOk = true; });
@@ -62,22 +78,35 @@ Scene_BrowseFiles.prototype.start = function () {
 		this._musicResult.bitmap.clear();
 		const file = musicInput.files[0];
 		if (file)
-			this._musicResult.bitmap.drawText(file.name, 0, 0, 1024, 32, 'center');
+			this._musicResult.bitmap.drawText(file.name, 0, 0, 1024, preferences.textHeight, 'center');
 		this._refreshPreview();
 	};
 	beatmapInput.oninput = (event) => {
 		this._beatmapResult.bitmap.clear();
 		const file = beatmapInput.files[0];
 		if (file)
-			this._beatmapResult.bitmap.drawText(file.name, 0, 0, 1024, 32, 'center');
+			this._beatmapResult.bitmap.drawText(file.name, 0, 0, 1024, preferences.textHeight, 'center');
+		if (this._beatmapUploaded) {
+			recordingInput.value = '';
+			recordingInput.oninput();
+		}
 		this._refreshPreview();
+	};
+	recordingInput.oninput = (event) => {
+		this._recordingResult.bitmap.clear();
+		const file = recordingInput.files[0];
+		if (file)
+			this._recordingResult.bitmap.drawText(file.name, 0, 0, 1024, preferences.textHeight, 'right');
+		this._loadRecording();
 	};
 
 	musicInput.oninput();
 	beatmapInput.oninput();
-
+	
+	this._beatmapUploaded = false;
 	this._shouldUploadAudio = false;
 	this._shouldUploadBeatmap = false;
+	this._shouldUploadRecording = false;
 	this._shouldOk = false;
 	this._shouldBack = false;
 
@@ -92,15 +121,19 @@ Scene_BrowseFiles.prototype.update = function () {
 	} else if (this._shouldUploadBeatmap) {
 		beatmapInput.click();
 		this._shouldUploadBeatmap = false;
+	} else if (this._shouldUploadRecording) {
+		recordingInput.click();
+		this._shouldUploadRecording = false;
 	} else if (this._shouldOk) {
 		const beatmapFile = beatmapInput.files[0];
 		if (beatmapFile) {
 			const scoreUrl = URL.createObjectURL(beatmapFile);
 			const audioFile = musicInput.files[0];
 			const musicUrl = audioFile ? URL.createObjectURL(audioFile) : '';
-			window.scene = new Scene_Game(musicUrl, scoreUrl);
+			window.scene = new Scene_Game(musicUrl, scoreUrl, this._recording && JSON.parse(this._recording));
 		} else {
 			this._beatmapAlert.visible = true;
+			this._shouldOk = false;
 		}
 	} else if (this._shouldBack) {
 		window.scene = new Scene_Title();
@@ -117,6 +150,8 @@ Scene_BrowseFiles.prototype._onKeydown = function (event) {
 		this._shouldUploadAudio = true;
 	} else if (event.key === 'b') {
 		this._shouldUploadBeatmap = true;
+	} else if (event.key === 'r') {
+		this._shouldUploadRecording = true;
 	} else if (event.key === 'Enter') {
 		this._shouldOk = true;
 	} else if (event.key === 'Escape') {
@@ -127,6 +162,7 @@ Scene_BrowseFiles.prototype._onKeydown = function (event) {
 Scene_BrowseFiles.prototype._refreshPreview = async function () {
 	const beatmapFile = beatmapInput.files[0];
 	if (beatmapFile) {
+		this._beatmapUploaded = true;
 		const beatmap = new Beatmap(URL.createObjectURL(beatmapFile));
 		await beatmap.load().then(async r => {
 			let length;
@@ -148,6 +184,15 @@ Scene_BrowseFiles.prototype._refreshPreview = async function () {
 			this._preview.bitmap.drawText(`${Strings.length}: ${length}ms`, 0, 160, Graphics.width, 40);
 		});
 	} else {
+		this._beatmapUploaded = false;
 		this._preview.bitmap.clear();
 	}
-}
+};
+
+Scene_BrowseFiles.prototype._loadRecording = async function () {
+	const recordingFile = recordingInput.files[0];
+	if (recordingFile) {
+		this._recording = (await fetch(URL.createObjectURL(recordingFile)).then(r => r.text()));
+	} else
+		this._recording = undefined;
+};

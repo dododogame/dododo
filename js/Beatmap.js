@@ -10,7 +10,7 @@ Beatmap.prototype.initialize = function (url) {
 };
 
 Beatmap.prototype.load = async function () {
-	let [head, data] = eol.lf((await fetch(this.url).then(r => r.text()))).split('---\n');
+	let [head, data] = eol.lf(await fetch(this.url).then(r => r.text())).split('---\n');
 	head = head.split('\n').map(s => s.split(': '));
 	for (let i = 0; i < head.length; i++) {
 		if (head[i].length > 2)

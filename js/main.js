@@ -5,9 +5,14 @@
 window.musicInput = document.createElement('input');
 musicInput.type = 'file';
 musicInput.accept = 'audio/*';
+
 window.beatmapInput = document.createElement('input');
 beatmapInput.type = 'file';
 beatmapInput.accept = '.ddd';
+
+window.recordingInput = document.createElement('input');
+recordingInput.type = 'file';
+recordingInput.accept = 'application/json'
 
 window.onload = () => {
 	Graphics.initialize(1024, 768, 'webgl');
