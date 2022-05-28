@@ -30,6 +30,7 @@ Scene_Game.prototype.start = function () {
 	this._createMarkSprite();
 	this._createSummarySprite();
 	this._createFullComboSprite();
+	this._createInaccuraciesDistributionSprite();
 	if (preferences.showInaccuracyData)
 		this._createInaccuracyDataSprite();
 	this._createInaccuracyBarSprite();
@@ -182,6 +183,20 @@ Scene_Game.prototype._createFullComboSprite = function () {
 	this._fullCombo.bitmap.drawText(Strings.fullCombo, 0, 0, 60, preferences.textHeight, 'center');
 	this._fullCombo.visible = false;
 	this.addChild(this._fullCombo);
+};
+
+Scene_Game.prototype._createInaccuraciesDistributionSprite = function () {
+	const sprite = this._inaccuraciesDistribution = new Sprite(new Bitmap(Graphics.width, Graphics.height - 11*preferences.textHeight));
+	sprite.y = 9*preferences.textHeight;
+	sprite.bitmap.fillRect(0, sprite.height - preferences.textHeight, sprite.width, 1, preferences.textColor);
+	sprite.bitmap.fillRect(sprite.width/2, 0, 1, sprite.height - preferences.textHeight, preferences.textColor);
+	sprite.bitmap.fillRect(sprite.width/3, 0, 1, sprite.height - preferences.textHeight, preferences.textColor);
+	sprite.bitmap.fillRect(sprite.width*2/3, 0, 1, sprite.height - preferences.textHeight, preferences.textColor);
+	sprite.bitmap.drawText('μ', sprite.width/2-64, sprite.height-preferences.textHeight, 128, preferences.textHeight, 'center');
+	sprite.bitmap.drawText('μ+σ', sprite.width*2/3-64, sprite.height-preferences.textHeight, 128, preferences.textHeight, 'center');
+	sprite.bitmap.drawText('μ-σ', sprite.width/3-64, sprite.height-preferences.textHeight, 128, preferences.textHeight, 'center');
+	sprite.visible = false;
+	this.addChild(sprite);
 };
 
 Scene_Game.prototype._createInaccuracyDataSprite = function () {
@@ -434,7 +449,7 @@ Scene_Game.prototype.update = function () {
 		window.scene = new Scene_Game(this._musicUrl, this._beatmapUrl, this._isRecording ? undefined : this._newRecording);
 	}
 	if (this._shouldBack) {
-		window.scene = this._inaccuraciesArray ? new Scene_Preferences() : new Scene_Title();
+		window.scene = this._offsetWizard ? new Scene_Preferences() : new Scene_Title();
 	}
 	if (this._shouldReplay) {
 		window.scene = new Scene_Game(this._musicUrl, this._beatmapUrl, this._newRecording);
@@ -498,8 +513,8 @@ Scene_Game.prototype._onLoad = async function () {
 		this._hasMusic = true;
 		this._musicUrl = this._beatmap.audioUrl;
 	}
-	if (this._beatmap.title === 'offset_wizard' && this._hasMusic)
-		this._inaccuraciesArray = [];
+	this._offsetWizard = this._beatmap.title === 'offset_wizard' && this._hasMusic
+	this._inaccuraciesArray = [];
 	this._lastPos = this._beatmap.start;
 	this._makeTitle();
 	this._updateScore();
@@ -627,6 +642,8 @@ Scene_Game.prototype.actualResume = function () {
 }
 
 Scene_Game.prototype._onKeydown = function (event) {
+	if (!this._loadingFinished)
+		return;
 	if (event.key === 'Escape' || event.key === 'F7' && preferences.F7Pause) {
 		this._pause();
 	} else if (!event.ctrlKey && !event.altKey && !event.metaKey && TyphmConstants.HITTABLE_KEYS.includes(event.key)) {
@@ -648,6 +665,8 @@ Scene_Game.prototype._onKeydown = function (event) {
 };
 
 Scene_Game.prototype._onKeyup = function (event) {
+	if (!this._loadingFinished)
+		return;
 	delete this._pressings[event.key];
 	if (!this._paused && !preferences.autoPlay && this._isRecording) {
 		this._processLoosen();
@@ -689,7 +708,7 @@ Scene_Game.prototype._onTouchStart = function (event) {
 };
 
 Scene_Game.prototype._hitSoundEnabled = function () {
-	return !!(preferences.enableHitSound && !this._inaccuraciesArray);
+	return !!(preferences.enableHitSound && !this._offsetWizard);
 };
 
 Scene_Game.prototype._playHitSound = function () {
@@ -705,9 +724,7 @@ Scene_Game.prototype._processHit = function (now) {
 	if (!this._ended) {
 		const event = this._unclearedEvents[0];
 		if (event && now >= event.time - this._badTolerance) {
-			if (this._inaccuraciesArray) {
-				this._inaccuraciesArray.push(now - event.time);
-			}
+			this._inaccuraciesArray.push(now - event.time);
 			const inaccuracy = now - event.time;
 			let judge;
 			if (Math.abs(inaccuracy) <= this._perfectTolerance) {
@@ -978,11 +995,49 @@ Scene_Game.prototype._finish = function () {
 	this._line2.visible = false;
 	if (preferences.TPSIndicator)
 		this._TPSIndicator.visible = false;
-	if (this._inaccuraciesArray && this._inaccuraciesArray.length > 0)
-		preferences.offset -= this._inaccuraciesArray.reduce((a, b) => a + b) / this._inaccuraciesArray.length;
+	if (this._offsetWizard && this._inaccuraciesArray.length > 0)
+		preferences.offset -= math.mean(this._inaccuraciesArray);
+	if (this._inaccuraciesArray.length > 0)
+		this._inaccuraciesDistribution.visible = true;
 	this._setButtonsVisible(true);
 	this._viewRecordingButton.visible = true;
 	this._saveRecordingButton.visible = true;
+};
+
+Scene_Game.prototype._drawInaccuraciesDistribution = function () {
+	if (this._inaccuraciesArray.length < 2)
+		return;
+	const mu = math.mean(this._inaccuraciesArray);
+	const sigma2 = math.variance(this._inaccuraciesArray);
+	const sigma = Math.sqrt(sigma2);
+	const twoS2 = 2*TyphmConstants.INACCURACIES_DISTRIBUTION_BLUR / this._inaccuraciesArray.length;
+	const n = TyphmConstants.INACCURACIES_DISTRIBUTION_PIECES;
+	const points = new Array(n).fill(0);
+	for (let i = 0; i < n; i++) {
+		const x = (i/n - 0.5)*6;
+		for (let j = 0; j < this._inaccuraciesArray.length; j++) {
+			const z = (this._inaccuraciesArray[j] - mu) / sigma
+			points[i] += 1 / (1 + (z-x)**2 / twoS2);
+		}
+	}
+	const peak = points.reduce((oldMax, y) => Math.max(oldMax, y), 0);
+	const context = this._inaccuraciesDistribution.bitmap._context;
+	const width = this._inaccuraciesDistribution.width;
+	const height = this._inaccuraciesDistribution.height - preferences.textHeight;
+	context.save();
+	context.lineWidth = 2;
+	context.strokeStyle = preferences.textColor;
+	context.fillStyle = preferences.textColor + '80';
+	context.beginPath();
+	context.moveTo(0, height);
+	for (let i = 0; i < n; i++)
+		context.lineTo(width*i/n, height*(1-points[i]/peak));
+	context.lineTo(width, height);
+	context.stroke();
+	context.fill();
+	context.restore();
+	this._inaccuraciesDistribution.bitmap.drawText(sprintf('μ=%+.0fms', mu), width-256, 0, 256, preferences.textHeight, 'right');
+	this._inaccuraciesDistribution.bitmap.drawText(sprintf('σ=%.0fms', sigma), width-256, preferences.textHeight, 256, preferences.textHeight, 'right');
 };
 
 Scene_Game.prototype._drawSummary = function () {
@@ -1001,6 +1056,7 @@ Scene_Game.prototype._drawSummary = function () {
 	this._summarySprite.bitmap.drawText(`${Strings.excess}: ${this._excessNumber}`, 0, preferences.textHeight*4, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = 'white';
 	this._summarySprite.bitmap.drawText(`${Strings.maxCombo}: ${this._maxCombo}`, 0, preferences.textHeight*5, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._drawInaccuraciesDistribution();
 };
 
 Scene_Game.prototype._getMark = function () {
