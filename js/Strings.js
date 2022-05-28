@@ -5,7 +5,7 @@ function Strings() {
 Strings.LANGUAGES = {
 	"en-US": "English (United States)",
 	"zh-CN": "中文 (中国)",
-	"zh-TW": "中文 (台灣)"
+	"zh-TW": "中文 (臺灣)"
 };
 
 Strings["en-US"] = {
@@ -335,7 +335,7 @@ Strings["zh-TW"] = {
 	"browseFiles": "瀏覽文件",
 	"browseStore": "瀏覽商店",
 	"browseHistory": "瀏覽歷史",
-	"preferences": "設置",
+	"preferences": "設定",
 	
 	// browse files
 	"uploadAudio": "上載音頻文件",
@@ -446,11 +446,11 @@ Strings["zh-TW"] = {
 	// preferences: system
 	"system": "系統",
 	"language": "語言",
-	"save": "在網頁存儲中存儲設置",
-	"reset": "將所有設置項重設為默認狀態",
-	"confirmReset": "將所有設置項重設為默認狀態?",
-	"export": "導出設置為文件",
-	"import": "導入設置",
+	"save": "在網頁存儲中存儲設定",
+	"reset": "將所有設定項重設為默認狀態",
+	"confirmReset": "將所有設定項重設為默認狀態?",
+	"export": "導出設定為文件",
+	"import": "導入設定",
 	"importFailure": "導入失敗, 由於 %s",
 	"github": "打開 Dododo 的 GitHub 倉庫",
 	"discord": "加入 Dododo 的 Discord 服務器",
