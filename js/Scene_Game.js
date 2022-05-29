@@ -420,9 +420,14 @@ Scene_Game.prototype._saveRecording = function () {
 };
 
 Scene_Game.prototype._drawInaccuracyBar = function (perfect, good, bad) {
-	this._inaccuracyBar.bitmap.fillRect(0, 0, 512, 10, preferences.badColor);
-	this._inaccuracyBar.bitmap.fillRect(256*(1-good/bad), 0, 512*good/bad, 10, preferences.goodColor);
-	this._inaccuracyBar.bitmap.fillRect(256*(1-perfect/bad), 0, 512*perfect/bad, 10, preferences.perfectColor);
+	if (this._modifiers.noBad) {
+		this._inaccuracyBar.bitmap.fillRect(0, 0, 512, 10, preferences.goodColor);
+		this._inaccuracyBar.bitmap.fillRect(256 * (1 - perfect / good), 0, 512 * perfect / good, 10, preferences.perfectColor);
+	} else {
+		this._inaccuracyBar.bitmap.fillRect(0, 0, 512, 10, preferences.badColor);
+		this._inaccuracyBar.bitmap.fillRect(256 * (1 - good / bad), 0, 512 * good / bad, 10, preferences.goodColor);
+		this._inaccuracyBar.bitmap.fillRect(256 * (1 - perfect / bad), 0, 512 * perfect / bad, 10, preferences.perfectColor);
+	}
 };
 
 Scene_Game.prototype._createListeners = function () {
@@ -513,6 +518,10 @@ Scene_Game.prototype._updateHitSoundWithMusic = function (now) {
 	}
 };
 
+Scene_Game.prototype._missBoundary = function () {
+	return this._modifiers.noBad ? this._goodTolerance : this._badTolerance;
+};
+
 Scene_Game.prototype._autoPlayUpdateAndProcessMiss = function (now) {
 	while (this._unclearedEvents.length > 0) {
 		const event = this._unclearedEvents[0];
@@ -521,7 +530,7 @@ Scene_Game.prototype._autoPlayUpdateAndProcessMiss = function (now) {
 				this._autoPlayEvent();
 				if (this._visuals.TPSIndicator)
 					this._hitsLastSecond.push(now);
-			} else if (now >= event.time + this._badTolerance * this._modifiers.judgeWindow) {
+			} else if (now >= event.time + this._missBoundary() * this._modifiers.judgeWindow) {
 				this._missEvent();
 			} else
 				break;
@@ -551,7 +560,7 @@ Scene_Game.prototype._missEvent = function () {
 	this._combo = 0;
 	if (this._visuals.flashWarningMiss)
 		this._flashWarn('miss')
-	if (preferences.autoRestartGood || preferences.autoRestartMiss)
+	if (this._isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 		this._shouldRestart = true;
 	this._updateCombo();
 	this._updateScore();
@@ -566,7 +575,7 @@ Scene_Game.prototype._updateHoldings = function (now) {
 				this._perfectNumber++;
 			} else {
 				this._goodNumber++;
-				if (preferences.autoRestartGood)
+				if (this._isRecording && preferences.autoRestartGood)
 					this._shouldRestart = true;
 			}
 			this._combo++;
@@ -938,7 +947,7 @@ Scene_Game.prototype._processHit = function (now) {
 		this._hitsLastSecond.push(now);
 	if (!this._ended) {
 		const event = this._unclearedEvents[0];
-		if (event && now >= event.time - this._badTolerance * this._modifiers.judgeWindow) {
+		if (event && now >= event.time - this._missBoundary() * this._modifiers.judgeWindow) {
 			this._inaccuraciesArray.push(now - event.time);
 			const inaccuracy = now - event.time;
 			let judge;
@@ -961,7 +970,7 @@ Scene_Game.prototype._processHit = function (now) {
 				if (!event.hold) {
 					this._goodNumber++;
 					this._combo++;
-					if (this._visuals.autoRestartGood)
+					if (this._isRecording && preferences.autoRestartGood)
 						this._shouldRestart = true;
 				} else {
 					this._holdings.push([event, judge]);
@@ -971,7 +980,7 @@ Scene_Game.prototype._processHit = function (now) {
 				this._badNumber++;
 				if (this._visuals.flashWarningMiss)
 					this._flashWarn(judge)
-				if (preferences.autoRestartGood || preferences.autoRestartMiss)
+				if (this._isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 					this._shouldRestart = true;
 				this._combo = 0;
 			}
@@ -985,12 +994,12 @@ Scene_Game.prototype._processHit = function (now) {
 			}
 			this._createInaccuracyIndicator(inaccuracy);
 			this._createHitEffect(event, judge);
-		} else {
+		} else if (!this._modifiers.noExcess) {
 			this._createWrongNote(now);
 			this._combo = 0;
 			this._updateCombo();
 			this._excessNumber++;
-			if (preferences.autoRestartGood || preferences.autoRestartMiss)
+			if (this._isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 				this._shouldRestart = true;
 			if (this._visuals.flashWarningMiss)
 				this._flashWarn('excess')
@@ -1006,7 +1015,7 @@ Scene_Game.prototype._processLoosen = function (now) {
 			this._beatmap.clearNote(event, 'miss');
 			this._missNumber++;
 			this._combo = 0;
-			if (preferences.autoRestartGood || preferences.autoRestartMiss)
+			if (this._isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 				this._shouldRestart = true;
 			if (this._visuals.flashWarningMiss)
 				this._flashWarn('miss');
@@ -1096,7 +1105,7 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 	inaccuracyIndicator.anchor.x = 0.5;
 	inaccuracyIndicator.anchor.y = 0.5;
 	inaccuracyIndicator.x = this._inaccuracyBar.x + 
-			this._inaccuracyBar.width/2 * inaccuracy/(this._badTolerance * this._modifiers.judgeWindow);
+			this._inaccuracyBar.width/2 * inaccuracy/(this._missBoundary() * this._modifiers.judgeWindow);
 	inaccuracyIndicator.y = this._inaccuracyBar.y;
 	this._overHUDLayer.addChild(inaccuracyIndicator);
 	inaccuracyIndicator.update = () => {
