@@ -64,7 +64,7 @@ Strings["en-US"] = {
 	"inGame_noBad": "No-bad",
 	"inGame_noExcess": "No-excess",
 	"inGame_judgeWindow": "%fx judge",
-	"inGame_autoCompleteHold": "Auto-hold",
+	"inGame_autoCompleteHolds": "Auto-hold",
 	
 	// preferences: modifiers
 	"modifiers": "Modifiers",
@@ -243,7 +243,7 @@ Strings["zh-CN"] = {
 	"inGame_noBad": "无坏",
 	"inGame_noExcess": "无多余",
 	"inGame_judgeWindow": "%fx 判",
-	"inGame_autoCompleteHold": "自动长押",
+	"inGame_autoCompleteHolds": "自动长押",
 	
 	// preferences: modifiers
 	"modifiers": "模式",
@@ -422,7 +422,7 @@ Strings["zh-TW"] = {
 	"inGame_noBad": "無壞",
 	"inGame_noExcess": "無多餘",
 	"inGame_judgeWindow": "%fx 判",
-	"inGame_autoCompleteHold": "自動長押",
+	"inGame_autoCompleteHolds": "自動長押",
 	
 	// preferences: modifiers
 	"modifiers": "模式",

@@ -11,7 +11,7 @@ Scene_Game.MODIFIERS = [
 	'noBad',
 	'noExcess',
 	'judgeWindow',
-	'autoCompleteHold'
+	'autoCompleteHolds'
 ];
 Scene_Game.VISUALS = [
 	'FCAPIndicator',
@@ -554,7 +554,7 @@ Scene_Game.prototype._missHit = function () {
 
 Scene_Game.prototype._updateHoldings = function (now) {
 	for (let i = 0; i < this._holdings.length; i++) {
-		const [event, judge] = this._holdings[i];
+		const {event, judge} = this._holdings[i];
 		if (now >= event.timeEnd) {
 			this._beatmap.clearNote(event, judge);
 			if (judge === 'perfect') {
@@ -933,7 +933,7 @@ Scene_Game.prototype._perfectHit = function () {
 	if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 		this._playHitSound();
 	if (event.hold) {
-		this._holdings.push([event, 'perfect']);
+		this._holdings.push({'event': event, judge: 'perfect'});
 		this._holdings.sort((a, b) => a.timeEnd - b.timeEnd);
 	} else {
 		this._beatmap.clearNote(event, 'perfect');
@@ -952,7 +952,7 @@ Scene_Game.prototype._goodHit = function () {
 	if (this._visuals.flashWarningGood)
 		this._flashWarn('good')
 	if (event.hold) {
-		this._holdings.push([event, 'good']);
+		this._holdings.push({'event': event, judge: 'good'});
 		this._holdings.sort((a, b) => a.timeEnd - b.timeEnd);
 	} else {
 		this._beatmap.clearNote(event, 'good');
@@ -1022,8 +1022,8 @@ Scene_Game.prototype._excessHit = function (now) {
 };
 
 Scene_Game.prototype._processLoosen = function (now) {
-	if (Object.keys(this._pressings).length < this._holdings.length) {
-		const [event, judge] = this._holdings.shift();
+	if (!this._modifiers.autoCompleteHolds && Object.keys(this._pressings).length < this._holdings.length) {
+		const {event, judge} = this._holdings.shift();
 		if (now < event.timeEnd - this._goodTolerance * this._modifiers.judgeWindow) {
 			this._beatmap.clearNote(event, 'miss');
 			this._missNumber++;
