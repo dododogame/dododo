@@ -100,6 +100,7 @@ Strings["en-US"] = {
 	"fadeOut": "Fade-out (ratio to resolution, 0 to disable)",
 	"reverseVoices": "Reverse voices",
 	"mirror": "Mirror (flip horizontally)",
+	"showKeyboard": "Show keyboard pressings",
 	
 	// preferences: geometry
 	"geometry": "Geometry",
@@ -278,6 +279,7 @@ Strings["zh-CN"] = {
 	"fadeOut": "下隐距离 (0 为不下隐)",
 	"reverseVoices": "声部反转",
 	"mirror": "镜像 (左右反转)",
+	"showKeyboard": "显示按键情况",
 	
 	// preferences: geometry
 	"geometry": "几何",
@@ -456,6 +458,7 @@ Strings["zh-TW"] = {
 	"fadeOut": "下隱距離 (0 爲不下隱)",
 	"reverseVoices": "聲部反轉",
 	"mirror": "鏡像 (左右反轉)",
+	"showKeyboard": "顯示按鍵情況",
 	
 	// preferences: geometry
 	"geometry": "幾何",

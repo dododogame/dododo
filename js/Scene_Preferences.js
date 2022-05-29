@@ -173,6 +173,12 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				type: 'boolean',
 				args: {
 				}
+			},
+			{
+				name: 'showKeyboard',
+				type: 'boolean',
+				args: {
+				}
 			}
 		]
 	},
@@ -540,6 +546,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	fadeOut: 0,
 	reverseVoices: false,
 	mirror: false,
+	showKeyboard: !Utils.isMobileDevice(),
 	fontSize: 28,
 	textHeight: 40,
 	margin: 16,

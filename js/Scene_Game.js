@@ -24,7 +24,8 @@ Scene_Game.VISUALS = [
 	'fadeIn',
 	'fadeOut',
 	'reverseVoices',
-	'mirror'
+	'mirror',
+	'showKeyboard'
 ];
 
 Scene_Game.prototype.initialize = function (musicUrl, beatmapUrl, recording) {
@@ -51,6 +52,8 @@ Scene_Game.prototype.start = function () {
 	this._setButtonsVisible(false);
 	this._createScoreSprite();
 	this._createComboSprite();
+	if (this._visuals.showKeyboard)
+		this._createKeyboardSprite();
 	this._createMarkSprite();
 	this._createSummarySprite();
 	this._createFullComboSprite();
@@ -230,6 +233,13 @@ Scene_Game.prototype._createComboSprite = function () {
 	this._comboSprite.y = Graphics.height;
 	this._comboSprite.visible = false;
 	this.addChild(this._comboSprite);
+};
+
+Scene_Game.prototype._createKeyboardSprite = function () {
+	this._keyboardSprite = new Sprite(new Bitmap(256, preferences.textHeight));
+	this._keyboardSprite.y = Graphics.height - 2*preferences.textHeight;
+	this._keyboardSprite.visible = false;
+	this.addChild(this._keyboardSprite);
 };
 
 Scene_Game.prototype._createMarkSprite = function () {
@@ -561,6 +571,12 @@ Scene_Game.prototype._finishIfShould = function (now) {
 	}
 };
 
+Scene_Game.prototype._updateKeyboard = function () {
+	this._keyboardSprite.bitmap.clear();
+	this._keyboardSprite.bitmap.drawText(Object.keys(this._pressings).join(''), 0, 0,
+		this._keyboardSprite.width, preferences.textHeight, 'left');
+};
+
 Scene_Game.prototype.update = function () {
 	const now = this._now();
 	this._updateProgress(now);
@@ -570,6 +586,8 @@ Scene_Game.prototype.update = function () {
 		this._updateJudgeLine(now);
 		if (this._visuals.TPSIndicator)
 			this._updateTPSIndicator(now);
+		if (this._visuals.showKeyboard)
+			this._updateKeyboard();
 		if (this._hitSoundEnabled() && (this._modifiers.autoPlay || preferences.hitSoundWithMusic))
 			this._updateHitSoundWithMusic(now);
 		this._autoPlayUpdateAndProcessMiss(now);
@@ -584,17 +602,19 @@ Scene_Game.prototype.update = function () {
 
 Scene_Game.prototype._updateRecordingApply = function (now) {
 	while (this._recording.hit.length > 0) {
-		const nextHit = this._recording.hit[0].time;
-		if (now >= nextHit) {
-			this._processHit(nextHit);
+		const {time, key} = this._recording.hit[0];
+		if (now >= time) {
+			this._processHit(time);
+			this._pressings[key] = true;
 			this._recording.hit.shift();
 		} else
 			break;
 	}
 	while (this._recording.loosen.length > 0) {
-		const nextLoosen = this._recording.loosen[0].time;
-		if (now >= nextLoosen) {
-			this._processLoosen(nextLoosen);
+		const {time, key} = this._recording.loosen[0];
+		if (now >= time) {
+			this._processLoosen(time);
+			delete this._pressings[key];
 			this._recording.loosen.shift();
 		} else
 			break;
@@ -713,6 +733,8 @@ Scene_Game.prototype._postLoadingAudio = function () {
 	this._comboSprite.visible = true;
 	this._title.visible = true;
 	this._modifiersListSprite.visible = true;
+	if (this._visuals.showKeyboard)
+		this._keyboardSprite.visible = true;
 	if (this._visuals.TPSIndicator)
 		this._TPSIndicator.visible = true;
 	this._line1.bitmap = this._beatmap.lines[this._line1Index];
@@ -1128,6 +1150,8 @@ Scene_Game.prototype._finish = function () {
 	this._judgeLine.visible = false;
 	this._line1.visible = false;
 	this._line2.visible = false;
+	if (this._visuals.showKeyboard)
+		this._keyboardSprite.visible = false;
 	if (this._visuals.TPSIndicator)
 		this._TPSIndicator.visible = false;
 	if (this._offsetWizard && this._inaccuraciesArray.length > 0)
