@@ -517,11 +517,11 @@ Scene_Game.prototype._autoPlayUpdateAndProcessMiss = function (now) {
 	while (this._unclearedEvents.length > 0) {
 		const event = this._unclearedEvents[0];
 		if (now >= event.time) {
-			if (this._modifiers.autoPlay && now <= event.time + this._perfectTolerance) {
+			if (this._modifiers.autoPlay && now <= event.time + this._perfectTolerance * this._modifiers.judgeWindow) {
 				this._autoPlayEvent();
 				if (this._visuals.TPSIndicator)
 					this._hitsLastSecond.push(now);
-			} else if (now >= event.time + this._badTolerance) {
+			} else if (now >= event.time + this._badTolerance * this._modifiers.judgeWindow) {
 				this._missEvent();
 			} else
 				break;
@@ -938,11 +938,11 @@ Scene_Game.prototype._processHit = function (now) {
 		this._hitsLastSecond.push(now);
 	if (!this._ended) {
 		const event = this._unclearedEvents[0];
-		if (event && now >= event.time - this._badTolerance) {
+		if (event && now >= event.time - this._badTolerance * this._modifiers.judgeWindow) {
 			this._inaccuraciesArray.push(now - event.time);
 			const inaccuracy = now - event.time;
 			let judge;
-			if (Math.abs(inaccuracy) <= this._perfectTolerance) {
+			if (Math.abs(inaccuracy) <= this._perfectTolerance * this._modifiers.judgeWindow) {
 				judge = 'perfect';
 				if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 					this._playHitSound();
@@ -952,7 +952,7 @@ Scene_Game.prototype._processHit = function (now) {
 				} else {
 					this._holdings.push([event, judge]);
 				}
-			} else if (Math.abs(inaccuracy) <= this._goodTolerance) {
+			} else if (Math.abs(inaccuracy) <= this._goodTolerance * this._modifiers.judgeWindow) {
 				judge = 'good';
 				if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 					this._playHitSound();
@@ -1002,7 +1002,7 @@ Scene_Game.prototype._processHit = function (now) {
 Scene_Game.prototype._processLoosen = function (now) {
 	if (Object.keys(this._pressings).length < this._holdings.length) {
 		const [event, judge] = this._holdings.shift();
-		if (now < event.timeEnd - this._goodTolerance) {
+		if (now < event.timeEnd - this._goodTolerance * this._modifiers.judgeWindow) {
 			this._beatmap.clearNote(event, 'miss');
 			this._missNumber++;
 			this._combo = 0;
@@ -1096,7 +1096,7 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 	inaccuracyIndicator.anchor.x = 0.5;
 	inaccuracyIndicator.anchor.y = 0.5;
 	inaccuracyIndicator.x = this._inaccuracyBar.x + 
-			this._inaccuracyBar.width/2 * inaccuracy/this._badTolerance;
+			this._inaccuracyBar.width/2 * inaccuracy/(this._badTolerance * this._modifiers.judgeWindow);
 	inaccuracyIndicator.y = this._inaccuracyBar.y;
 	this._overHUDLayer.addChild(inaccuracyIndicator);
 	inaccuracyIndicator.update = () => {
@@ -1114,11 +1114,11 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 
 Scene_Game.prototype._getJudgeFromInaccuracy = function (inaccuracy) {
 	const absInaccuracy = Math.abs(inaccuracy);
-	if (absInaccuracy <= this._perfectTolerance)
+	if (absInaccuracy <= this._perfectTolerance * this._modifiers.judgeWindow)
 		return 'perfect';
-	if (absInaccuracy <= this._goodTolerance)
+	if (absInaccuracy <= this._goodTolerance * this._modifiers.judgeWindow)
 		return 'good';
-	if (absInaccuracy <= this._badTolerance)
+	if (absInaccuracy <= this._badTolerance * this._modifiers.judgeWindow)
 		return 'bad';
 	return 'miss';
 };
