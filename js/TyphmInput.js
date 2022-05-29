@@ -19,7 +19,7 @@ TyphmInput.prototype.initialize = function (selectItems) {
 	this.height = preferences.textHeight;
 	this.anchor = new Point(0, 0);
 	this._input.style = `
-		background-color: ${preferences.backgroundColor};
+		background-color: ${preferences.backgroundColor}00;
 		border: none;
 		outline: 0;
 		box-shadow: none;

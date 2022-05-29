@@ -150,14 +150,16 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				name: 'fadeIn',
 				type: 'number',
 				args: {
-					min: 0
+					min: 0.0,
+					step: 0.01
 				}
 			},
 			{
 				name: 'fadeOut',
 				type: 'number',
 				args: {
-					min: 0
+					min: 0.0,
+					step: 0.01
 				}
 			},
 			{

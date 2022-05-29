@@ -39,7 +39,6 @@ Strings["en-US"] = {
 	// in-game
 	"quitGame": "Back",
 	"restartGame": "Restart",
-	"autoPlaying": "Auto-playing",
 	"perfect": "Perfect",
 	"good": "Good",
 	"bad": "Bad",
@@ -58,6 +57,14 @@ Strings["en-US"] = {
 	"viewRecording": "Watch replay",
 	"saveRecording": "Save replay",
 	"uploadRecording": "Upload replay",
+	
+	// in-game display of modifiers
+	"inGame_playRate": "%fx speed",
+	"inGame_autoPlay": "Auto-play",
+	"inGame_noBad": "No-bad",
+	"inGame_noExcess": "No-excess",
+	"inGame_judgeWindow": "%fx judge",
+	"inGame_autoCompleteHold": "Auto-hold",
 	
 	// preferences: modifiers
 	"modifiers": "Modifiers",
@@ -89,8 +96,8 @@ Strings["en-US"] = {
 	"flashWarningMiss": "Warn by flash the screen at combo breaks",
 	"showInaccuracyData": "Show inaccuracy data",
 	"comboPopupInterval": "Interval of combo popups (set 0 to disable)",
-	"fadeIn": "Fade-in distance (0 to disable)",
-	"fadeOut": "Fade-out distance (0 to disable)",
+	"fadeIn": "Fade-in (ratio to resolution, 0 to disable)",
+	"fadeOut": "Fade-out (ratio to resolution, 0 to disable)",
 	"reverseVoices": "Reverse voices",
 	"mirror": "Mirror (flip horizontally)",
 	
@@ -211,7 +218,6 @@ Strings["zh-CN"] = {
 	// in-game
 	"quitGame": "返回",
 	"restartGame": "重开",
-	"autoPlaying": "自动",
 	"perfect": "完美",
 	"good": "好",
 	"bad": "坏",
@@ -229,6 +235,14 @@ Strings["zh-CN"] = {
 	"fullCombo": "全连",
 	"viewRecording": "看回放",
 	"saveRecording": "保存回放",
+	
+	// in-game display of modifiers
+	"inGame_playRate": "%fx 速",
+	"inGame_autoPlay": "自动",
+	"inGame_noBad": "无坏",
+	"inGame_noExcess": "无多余",
+	"inGame_judgeWindow": "%fx 判",
+	"inGame_autoCompleteHold": "自动长押",
 	
 	// preferences: modifiers
 	"modifiers": "模式",
@@ -382,7 +396,6 @@ Strings["zh-TW"] = {
 	// in-game
 	"quitGame": "返回",
 	"restartGame": "重開",
-	"autoPlaying": "自動",
 	"perfect": "完美",
 	"good": "好",
 	"bad": "壞",
@@ -400,6 +413,14 @@ Strings["zh-TW"] = {
 	"fullCombo": "全連",
 	"viewRecording": "看回放",
 	"saveRecording": "保存回放",
+	
+	// in-game display of modifiers
+	"inGame_playRate": "%fx 速",
+	"inGame_autoPlay": "自動",
+	"inGame_noBad": "無壞",
+	"inGame_noExcess": "無多餘",
+	"inGame_judgeWindow": "%fx 判",
+	"inGame_autoCompleteHold": "自動長押",
 	
 	// preferences: modifiers
 	"modifiers": "模式",
