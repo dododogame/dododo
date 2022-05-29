@@ -221,6 +221,19 @@ Beatmap.prototype.drawLines = function () {
 			case 'bad':
 				line[event.event] = parseFloat(event.parameters[0]);
 				break;
+			case 'fake_judge_line':
+				line.fakeJudgeLines ||= [];
+				line.fakeJudgeLines.push({
+					space_xFormula: x => Number(x),
+					space_yFormula: x => 0,
+					redFormula: x => 1,
+					greenFormula: x => 1,
+					blueFormula: x => 1,
+					alphaFormula: x => 1,
+					widthFormula: x => 1,
+					heightFormula: x => line.voicesNumber * preferences.voicesHeight
+				});
+				break;
 			case 'space_x':
 			case 'space_y':
 			case 'time':
@@ -232,7 +245,8 @@ Beatmap.prototype.drawLines = function () {
 			case 'height':
 				const property = event.event + 'Formula'
 				const expression = math.parse(event.parameters.join(' ')).compile();
-				line[property] = x => Number(expression.evaluate({'x': Number(x), ...preferences}));
+				(line.fakeJudgeLines ? line.fakeJudgeLines.last() : line)[property] =
+						x => Number(expression.evaluate({'x': Number(x), ...preferences}));
 				break;
 			case 'line':
 				line.lineno = this.lines.length - 1;

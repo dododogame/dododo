@@ -4,6 +4,48 @@ function Scene_Preferences() {
 
 Scene_Preferences.PREFERENCES_PAGES = [
 	{
+		category: 'modifiers',
+		list: [
+			{
+				name: 'playRate',
+				type: 'number',
+				args: {
+					min: 0,
+					step: 0.1
+				}
+			},
+			{
+				name: 'autoPlay',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'noBad',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'noExcess',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'judgeWindow',
+				type: 'number',
+				args: {
+					min: 0,
+					step: 0.1
+				}
+			},
+			{
+				name: 'autoCompleteHolds',
+				type: 'boolean',
+				args: {
+				}
+			}
+		]
+	},
+	{
 		category: 'gameplay',
 		list: [
 			{
@@ -19,19 +61,6 @@ Scene_Preferences.PREFERENCES_PAGES = [
 						scene._shouldGotoOffsetWizard = true;
 					}
 				}
-			},
-			{
-				name: 'playRate',
-				type: 'number',
-				args: {
-					min: 0,
-					step: 0.1
-				}
-			},
-			{
-				name: 'autoPlay',
-				type: 'boolean',
-				args: {}
 			},
 			{
 				name: 'countdown',
@@ -62,6 +91,12 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				name: 'autoPause',
 				type: 'boolean',
 				args: {}
+			},
+			{
+				name: 'recordVisual',
+				type: 'boolean',
+				args: {
+				}
 			}
 		]
 	},
@@ -109,6 +144,32 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				type: 'number',
 				args: {
 					min: 0
+				}
+			},
+			{
+				name: 'fadeIn',
+				type: 'number',
+				args: {
+					min: 0
+				}
+			},
+			{
+				name: 'fadeOut',
+				type: 'number',
+				args: {
+					min: 0
+				}
+			},
+			{
+				name: 'reverseVoices',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
+				name: 'mirror',
+				type: 'boolean',
+				args: {
 				}
 			}
 		]
@@ -427,6 +488,13 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
+				name: 'wiki',
+				type: 'button',
+				args: {
+					onclick: () => { open('https://github.com/UlyssesZh/dododo/wiki'); }
+				}
+			},
+			{
 				name: 'github',
 				type: 'button',
 				args: {
@@ -445,15 +513,20 @@ Scene_Preferences.PREFERENCES_PAGES = [
 ];
 
 Scene_Preferences.DEFAULT_PREFERENCES = {
-	offset: 0.0,
 	playRate: 1.0,
 	autoPlay: false,
+	noBad: false,
+	noExcess: false,
+	judgeWindow: 1.0,
+	autoCompleteHolds: false,
+	offset: 0.0,
 	countdown: true,
 	autoRestartGood: false,
 	autoRestartMiss: false,
 	F7Pause: true,
 	backtickRestart: true,
 	autoPause: true,
+	recordVisual: true,
 	FCAPIndicator: true,
 	TPSIndicator: true,
 	judgeLinePerformances: true,
@@ -461,6 +534,10 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	flashWarningMiss: true,
 	showInaccuracyData: true,
 	comboPopupInterval: 25,
+	fadeIn: 0,
+	fadeOut: 0,
+	reverseVoices: false,
+	mirror: false,
 	fontSize: 28,
 	textHeight: 40,
 	margin: 16,
