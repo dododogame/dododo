@@ -43,7 +43,12 @@ Scene_Game.prototype.start = function () {
 	this._paused = true;
 	this._lastPos = 0.0;
 	this._starting = performance.now();
+	this._createLayers();
 	this._createTwoLines();
+	if (this._visuals.fadeIn)
+		this._createFadeInMask();
+	if (this._visuals.fadeOut)
+		this._createFadeOutMask();
 	this._createJudgeLineSprite();
 	this._createPauseButton();
 	this._createBackButton();
@@ -140,17 +145,50 @@ Scene_Game.prototype._createLoadingSprite = function () {
 	this.addChild(this._loading);
 };
 
+Scene_Game.prototype._createLayers = function () {
+	this.addChild(this._beatmapLayer = new Sprite());
+	this.addChild(this._beatmapMaskLayer = new Sprite());
+	this.addChild(this._nextBeatmapLayer = new Sprite());
+	this.addChild(this._judgeLineLayer = new Sprite());
+	this.addChild(this._hitEffectLayer = new Sprite());
+	this.addChild(this._HUDLayer = new Sprite());
+	this.addChild(this._overHUDLayer = new Sprite());
+	this.addChild(this._summaryLayer = new Sprite());
+	this.addChild(this._screenEffectLayer = new Sprite());
+};
+
+Scene_Game.prototype._createFadeInMask = function () {
+	const distance = this._visuals.fadeIn * Graphics.width
+	const sprite = this._fadeInMask = new Sprite(new Bitmap(Graphics.width*3, Graphics.height*3));
+	sprite.anchor.x = 0.5;
+	sprite.anchor.y = 0.5;
+	sprite.bitmap.fillAll(preferences.backgroundColor);
+	sprite.bitmap.clearRect(sprite.width/2 - distance, 0, distance * 2, sprite.height);
+	sprite.visible = false;
+	this._beatmapMaskLayer.addChild(sprite);
+};
+
+Scene_Game.prototype._createFadeOutMask = function () {
+	const distance = this._visuals.fadeOut * Graphics.width
+	const sprite = this._fadeOutMask = new Sprite(new Bitmap(Graphics.width*3, Graphics.height*3));
+	sprite.anchor.x = 0.5;
+	sprite.anchor.y = 0.5;
+	sprite.bitmap.fillRect(sprite.width/2 - distance, 0, distance * 2, sprite.height, preferences.backgroundColor);
+	sprite.visible = false;
+	this._beatmapMaskLayer.addChild(sprite);
+};
+
 Scene_Game.prototype._createTwoLines = function () {
 	this._line1 = new Sprite();
 	this._line1.width = Graphics.width;
 	this._line1.anchor.y = 0.5;
 	this._center(this._line1, (Graphics.height - preferences.distanceBetweenLines)/2);
-	this.addChild(this._line1);
+	this._beatmapLayer.addChild(this._line1);
 	this._line2 = new Sprite();
 	this._line2.width = Graphics.width;
 	this._line2.anchor.y = 0.5;
 	this._center(this._line2, (Graphics.height + preferences.distanceBetweenLines)/2);
-	this.addChild(this._line2);
+	this._nextBeatmapLayer.addChild(this._line2);
 };
 
 Scene_Game.prototype._createJudgeLineSprite = function () {
@@ -159,13 +197,13 @@ Scene_Game.prototype._createJudgeLineSprite = function () {
 	this._judgeLine.anchor.x = 0.5;
 	this._judgeLine.anchor.y = 0.5;
 	this._judgeLine.visible = false;
-	this.addChild(this._judgeLine);
+	this._judgeLineLayer.addChild(this._judgeLine);
 	this._fakeJudgeLines = [];
 };
 
 Scene_Game.prototype._destroyFakeJudgeLines = function () {
 	for (let i = 0; i < this._fakeJudgeLines.length; i++) {
-		this.removeChild(this._fakeJudgeLines[i]);
+		this._judgeLineLayer.removeChild(this._fakeJudgeLines[i]);
 	}
 };
 
@@ -177,7 +215,7 @@ Scene_Game.prototype._createFakeJudgeLines = function () {
 			sprite.bitmap.fillAll('white');
 			sprite.anchor.x = 0.5;
 			sprite.anchor.y = 0.5;
-			this.addChild(sprite);
+			this._judgeLineLayer.addChild(sprite);
 			this._fakeJudgeLines.push(sprite);
 		}
 	}
@@ -190,7 +228,7 @@ Scene_Game.prototype._createPauseButton = function () {
 	this._pauseButton.bitmap.fillRect(6, 4, 6, 24, 'white');
 	this._pauseButton.bitmap.fillRect(18, 4, 6, 24, 'white');
 	this._pauseButton.visible = false;
-	this.addChild(this._pauseButton);
+	this._HUDLayer.addChild(this._pauseButton);
 }
 
 Scene_Game.prototype._createBackButton = function () {
@@ -199,7 +237,7 @@ Scene_Game.prototype._createBackButton = function () {
 	this._back.bitmap.drawText(`${Strings.quitGame} (b)`, 0, 0, 192, preferences.textHeight, 'center');
 	this._back.x = 30;
 	this._back.zIndex = 10;
-	this.addChild(this._back);
+	this._HUDLayer.addChild(this._back);
 };
 
 Scene_Game.prototype._createRestartButton = function () {
@@ -207,7 +245,7 @@ Scene_Game.prototype._createRestartButton = function () {
 		() => { this._shouldRestart = true });
 	this._restart.bitmap.drawText(`${Strings.restartGame} (r)`, 0, 0, 192, preferences.textHeight, 'center');
 	this._restart.x = 30+192;
-	this.addChild(this._restart);
+	this._HUDLayer.addChild(this._restart);
 };
 
 Scene_Game.prototype._createTitleSprite = function () {
@@ -216,7 +254,7 @@ Scene_Game.prototype._createTitleSprite = function () {
 	this._title.height = preferences.textHeight;
 	this._title.x = 32+192+192;
 	this._title.visible = false;
-	this.addChild(this._title);
+	this._HUDLayer.addChild(this._title);
 };
 
 Scene_Game.prototype._createScoreSprite = function () {
@@ -224,7 +262,7 @@ Scene_Game.prototype._createScoreSprite = function () {
 	this._scoreSprite.anchor.x = 1;
 	this._scoreSprite.x = Graphics.width;
 	this._scoreSprite.visible = false;
-	this.addChild(this._scoreSprite);
+	this._HUDLayer.addChild(this._scoreSprite);
 };
 
 Scene_Game.prototype._createComboSprite = function () {
@@ -232,26 +270,26 @@ Scene_Game.prototype._createComboSprite = function () {
 	this._comboSprite.anchor.y = 1;
 	this._comboSprite.y = Graphics.height;
 	this._comboSprite.visible = false;
-	this.addChild(this._comboSprite);
+	this._HUDLayer.addChild(this._comboSprite);
 };
 
 Scene_Game.prototype._createKeyboardSprite = function () {
 	this._keyboardSprite = new Sprite(new Bitmap(256, preferences.textHeight));
 	this._keyboardSprite.y = Graphics.height - 2*preferences.textHeight;
 	this._keyboardSprite.visible = false;
-	this.addChild(this._keyboardSprite);
+	this._HUDLayer.addChild(this._keyboardSprite);
 };
 
 Scene_Game.prototype._createMarkSprite = function () {
 	this._markSprite = new Sprite(new Bitmap(256, 256));
 	this._center(this._markSprite, preferences.textHeight);
-	this.addChild(this._markSprite);
+	this._HUDLayer.addChild(this._markSprite);
 };
 
 Scene_Game.prototype._createSummarySprite = function () {
 	this._summarySprite = new Sprite(new Bitmap(512, 384));
 	this._summarySprite.y = preferences.textHeight;
-	this.addChild(this._summarySprite);
+	this._summaryLayer.addChild(this._summarySprite);
 };
 
 Scene_Game.prototype._createFullComboSprite = function () {
@@ -261,7 +299,7 @@ Scene_Game.prototype._createFullComboSprite = function () {
 	this._fullCombo.x = 80;
 	this._fullCombo.bitmap.drawText(Strings.fullCombo, 0, 0, 60, preferences.textHeight, 'center');
 	this._fullCombo.visible = false;
-	this.addChild(this._fullCombo);
+	this._HUDLayer.addChild(this._fullCombo);
 };
 
 Scene_Game.prototype._createInaccuraciesDistributionSprite = function () {
@@ -275,13 +313,13 @@ Scene_Game.prototype._createInaccuraciesDistributionSprite = function () {
 	sprite.bitmap.drawText('μ+σ', sprite.width*2/3-64, sprite.height-preferences.textHeight, 128, preferences.textHeight, 'center');
 	sprite.bitmap.drawText('μ-σ', sprite.width/3-64, sprite.height-preferences.textHeight, 128, preferences.textHeight, 'center');
 	sprite.visible = false;
-	this.addChild(sprite);
+	this._summaryLayer.addChild(sprite);
 };
 
 Scene_Game.prototype._createInaccuracyDataSprite = function () {
 	this._inaccuracyDataSprite = new Sprite(new Bitmap(256, preferences.textHeight));
 	this._center(this._inaccuracyDataSprite, Graphics.height - 2 * preferences.textHeight);
-	this.addChild(this._inaccuracyDataSprite);
+	this._HUDLayer.addChild(this._inaccuracyDataSprite);
 };
 
 Scene_Game.prototype._createAccuracyRateSprite = function () {
@@ -290,7 +328,7 @@ Scene_Game.prototype._createAccuracyRateSprite = function () {
 	this._accuracyRateSprite.anchor.x = 1;
 	this._accuracyRateSprite.x = Graphics.width;
 	this._accuracyRateSprite.y = Graphics.height;
-	this.addChild(this._accuracyRateSprite);
+	this._HUDLayer.addChild(this._accuracyRateSprite);
 };
 
 Scene_Game.prototype._createInaccuracyBarSprite = function () {
@@ -299,7 +337,7 @@ Scene_Game.prototype._createInaccuracyBarSprite = function () {
 	this._center(this._inaccuracyBar, Graphics.height - preferences.textHeight / 2);
 	this._drawInaccuracyBar(TyphmConstants.DEFAULT_PERFECT, TyphmConstants.DEFAULT_GOOD, TyphmConstants.DEFAULT_BAD);
 	this._inaccuracyBar.visible = false;
-	this.addChild(this._inaccuracyBar);
+	this._HUDLayer.addChild(this._inaccuracyBar);
 	this._inaccuracyBitmap = new Bitmap(3, 16); // for use with inaccuracy indicators (small rules)
 	this._inaccuracyBitmap.fillAll('white');
 };
@@ -308,7 +346,7 @@ Scene_Game.prototype._createProgressIndicatorSprite = function () {
 	this._progressIndicator = new Sprite(new Bitmap(Graphics.width, 1));
 	this._progressIndicator.bitmap.fillAll('white');
 	this._progressIndicator.anchor.x = 1;
-	this.addChild(this._progressIndicator);
+	this._HUDLayer.addChild(this._progressIndicator);
 };
 
 Scene_Game.prototype._createViewRecordingButton = function () {
@@ -319,7 +357,7 @@ Scene_Game.prototype._createViewRecordingButton = function () {
 	this._viewRecordingButton.x = Graphics.width;
 	this._viewRecordingButton.y = preferences.textHeight;
 	this._viewRecordingButton.visible = false;
-	this.addChild(this._viewRecordingButton);
+	this._summaryLayer.addChild(this._viewRecordingButton);
 };
 
 Scene_Game.prototype._createModifiersListSprite = function () {
@@ -334,7 +372,7 @@ Scene_Game.prototype._createModifiersListSprite = function () {
 	this._modifiersListSprite.bitmap.drawText(modifiersTexts.join(', '), 0, 0,
 		this._modifiersListSprite.width, preferences.textHeight, 'left');
 	this._modifiersListSprite.visible = false;
-	this.addChild(this._modifiersListSprite);
+	this._summaryLayer.addChild(this._modifiersListSprite);
 };
 
 Scene_Game.prototype._createSaveRecordingButton = function () {
@@ -345,7 +383,7 @@ Scene_Game.prototype._createSaveRecordingButton = function () {
 	this._saveRecordingButton.x = Graphics.width;
 	this._saveRecordingButton.y = preferences.textHeight*2;
 	this._saveRecordingButton.visible = false;
-	this.addChild(this._saveRecordingButton);
+	this._summaryLayer.addChild(this._saveRecordingButton);
 };
 
 Scene_Game.prototype._createTPSIndicatorSprite = function () {
@@ -354,7 +392,7 @@ Scene_Game.prototype._createTPSIndicatorSprite = function () {
 	this._TPSIndicator.x = Graphics.width;
 	this._TPSIndicator.y = preferences.textHeight;
 	this._TPSIndicator.visible = false;
-	this.addChild(this._TPSIndicator);
+	this._HUDLayer.addChild(this._TPSIndicator);
 };
 
 Scene_Game.prototype._createFlashBitmap = function (judge) {
@@ -369,9 +407,9 @@ Scene_Game.prototype._flashWarn = function (judge) {
 	sprite.update = () => {
 		sprite.opacity -= 500 / Graphics._fpsMeter.fps;
 		if (sprite.opacity <= 0)
-			this.removeChild(sprite);
+			this._screenEffectLayer.removeChild(sprite);
 	};
-	this.addChild(sprite);
+	this._screenEffectLayer.addChild(sprite);
 };
 
 Scene_Game.prototype._saveRecording = function () {
@@ -442,6 +480,14 @@ Scene_Game.prototype._updateJudgeLine = function (now) {
 	} else {
 		this._judgeLine.y = this._line1.y;
 		this._judgeLine.scale.y = line.voicesNumber * preferences.voicesHeight;
+	}
+	if (this._visuals.fadeIn) {
+		this._fadeInMask.y = this._line1.y;
+		this._fadeInMask.x = this._judgeLine.x;
+	}
+	if (this._visuals.fadeOut) {
+		this._fadeOutMask.y = this._line1.y;
+		this._fadeOutMask.x = this._judgeLine.x;
 	}
 };
 
@@ -535,6 +581,8 @@ Scene_Game.prototype._updateHoldings = function (now) {
 };
 
 Scene_Game.prototype._switchLine = function () {
+	this._beatmapLayer.removeChild(this._line1);
+	this._nextBeatmapLayer.removeChild(this._line2);
 	let t = this._line1;
 	this._line1 = this._line2;
 	this._line2 = t;
@@ -543,6 +591,8 @@ Scene_Game.prototype._switchLine = function () {
 	this._line2Index = t;
 	this._line2Index += 2;
 	this._line2.bitmap = this._beatmap.lines[this._line2Index];
+	this._beatmapLayer.addChild(this._line1);
+	this._nextBeatmapLayer.addChild(this._line2);
 	this._setUpNewLine();
 };
 
@@ -737,6 +787,10 @@ Scene_Game.prototype._postLoadingAudio = function () {
 		this._keyboardSprite.visible = true;
 	if (this._visuals.TPSIndicator)
 		this._TPSIndicator.visible = true;
+	if (this._visuals.fadeIn)
+		this._fadeInMask.visible = true;
+	if (this._visuals.fadeOut)
+		this._fadeOutMask.visible = true;
 	this._line1.bitmap = this._beatmap.lines[this._line1Index];
 	this._line2.bitmap = this._beatmap.lines[this._line2Index];
 	this._loadingFinished = true;
@@ -757,7 +811,7 @@ Scene_Game.prototype._pause = function () {
 		this._paused = true;
 		this._setButtonsVisible(true);
 		if (this._resumingCountdown)
-			this.removeChild(this._resumingCountdown);
+			this._overHUDLayer.removeChild(this._resumingCountdown);
 		if (this._hasMusic)
 			this._audioPlayer.stop();
 	}
@@ -1012,11 +1066,11 @@ Scene_Game.prototype._updateCombo = function () {
 		comboIndicator.bitmap.drawText(this._combo, 0, 0, 512, 128, 'center');
 		comboIndicator.anchor.y = 0.5;
 		this._center(comboIndicator, Graphics.height / 2);
-		this.addChild(comboIndicator);
+		this._overHUDLayer.addChild(comboIndicator);
 		comboIndicator.update = () => {
 			comboIndicator.opacity *= 0.95**(60/Graphics._fpsMeter.fps);
 			if (comboIndicator.opacity <= 5)
-				this.removeChild(comboIndicator);
+				this._overHUDLayer.removeChild(comboIndicator);
 		};
 	}
 };
@@ -1044,11 +1098,11 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 	inaccuracyIndicator.x = this._inaccuracyBar.x + 
 			this._inaccuracyBar.width/2 * inaccuracy/this._badTolerance;
 	inaccuracyIndicator.y = this._inaccuracyBar.y;
-	this.addChild(inaccuracyIndicator);
+	this._overHUDLayer.addChild(inaccuracyIndicator);
 	inaccuracyIndicator.update = () => {
 		inaccuracyIndicator.opacity -= 0.5*60/Graphics._fpsMeter.fps;
 		if (inaccuracyIndicator.opacity <= 0)
-			this.removeChild(inaccuracyIndicator);
+			this._overHUDLayer.removeChild(inaccuracyIndicator);
 	};
 	if (this._visuals.showInaccuracyData) {
 		this._inaccuracyDataSprite.bitmap.clear();
@@ -1079,14 +1133,14 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 	hitEffect.x = event.x;
 	const line = this._line1Index === event.lineno ? this._line1 : this._line2;
 	hitEffect.y = line.y - TyphmConstants.LINES_HEIGHT / 2 + event.y;
-	this.addChild(hitEffect);
+	this._hitEffectLayer.addChild(hitEffect);
 	let n = 1;
 	hitEffect.update = () => {
 		hitEffect.opacity = 255*0.9**(n*60/Graphics._fpsMeter.fps);
 		hitEffect.bitmap.drawCircle(r, r, r-(r - preferences.headsRadius)/n, color);
 		n++;
 		if (hitEffect.opacity <= 5)
-			this.removeChild(hitEffect);
+			this._hitEffectLayer.removeChild(hitEffect);
 	};
 };
 
@@ -1097,11 +1151,11 @@ Scene_Game.prototype._createWrongNote = function (time) {
 	wrongNote.anchor.y = 0.5;
 	wrongNote.x = this._getXFromTime(time);
 	wrongNote.y = this._line1.y;
-	this.addChild(wrongNote);
+	this._beatmapLayer.addChild(wrongNote);
 	wrongNote.update = () => {
 		wrongNote.opacity *= 0.98**(60/Graphics._fpsMeter.fps);
 		if (wrongNote.opacity <= 5)
-			this.removeChild(wrongNote);
+			this._beatmapLayer.removeChild(wrongNote);
 	};
 };
 

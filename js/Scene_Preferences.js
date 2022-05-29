@@ -151,7 +151,7 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				type: 'number',
 				args: {
 					min: 0.0,
-					step: 0.01
+					step: 0.1
 				}
 			},
 			{
@@ -159,7 +159,7 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				type: 'number',
 				args: {
 					min: 0.0,
-					step: 0.01
+					step: 0.1
 				}
 			},
 			{
