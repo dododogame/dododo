@@ -155,7 +155,7 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 	}
 }
 
-Beatmap.prototype.drawLines = function () {
+Beatmap.prototype.drawLines = function (reverseVoices) {
 	this.lines = [new Bitmap(Graphics.width, TyphmConstants.LINES_HEIGHT)];
 	this.notes = [];
 	let lastLineNotes = [];
@@ -290,7 +290,9 @@ Beatmap.prototype.drawLines = function () {
 					if (i > 0)
 						for (let j = 0; j < voices[i].length; j++)
 							this._calculateLengthRecursive(voices[i][j]);
-					const y = y0+preferences.voicesHeight*i;
+					let y = y0+preferences.voicesHeight*i;
+					if (reverseVoices)
+						y = TyphmConstants.LINES_HEIGHT - y;
 					this.drawStaffLine(line, y);
 					lastLineNotes[i] = this.drawVoiceAndGetLastNote(line, voices[i], y, lastLineNotes[i]);
 				}

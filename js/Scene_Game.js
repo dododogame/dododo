@@ -711,7 +711,7 @@ Scene_Game.prototype.stop = function () {
 
 Scene_Game.prototype._onLoad = async function () {
 	await this._beatmap.load();
-	this._beatmap.drawLines();
+	this._beatmap.drawLines(this._visuals.reverseVoices);
 	if (!this._hasMusic && this._beatmap.audioUrl) {
 		this._hasMusic = true;
 		this._musicUrl = this._beatmap.audioUrl;
