@@ -189,6 +189,10 @@ Scene_Game.prototype._createTwoLines = function () {
 	this._line2.anchor.y = 0.5;
 	this._center(this._line2, (Graphics.height + preferences.distanceBetweenLines)/2);
 	this._nextBeatmapLayer.addChild(this._line2);
+	if (this._visuals.mirror) {
+		this._line1.scale.x = -1;
+		this._line2.scale.x = -1;
+	}
 };
 
 Scene_Game.prototype._createJudgeLineSprite = function () {
@@ -462,6 +466,8 @@ Scene_Game.prototype._updateJudgeLine = function (now) {
 	const lengthPosition = this._getLengthPositionFromTime(now);
 	const line = this._line1.bitmap;
 	this._judgeLine.x = this._getXFromLengthPosition(lengthPosition);
+	if (this._visuals.mirror)
+		this._judgeLine.x = Graphics.width - this._judgeLine.x;
 	if (this._visuals.judgeLinePerformances) {
 		this._judgeLine.y = this._line1.y - line.space_yFormula(lengthPosition);
 		this._judgeLine.scale.x = line.widthFormula(lengthPosition);
@@ -474,6 +480,8 @@ Scene_Game.prototype._updateJudgeLine = function (now) {
 			const judgeLine = this._fakeJudgeLines[i];
 			const set = line.fakeJudgeLines[i];
 			judgeLine.x = preferences.margin + set.space_xFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
+			if (this._visuals.mirror)
+				judgeLine.x = Graphics.width - judgeLine.x;
 			judgeLine.y = this._line1.y - set.space_yFormula(lengthPosition);
 			judgeLine.scale.x = set.widthFormula(lengthPosition);
 			judgeLine.scale.y = set.heightFormula(lengthPosition);
@@ -570,7 +578,8 @@ Scene_Game.prototype._updateHoldings = function (now) {
 			this._holdings.shift();
 			i--;
 		} else {
-			this._beatmap.trackHoldTo(now, this._judgeLine.x, event, judge, this._line1Index);
+			const xNow = this._visuals.mirror ? Graphics.width - this._judgeLine.x : this._judgeLine.x;
+			this._beatmap.trackHoldTo(now, xNow, event, judge, this._line1Index);
 		}
 	}
 };
@@ -1153,6 +1162,8 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 	hitEffect.anchor.x = 0.5;
 	hitEffect.anchor.y = 0.5;
 	hitEffect.x = event.x;
+	if (this._visuals.mirror)
+		hitEffect.x = Graphics.width - hitEffect.x;
 	const line = this._line1Index === event.lineno ? this._line1 : this._line2;
 	hitEffect.y = line.y - TyphmConstants.LINES_HEIGHT / 2 + event.y;
 	this._hitEffectLayer.addChild(hitEffect);
@@ -1230,6 +1241,8 @@ Scene_Game.prototype._finish = function () {
 		this._keyboardSprite.visible = false;
 	if (this._visuals.TPSIndicator)
 		this._TPSIndicator.visible = false;
+	if (this._visuals.showInaccuracyData)
+		this._inaccuracyDataSprite.visible = false;
 	if (this._offsetWizard && this._inaccuraciesArray.length > 0)
 		preferences.offset -= math.mean(this._inaccuraciesArray);
 	if (this._inaccuraciesArray.length > 0)
