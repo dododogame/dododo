@@ -1161,7 +1161,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 	hitEffect.bitmap.drawCircle(r, r, preferences.headsRadius, color);
 	hitEffect.anchor.x = 0.5;
 	hitEffect.anchor.y = 0.5;
-	hitEffect.x = event.x;
+	hitEffect.x = event.hitX;
 	if (this._visuals.mirror)
 		hitEffect.x = Graphics.width - hitEffect.x;
 	const line = this._line1Index === event.lineno ? this._line1 : this._line2;

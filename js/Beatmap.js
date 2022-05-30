@@ -243,6 +243,8 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 			case 'alpha':
 			case 'width':
 			case 'height':
+			case 'note_x':
+			case 'hit_x':
 				const property = event.event + 'Formula'
 				const expression = math.parse(event.parameters.join(' ')).compile();
 				(line.fakeJudgeLines ? line.fakeJudgeLines.last() : line)[property] =
@@ -274,6 +276,8 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 				line.alphaFormula ||= x => 1;
 				line.widthFormula ||= x => 1;
 				line.heightFormula ||= x => line.voicesNumber * preferences.voicesHeight;
+				line.note_xFormula ||= line.space_xFormula;
+				line.hit_xFormula ||= line.note_xFormula;
 				if (line.BPMMarkers) {
 					for (let i = 0; i < line.BPMMarkers.length; i++) {
 						const {length, dots, bpm, position} = line.BPMMarkers[i];
@@ -308,17 +312,18 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 
 Beatmap.prototype.drawStaffLine = function (bitmap, y) {
 	bitmap.fillRect(0, y, Graphics.width, 1, preferences.auxiliariesColor);
-}
+};
+
+Beatmap.prototype.denormalizeX = function (normalizedX) {
+	return normalizedX * (Graphics.width - preferences.margin*2) + preferences.margin;
+};
 
 Beatmap.prototype.drawVoiceAndGetLastNote = function (bitmap, voice, y, lastNote) {
 	bitmap.totalTime = bitmap.totalLength.valueOf() * bitmap.millisecondsPerWhole;
 	let timeLengthPassed = frac(0);
 	for (let i = 0; i < voice.length; i++) {
 		const event = voice[i];
-		event.x = bitmap.space_xFormula(timeLengthPassed.div(bitmap.totalLength)) * (Graphics.width - preferences.margin*2) + preferences.margin;
-		event.xEnd = bitmap.space_xFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * (Graphics.width - preferences.margin*2) + preferences.margin;
-		event.time = bitmap.startTime + bitmap.timeFormula(timeLengthPassed.div(bitmap.totalLength)) * bitmap.totalTime;
-		event.timeEnd = bitmap.startTime + bitmap.timeFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * bitmap.totalTime;
+		this.setupNoteXAndTime(bitmap, event, timeLengthPassed);
 		const lastTie = lastNote && lastNote.tie;
 		if (event.event === "note") {
 			if (lastTie) {
@@ -389,7 +394,7 @@ Beatmap.prototype.recordHitEvent = function (lineno, note, y, shouldHit) {
 	if (shouldHit) {
 		note.hitEvents = [];
 		for (let i = 0; i < note.multiplicity; i++) {
-			const hitEvent = {"x": note.x, "y": y+i*preferences.headsRadius*2, "xEnd": note.xEnd, "time": note.time, "timeEnd": note.timeEnd,
+			const hitEvent = {"x": note.x, "hitX": note.hitX, "y": y+i*preferences.headsRadius*2, "xEnd": note.xEnd, "time": note.time, "timeEnd": note.timeEnd,
 				"hold": note.hold, "solid": note.length > 1, "lineno": lineno};
 			note.hitEvents.push(hitEvent);
 			this.notes.push(hitEvent);
@@ -535,15 +540,22 @@ Beatmap.prototype.drawTie = function (bitmap, x1, x2, y) {
 	bitmap._setDirty();
 };
 
+Beatmap.prototype.setupNoteXAndTime = function (bitmap, event, timeLengthPassed) {
+	const position = timeLengthPassed.div(bitmap.totalLength);
+	const positionEnd = timeLengthPassed.add(event.trueLength).div(bitmap.totalLength);
+	event.x = this.denormalizeX(bitmap.note_xFormula(position));
+	event.xEnd = this.denormalizeX(bitmap.note_xFormula(positionEnd));
+	event.hitX = this.denormalizeX(bitmap.hit_xFormula(position));
+	event.time = bitmap.timeFormula(position) * bitmap.totalTime + bitmap.startTime;
+	event.timeEnd = bitmap.timeFormula(positionEnd) * bitmap.totalTime + bitmap.startTime;
+};
+
 Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y, lastNote, isFirst, isLast, height, lengthStart, previousEvent, nextEvent, layer) {
 	const notes = group.notes;
 	let timeLengthPassed = lengthStart;
 	for (let i = 0; i < notes.length; i++) {
 		const event = notes[i];
-		event.x = bitmap.space_xFormula(timeLengthPassed.div(bitmap.totalLength)) * (Graphics.width-2*preferences.margin) + preferences.margin;
-		event.xEnd = bitmap.space_xFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * (Graphics.width-2*preferences.margin) + preferences.margin;
-		event.time = bitmap.timeFormula(timeLengthPassed.div(bitmap.totalLength)) * bitmap.totalTime + bitmap.startTime;
-		event.timeEnd = bitmap.timeFormula(timeLengthPassed.add(event.trueLength).div(bitmap.totalLength)) * bitmap.totalTime + bitmap.startTime;
+		this.setupNoteXAndTime(bitmap, event, timeLengthPassed);
 		const lastTie = lastNote && lastNote.tie;
 		let previousIndex = i - 1;
 		while (notes[previousIndex] && notes[previousIndex].event === "barline") {
