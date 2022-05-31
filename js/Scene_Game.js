@@ -27,6 +27,11 @@ Scene_Game.VISUALS = [
 	'mirror',
 	'showKeyboard'
 ];
+Scene_Game.PERFECT = 3;
+Scene_Game.GOOD = 2;
+Scene_Game.BAD = 1;
+Scene_Game.MISS = 0;
+Scene_Game.EXCEESS = -1;
 
 Scene_Game.prototype.initialize = function (musicUrl, beatmapUrl, recording) {
 	Scene_Base.prototype.initialize.call(this);
@@ -72,10 +77,10 @@ Scene_Game.prototype.start = function () {
 	this._createSaveRecordingButton();
 	this._createModifiersListSprite();
 	if (this._visuals.flashWarningGood)
-		this._createFlashBitmap('good');
+		this._createFlashBitmap(Scene_Game.GOOD);
 	if (this._visuals.flashWarningMiss) {
-		this._createFlashBitmap('bad');
-		this._createFlashBitmap('miss');
+		this._createFlashBitmap(Scene_Game.BAD);
+		this._createFlashBitmap(Scene_Game.MISS);
 		this._createFlashBitmap('excess');
 	}
 	if (this._visuals.TPSIndicator)
@@ -89,6 +94,10 @@ Scene_Game.prototype.start = function () {
 	this._badNumber = 0;
 	this._missNumber = 0;
 	this._excessNumber = 0;
+	this._perfectMeasures = 0;
+	this._goodMeasures = 0;
+	this._badMeasures = 0;
+	this._missMeasures = 0;
 	this._combo = 0;
 	this._maxCombo = 0;
 	this._holdings = [];
@@ -96,6 +105,7 @@ Scene_Game.prototype.start = function () {
 	this._hitsLastSecond = [];
 	this._line1Index = 0;
 	this._line2Index = 1;
+	this._clearedMeasures = 0;
 	this._createListeners();
 	this._resumingCountdown = null;
 	this._loadingFinished = false;
@@ -402,7 +412,7 @@ Scene_Game.prototype._createTPSIndicatorSprite = function () {
 Scene_Game.prototype._createFlashBitmap = function (judge) {
 	this._flashBitmaps ||= {};
 	this._flashBitmaps[judge] = new Bitmap(Graphics.width, Graphics.height);
-	this._flashBitmaps[judge].fillAll(preferences[judge + 'Color']);
+	this._flashBitmaps[judge].fillAll(Scene_Game.getColorFromJudge(judge));
 };
 
 Scene_Game.prototype._flashWarn = function (judge) {
@@ -549,15 +559,31 @@ Scene_Game.prototype._autoPlayUpdateAndProcessMiss = function (now) {
 
 Scene_Game.prototype._missHit = function () {
 	const event = this._unclearedEvents.shift();
-	this._beatmap.clearNote(event, 'miss');
+	if (event.time >= this._unclearedMeasures[0])
+		this._clearMeasure();
+	this._currentMeasureJudge = Scene_Game.MISS;
+	this._beatmap.clearNote(event, Scene_Game.MISS);
 	this._missNumber++;
 	this._combo = 0;
 	if (this._visuals.flashWarningMiss)
-		this._flashWarn('miss')
+		this._flashWarn(Scene_Game.MISS)
 	if (this._isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 		this._shouldRestart = true;
 	this._updateCombo();
 	this._updateScore();
+};
+
+Scene_Game.getColorFromJudge = function (judge) {
+	if (judge === Scene_Game.PERFECT)
+		return preferences.perfectColor;
+	else if (judge === Scene_Game.GOOD)
+		return preferences.goodColor;
+	else if (judge === Scene_Game.BAD)
+		return preferences.badColor;
+	else if (judge === Scene_Game.MISS)
+		return preferences.missColor;
+	else if (judge === Scene_Game.EXCEESS)
+		return preferences.excessColor;
 };
 
 Scene_Game.prototype._updateHoldings = function (now) {
@@ -565,7 +591,7 @@ Scene_Game.prototype._updateHoldings = function (now) {
 		const {event, judge} = this._holdings[i];
 		if (now >= event.timeEnd) {
 			this._beatmap.clearNote(event, judge);
-			if (judge === 'perfect') {
+			if (judge === Scene_Game.PERFECT) {
 				this._perfectNumber++;
 			} else {
 				this._goodNumber++;
@@ -732,10 +758,12 @@ Scene_Game.prototype._onLoad = async function () {
 	this._inaccuraciesArray = [];
 	this._lastPos = this._beatmap.start;
 	this._makeTitle();
-	this._updateScore();
-	this._updateCombo();
 	this._unclearedEvents = [...this._beatmap.notes];
 	this._unclearedHitSounds = [...this._beatmap.notes];
+	this._unclearedMeasures = this._beatmap.barlines.map(barline => barline.time);
+	this._currentMeasureJudge = Scene_Game.PERFECT;
+	this._updateScore();
+	this._updateCombo();
 	if (this._hasMusic) {
 		this._audioPlayer = new WebAudio(this._musicUrl);
 		this._audioPlayer.addLoadListener(() => {
@@ -951,32 +979,37 @@ Scene_Game.prototype._playHitSound = function () {
 
 Scene_Game.prototype._perfectHit = function () {
 	const event = this._unclearedEvents.shift();
+	if (event.time >= this._unclearedMeasures[0])
+		this._clearMeasure();
 	if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 		this._playHitSound();
 	if (event.hold) {
-		this._holdings.push({'event': event, judge: 'perfect'});
+		this._holdings.push({'event': event, judge: Scene_Game.PERFECT});
 		this._holdings.sort((a, b) => a.timeEnd - b.timeEnd);
 	} else {
-		this._beatmap.clearNote(event, 'perfect');
+		this._beatmap.clearNote(event, Scene_Game.PERFECT);
 		this._perfectNumber++;
 		this._combo++;
 		this._updateScore();
 		this._updateCombo();
 	}
-	this._createHitEffect(event, 'perfect');
+	this._createHitEffect(event, Scene_Game.PERFECT);
 };
 
 Scene_Game.prototype._goodHit = function () {
 	const event = this._unclearedEvents.shift();
+	if (event.time >= this._unclearedMeasures[0])
+		this._clearMeasure();
+	this._currentMeasureJudge = Math.min(Scene_Game.GOOD, this._currentMeasureJudge);
 	if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 		this._playHitSound();
 	if (this._visuals.flashWarningGood)
-		this._flashWarn('good')
+		this._flashWarn(Scene_Game.GOOD)
 	if (event.hold) {
-		this._holdings.push({'event': event, judge: 'good'});
+		this._holdings.push({'event': event, judge: Scene_Game.GOOD});
 		this._holdings.sort((a, b) => a.timeEnd - b.timeEnd);
 	} else {
-		this._beatmap.clearNote(event, 'good');
+		this._beatmap.clearNote(event, Scene_Game.GOOD);
 		this._goodNumber++;
 		this._combo++;
 		if (this._isRecording && preferences.autoRestartGood)
@@ -984,21 +1017,24 @@ Scene_Game.prototype._goodHit = function () {
 		this._updateScore();
 		this._updateCombo();
 	}
-	this._createHitEffect(event, 'good');
+	this._createHitEffect(event, Scene_Game.GOOD);
 };
 
 Scene_Game.prototype._badHit = function () {
 	const event = this._unclearedEvents.shift();
+	if (event.time >= this._unclearedMeasures[0])
+		this._clearMeasure();
+	this._currentMeasureJudge = Math.min(Scene_Game.BAD, this._currentMeasureJudge);
 	this._badNumber++;
 	if (this._visuals.flashWarningMiss)
-		this._flashWarn('bad')
+		this._flashWarn(Scene_Game.BAD)
 	if (this._isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 		this._shouldRestart = true;
 	this._combo = 0;
 	this._updateScore();
 	this._updateCombo();
-	this._beatmap.clearNote(event, 'bad');
-	this._createHitEffect(event, 'bad');
+	this._beatmap.clearNote(event, Scene_Game.BAD);
+	this._createHitEffect(event, Scene_Game.BAD);
 };
 
 Scene_Game.prototype._processHit = function (now) {
@@ -1010,11 +1046,11 @@ Scene_Game.prototype._processHit = function (now) {
 			if (now >= event.time - this._missBoundary() * this._modifiers.judgeWindow) {
 				const inaccuracy = now - event.time;
 				const judge = this._getJudgeFromInaccuracy(inaccuracy);
-				if (judge === 'perfect')
+				if (judge === Scene_Game.PERFECT)
 					this._perfectHit();
-				else if (judge === 'good')
+				else if (judge === Scene_Game.GOOD)
 					this._goodHit();
-				else if (judge === 'bad' && !this._modifiers.noBad)
+				else if (judge === Scene_Game.BAD && !this._modifiers.noBad)
 					this._badHit();
 				else {
 					this._missHit();
@@ -1046,19 +1082,19 @@ Scene_Game.prototype._processLoosen = function (now) {
 	if (!this._modifiers.autoCompleteHolds && Object.keys(this._pressings).length < this._holdings.length) {
 		const {event, judge} = this._holdings.shift();
 		if (now < event.timeEnd - this._goodTolerance * this._modifiers.judgeWindow) {
-			this._beatmap.clearNote(event, 'miss');
+			this._beatmap.clearNote(event, Scene_Game.MISS);
 			this._missNumber++;
 			this._combo = 0;
 			if (this._isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 				this._shouldRestart = true;
 			if (this._visuals.flashWarningMiss)
-				this._flashWarn('miss');
-		} else if (judge === 'perfect') {
-			this._beatmap.clearNote(event, 'perfect');
+				this._flashWarn(Scene_Game.MISS);
+		} else if (judge === Scene_Game.PERFECT) {
+			this._beatmap.clearNote(event, Scene_Game.PERFECT);
 			this._perfectNumber++;
 			this._combo++;
-		} else if (judge === 'good') {
-			this._beatmap.clearNote(event, 'good');
+		} else if (judge === Scene_Game.GOOD) {
+			this._beatmap.clearNote(event, Scene_Game.GOOD);
 			this._goodNumber++;
 			this._combo++;
 		}
@@ -1069,7 +1105,10 @@ Scene_Game.prototype._processLoosen = function (now) {
 
 Scene_Game.prototype._updateScore = function () {
 	this._scoreSprite.bitmap.clear();
-	this._score = Math.floor((this._perfectNumber + this._goodNumber/4 - this._excessNumber)*1000000/this._beatmap.notes.length);
+	this._score = Math.floor(500000 * (
+		(this._perfectNumber + this._goodNumber/4 - this._excessNumber)/this._beatmap.notes.length + // 准度分
+		(this._perfectMeasures + this._goodMeasures/2) / this._beatmap.barlines.length // 连击分
+	));
 	this._scoreSprite.bitmap.textColor = this._getScoreColor();
 	this._scoreSprite.bitmap.drawText(this._score, 0, 0, this._scoreSprite.width, preferences.textHeight, 'right');
 	if (!this._unclearedEvents || this._unclearedEvents.length === this._beatmap.notes.length)
@@ -1149,7 +1188,7 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 	};
 	if (this._visuals.showInaccuracyData) {
 		this._inaccuracyDataSprite.bitmap.clear();
-		this._inaccuracyDataSprite.bitmap.textColor = preferences[this._getJudgeFromInaccuracy(inaccuracy) + 'Color'];
+		this._inaccuracyDataSprite.bitmap.textColor = Scene_Game.getColorFromJudge(this._getJudgeFromInaccuracy(inaccuracy));
 		this._inaccuracyDataSprite.bitmap.drawText(sprintf('%+.0fms', inaccuracy), 0, 0,
 			this._inaccuracyDataSprite.width, preferences.textHeight, 'center');
 	}
@@ -1158,18 +1197,18 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 Scene_Game.prototype._getJudgeFromInaccuracy = function (inaccuracy) {
 	const absInaccuracy = Math.abs(inaccuracy);
 	if (absInaccuracy <= this._perfectTolerance * this._modifiers.judgeWindow)
-		return 'perfect';
+		return Scene_Game.PERFECT;
 	if (absInaccuracy <= this._goodTolerance * this._modifiers.judgeWindow)
-		return 'good';
+		return Scene_Game.GOOD;
 	if (absInaccuracy <= this._badTolerance * this._modifiers.judgeWindow)
-		return 'bad';
-	return 'miss';
+		return Scene_Game.BAD;
+	return Scene_Game.MISS;
 };
 
 Scene_Game.prototype._createHitEffect = function (event, judge) {
 	const r = preferences.hitEffectRadius;
 	const hitEffect = new Sprite(new Bitmap(2*r, 2*r));
-	const color = preferences[judge + 'Color'];
+	const color = Scene_Game.getColorFromJudge(judge);
 	hitEffect.bitmap.drawCircle(r, r, preferences.headsRadius, color);
 	hitEffect.anchor.x = 0.5;
 	hitEffect.anchor.y = 0.5;
@@ -1300,22 +1339,44 @@ Scene_Game.prototype._drawInaccuraciesDistribution = function () {
 	this._inaccuraciesDistribution.bitmap.drawText(sprintf('σ=%.0fms', sigma), width-256, preferences.textHeight, 256, preferences.textHeight, 'right');
 };
 
+Scene_Game.prototype._clearMeasure = function () {
+	if (this._currentMeasureJudge === Scene_Game.PERFECT)
+		this._perfectMeasures++;
+	else if (this._currentMeasureJudge === Scene_Game.GOOD)
+		this._goodMeasures++;
+	else if (this._currentMeasureJudge === Scene_Game.BAD)
+		this._badMeasures++;
+	else if (this._currentMeasureJudge === Scene_Game.MISS)
+		this._missMeasures++;
+	this._unclearedMeasures.shift();
+	this._currentMeasureJudge = Scene_Game.PERFECT;
+};
+
 Scene_Game.prototype._drawSummary = function () {
+	this._clearMeasure();
+	this._updateScore();
 	this._markSprite.bitmap.fontSize = 108;
 	this._markSprite.bitmap.textColor = this._getScoreColor();
-	this._markSprite.bitmap.drawText(this._getMark(), 0, 0, this._markSprite.width, this._markSprite.height, 'center');
+	this._markSprite.bitmap.drawText(this._getMark(),
+		0, 0, this._markSprite.width, this._markSprite.height, 'center');
 	this._summarySprite.bitmap.textColor = preferences.perfectColor;
-	this._summarySprite.bitmap.drawText(`${Strings.perfect}: ${this._perfectNumber}`, 0, 0, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.perfect}: ${this._perfectNumber} (${this._perfectMeasures})`,
+		0, 0, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = preferences.goodColor;
-	this._summarySprite.bitmap.drawText(`${Strings.good}: ${this._goodNumber}`, 0, preferences.textHeight, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.good}: ${this._goodNumber} (${this._goodMeasures})`,
+		0, preferences.textHeight, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = preferences.badColor;
-	this._summarySprite.bitmap.drawText(`${Strings.bad}: ${this._badNumber}`, 0, preferences.textHeight*2, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.bad}: ${this._badNumber} (${this._badMeasures})`,
+		0, preferences.textHeight*2, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = preferences.missColor;
-	this._summarySprite.bitmap.drawText(`${Strings.miss}: ${this._missNumber}`, 0, preferences.textHeight*3, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.miss}: ${this._missNumber} (${this._missMeasures})`,
+		0, preferences.textHeight*3, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = preferences.excessColor;
-	this._summarySprite.bitmap.drawText(`${Strings.excess}: ${this._excessNumber}`, 0, preferences.textHeight*4, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.excess}: ${this._excessNumber}`,
+		0, preferences.textHeight*4, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._summarySprite.bitmap.textColor = 'white';
-	this._summarySprite.bitmap.drawText(`${Strings.maxCombo}: ${this._maxCombo}`, 0, preferences.textHeight*5, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
+	this._summarySprite.bitmap.drawText(`${Strings.maxCombo}: ${this._maxCombo}`,
+		0, preferences.textHeight*5, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._drawInaccuraciesDistribution();
 };
 

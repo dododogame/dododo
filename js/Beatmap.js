@@ -16,7 +16,7 @@ Beatmap.prototype.load = async function () {
 		if (head[i].length > 2)
 			head[i] = [head[i][0], head[i].slice(1).join(': ')];
 		else if (head[i].length === 1)
-			head[i][1] = ''
+			head[i][1] = '';
 	}
 	const dataLineno = head.length + 1;
 	head = Object.fromEntries(head);
@@ -165,6 +165,7 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 Beatmap.prototype.drawLines = function (reverseVoices) {
 	this.lines = [new Bitmap(Graphics.width, TyphmConstants.LINES_HEIGHT)];
 	this.notes = [];
+	this.barlines = [];
 	let lastLineNotes = [];
 	let lastLineEndTime = this.offset;
 	let lastBPM = undefined;
@@ -305,7 +306,7 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 					if (reverseVoices)
 						y = TyphmConstants.LINES_HEIGHT - y;
 					this.drawStaffLine(line, y);
-					lastLineNotes[i] = this.drawVoiceAndGetLastNote(line, voices[i], y, lastLineNotes[i]);
+					lastLineNotes[i] = this.drawVoiceAndGetLastNote(line, voices[i], i === 0, y, lastLineNotes[i]);
 				}
 				line.endTime = line.startTime + line.totalLength.valueOf() * line.millisecondsPerWhole;
 				lastLineEndTime = line.endTime;
@@ -325,7 +326,7 @@ Beatmap.prototype.denormalizeX = function (normalizedX) {
 	return normalizedX * (Graphics.width - preferences.margin*2) + preferences.margin;
 };
 
-Beatmap.prototype.drawVoiceAndGetLastNote = function (bitmap, voice, y, lastNote) {
+Beatmap.prototype.drawVoiceAndGetLastNote = function (bitmap, voice, isFirstVoice, y, lastNote) {
 	bitmap.totalTime = bitmap.totalLength.valueOf() * bitmap.millisecondsPerWhole;
 	let timeLengthPassed = frac(0);
 	for (let i = 0; i < voice.length; i++) {
@@ -352,9 +353,16 @@ Beatmap.prototype.drawVoiceAndGetLastNote = function (bitmap, voice, y, lastNote
 				firstNote.tiedNote = lastNote;
 				firstNote.multiplicity = lastNote.multiplicity;
 			}
-			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, event, y, lastNote,
+			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, isFirstVoice, event, y, lastNote,
 					i === 0, i === voice.length - 1, this.getGroupHeightRecursive(event), timeLengthPassed, 1);
 		} else if (event.event === 'barline') {
+			if (isFirstVoice) {
+				this.barlines.push({
+					"time": event.time,
+					"x": event.x,
+					"lineno": bitmap.lineno
+				});
+			}
 			this.drawBarline(bitmap, event.x);
 		}
 		timeLengthPassed = timeLengthPassed.add(event.trueLength);
@@ -547,17 +555,21 @@ Beatmap.prototype.drawTie = function (bitmap, x1, x2, y) {
 	bitmap._setDirty();
 };
 
+Beatmap.prototype.getTimeFromPosition = function (bitmap, position) {
+	return bitmap.timeFormula(position) * bitmap.totalTime + bitmap.startTime;
+};
+
 Beatmap.prototype.setupNoteXAndTime = function (bitmap, event, timeLengthPassed) {
 	const position = timeLengthPassed.div(bitmap.totalLength);
 	const positionEnd = timeLengthPassed.add(event.trueLength).div(bitmap.totalLength);
 	event.x = this.denormalizeX(bitmap.note_xFormula(position));
 	event.xEnd = this.denormalizeX(bitmap.note_xFormula(positionEnd));
 	event.hitX = this.denormalizeX(bitmap.hit_xFormula(position));
-	event.time = bitmap.timeFormula(position) * bitmap.totalTime + bitmap.startTime;
-	event.timeEnd = bitmap.timeFormula(positionEnd) * bitmap.totalTime + bitmap.startTime;
+	event.time = this.getTimeFromPosition(bitmap, position);
+	event.timeEnd = this.getTimeFromPosition(bitmap, positionEnd);
 };
 
-Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y, lastNote, isFirst, isLast, height, lengthStart, previousEvent, nextEvent, layer) {
+Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, isFirstVoice, group, y, lastNote, isFirst, isLast, height, lengthStart, previousEvent, nextEvent, layer) {
 	const notes = group.notes;
 	let timeLengthPassed = lengthStart;
 	for (let i = 0; i < notes.length; i++) {
@@ -595,9 +607,11 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, group, y,
 				firstNote.tiedNote = lastNote;
 				firstNote.multiplicity = lastNote.multiplicity;
 			}
-			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, event, y, lastNote,
+			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, isFirstVoice, event, y, lastNote,
 				i === 0, isLast && i === notes.length - 1, height, timeLengthPassed, previousNote, nextNote, layer + 1);
 		} else if (event.event === 'barline') {
+			if (isFirstVoice)
+				this.barlines.push({"time": event.time, "x": event.x, "lineno": bitmap.lineno});
 			this.drawBarline(bitmap, event.x);
 		}
 		timeLengthPassed = timeLengthPassed.add(event.trueLength);
@@ -661,9 +675,9 @@ Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, lineno) {
 	context.lineTo(xNow, y);
 	context.lineWidth = preferences.holdWidth;
 	let color;
-	if (judge === 'perfect')
+	if (judge === Scene_Game.PERFECT)
 		color = preferences.perfectColor;
-	else if (judge === 'good')
+	else if (judge === Scene_Game.GOOD)
 		color = preferences.goodColor;
 	context.strokeStyle = color;
 	context.stroke();
@@ -918,5 +932,5 @@ Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm, position) {
 };
 
 Beatmap.prototype.clearNote = function (event, judge) {
-	this.drawNoteHead(this.lines[event.lineno], event.x, event.y, event.solid, preferences[judge + 'Color']);
+	this.drawNoteHead(this.lines[event.lineno], event.x, event.y, event.solid, Scene_Game.getColorFromJudge(judge));
 };
