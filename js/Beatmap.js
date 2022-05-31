@@ -162,7 +162,28 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 	}
 }
 
+Beatmap.prototype._createBigNoteHalo = function () {
+	const r = preferences.headsRadius*2;
+	this._bigNoteHalo = new Bitmap(r*2, r*2);
+	const context = this._bigNoteHalo._context;
+	context.save();
+	const gradient = context.createRadialGradient(r, r, 0, r, r, r);
+	gradient.addColorStop(0.5, preferences.notesColor);
+	gradient.addColorStop(1, preferences.notesColor + '00');
+	context.fillStyle = gradient;
+	context.beginPath();
+	context.arc(r, r, r, 0, 2*Math.PI);
+	context.fill();
+	context.globalCompositeOperation = 'destination-out';
+	context.beginPath();
+	context.arc(r, r, r/2, 0, 2*Math.PI);
+	context.fill();
+	context.restore();
+	this._bigNoteHalo._setDirty();
+};
+
 Beatmap.prototype.drawLines = function (reverseVoices) {
+	this._createBigNoteHalo();
 	this.lines = [new Bitmap(Graphics.width, TyphmConstants.LINES_HEIGHT)];
 	this.notes = [];
 	this.barlines = [];
@@ -410,7 +431,7 @@ Beatmap.prototype.recordHitEvent = function (lineno, note, y, shouldHit) {
 		note.hitEvents = [];
 		for (let i = 0; i < note.multiplicity; i++) {
 			const hitEvent = {"x": note.x, "hitX": note.hitX, "y": y+i*preferences.headsRadius*2, "xEnd": note.xEnd, "time": note.time, "timeEnd": note.timeEnd,
-				"hold": note.hold, "solid": note.length > 1, "lineno": lineno};
+				"big": note.big, "hold": note.hold, "solid": note.length > 1, "lineno": lineno};
 			note.hitEvents.push(hitEvent);
 			this.notes.push(hitEvent);
 		}
@@ -491,7 +512,8 @@ Beatmap.prototype.drawNoteHeadsAndDots = function (bitmap, note, y, shouldHit) {
 	}
 	context.restore();
 	for (let i = 0; i < note.multiplicity; i++) {
-		this.drawNoteHead(bitmap, note.x, y + i*preferences.headsRadius*2, note.length > 1, shouldHit ? preferences.notesColor : preferences.auxiliariesColor);
+		this.drawNoteHead(bitmap, note.x, y + i*preferences.headsRadius*2, note.length > 1,
+			note.big, shouldHit ? preferences.notesColor : preferences.auxiliariesColor);
 	}
 };
 
@@ -859,17 +881,22 @@ Beatmap.prototype.drawRest = function (bitmap, note, y) {
 	bitmap._setDirty();
 }
 
-Beatmap.prototype.drawNoteHead = function (bitmap, x, y, solid, color) {
+Beatmap.prototype.drawNoteHead = function (bitmap, x, y, solid, big, color) {
 	const context = bitmap._context;
+	const r = preferences.headsRadius;
 	context.save();
 	context.fillStyle = color;
 	context.strokeStyle = color;
 	context.lineWidth = 2;
 	context.beginPath();
-	context.arc(x, y, preferences.headsRadius, -Math.PI/2, Math.PI*1.5);
+	context.arc(x, y, r, -Math.PI/2, Math.PI*1.5);
 	context.stroke();
 	if (solid)
 		context.fill();
+	if (big) {
+		context.globalCompositeOperation = 'destination-over';
+		context.drawImage(this._bigNoteHalo._canvas, 0, 0, 4*r, 4*r, x - 2*r, y - 2*r, 4*r, 4*r);
+	}
 	context.restore();
 	bitmap._setDirty();
 };
@@ -932,5 +959,5 @@ Beatmap.prototype.drawBPM = function (bitmap, beatNote, dots, bpm, position) {
 };
 
 Beatmap.prototype.clearNote = function (event, judge) {
-	this.drawNoteHead(this.lines[event.lineno], event.x, event.y, event.solid, Scene_Game.getColorFromJudge(judge));
+	this.drawNoteHead(this.lines[event.lineno], event.x, event.y, event.solid, false, Scene_Game.getColorFromJudge(judge));
 };
