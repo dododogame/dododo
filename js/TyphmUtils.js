@@ -88,6 +88,10 @@ Graphics.removeSwitchStretchModeListener = function (listener) {
 	this._switchStretchModeListeners.splice(this._switchStretchModeListeners.findIndex(listener), 1);
 };
 
+Graphics.snapshotToClipboard = function () {
+	this._canvas.toBlob(blob => navigator.clipboard.write([new ClipboardItem({'image/png': blob})]), 'image/png');
+};
+
 const oldShouldPreventDefault = Input._shouldPreventDefault;
 Input._shouldPreventDefault = function(keyCode) {
 	if (document.activeElement instanceof HTMLInputElement)

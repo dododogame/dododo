@@ -58,6 +58,7 @@ Scene_BrowseStore.prototype.update = function () {
 };
 
 Scene_BrowseStore.prototype.stop = function () {
+	Scene_Base.prototype.stop.call(this);
 	document.removeEventListener('keydown', this._keydownEventListener);
 	this._input.destroy();
 };

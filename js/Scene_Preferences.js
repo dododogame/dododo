@@ -376,6 +376,13 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {
 					onclick: () => { Graphics._switchFullScreen(); }
 				}
+			},
+			{
+				name: 'screenshot',
+				type: 'button',
+				args: {
+					onclick: () => { scene._shouldTakeScreenShot = true; }
+				}
 			}
 		]
 	},
@@ -559,7 +566,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	unconnectedBeamsLength: 20,
 	barlinesHeight: 256,
 	hitEffectRadius: 32,
-	distanceBetweenLines: 512,
+	distanceBetweenLines: 384,
 	notesColor: '#ffffff',
 	auxiliariesColor: '#4c4c4c',
 	perfectColor: '#ffff00',
@@ -765,6 +772,7 @@ Scene_Preferences.prototype.update = function () {
 };
 
 Scene_Preferences.prototype.stop = function () {
+	Scene_Base.prototype.stop.call(this);
 	TouchInput.preventingDefault = true;
 	document.removeEventListener('keydown', this._keydownEventListener);
 	for (let j = 0; j < Scene_Preferences.PREFERENCES_PAGES.length; j++) {

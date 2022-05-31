@@ -18,7 +18,7 @@ Beatmap.prototype.load = async function () {
 		else if (head[i].length === 1)
 			head[i][1] = ''
 	}
-	const dataLineno = head.length + 2;
+	const dataLineno = head.length + 1;
 	head = Object.fromEntries(head);
 	data = data.split('\n');
 	this.title = head.title || '';
@@ -49,9 +49,9 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 			let [name, ...parameters] = line.split(' ');
 			let i = 0;
 			for (; i < parameters.length && parameters[i][0] !== '#'; i++);
-			this.events.push({"event": name.toLowerCase(), "parameters": parameters.slice(0, i)});
+			this.events.push({"event": name.toLowerCase(), "parameters": parameters.slice(0, i), "lineno": lineno + dataLineno});
 		} else if (line === '') { // new line
-			this.events.push({"event": "line", "voices": voices});
+			this.events.push({"event": "line", "voices": voices, "lineno": lineno + dataLineno});
 			voices = [];
 		} else { // voice
 			voices.push([]);
@@ -68,7 +68,7 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 					continue;
 				}
 				if (line[position] === '|') { // barline
-					voices.last().push({"event": "barline"});
+					voices.last().push({"event": "barline", "lineno": lineno + dataLineno, "column": position + 1});
 					position++;
 					continue;
 				}
@@ -78,7 +78,7 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 				}
 				
 				// start parsing a note here!
-				const noteEvent = {"event": "note"};
+				const noteEvent = {"event": "note", "lineno": lineno + dataLineno, "column": position + 1};
 				
 				// note length
 				if (TyphmUtils.isDigit(line[position])) {
@@ -109,6 +109,13 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 				} else
 					noteEvent.hold = false;
 				
+				// big
+				if (line[position] === '*') {
+					noteEvent.big = true;
+					position++;
+				} else
+					noteEvent.big = false;
+				
 				// tie
 				if (line[position] === '~') {
 					noteEvent.tie = true;
@@ -126,7 +133,7 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 						throw new BeatmapError(lineno + dataLineno, position + 1, 'excess right parentheses');
 					}
 					const group = voices.pop();
-					const groupEvent = {"event": "group", "notes": group};
+					const groupEvent = {"event": "group", "notes": group, "lineno": lineno + dataLineno, "column": position + 1};
 					if (TyphmUtils.isDigit(line[position])) {
 						groupEvent.ratio1 = TyphmUtils.parseDigit(line[position]);
 						position++;

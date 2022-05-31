@@ -13,10 +13,17 @@ Scene_Base.prototype.start = function () {
 	this._backgroundSprite = new Sprite(new Bitmap(Graphics.width, Graphics.height));
 	this._backgroundSprite.bitmap.fillAll(preferences.backgroundColor);
 	this.addChild(this._backgroundSprite);
+	this._shouldTakeScreenShot = false;
+	this._globalHotkeyListener = this._globalOnKeyDown.bind(this);
+	document.addEventListener('keydown', this._globalHotkeyListener);
 };
 
 Scene_Base.prototype.update = function() {
 	this.updateChildren();
+	if (this._shouldTakeScreenShot) {
+		Graphics.snapshotToClipboard();
+		this._shouldTakeScreenShot = false;
+	}
 	if (window.scene !== this) {
 		this.stop();
 		window.scene.start();
@@ -24,6 +31,12 @@ Scene_Base.prototype.update = function() {
 };
 
 Scene_Base.prototype.stop = function () {
+	document.removeEventListener('keydown', this._globalHotkeyListener);
+};
+
+Scene_Base.prototype._globalOnKeyDown = function (event) {
+	if (event.key === 'F7')
+		this._shouldTakeScreenShot = true;
 };
 
 Scene_Base.prototype.updateChildren = function () {

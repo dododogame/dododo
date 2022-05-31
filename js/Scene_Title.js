@@ -95,5 +95,6 @@ Scene_Title.prototype.update = function () {
 };
 
 Scene_Title.prototype.stop = function () {
+	Scene_Base.prototype.stop.call(this);
 	document.removeEventListener('keydown', this._keydownEventListener);
 };

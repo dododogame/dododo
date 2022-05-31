@@ -37,6 +37,9 @@ Strings["en-US"] = {
 	// browse history
 	
 	// in-game
+	"failedToLoad": "Failed to load files",
+	"infoForBeatmapper": "Provide the following info for the beatmapper:",
+	"copy": "Copy",
 	"quitGame": "Back",
 	"restartGame": "Restart",
 	"perfect": "Perfect",
@@ -137,6 +140,7 @@ Strings["en-US"] = {
 	"showFPS": "Switch view of FPS (F2)",
 	"stretchGraphics": "Stretch to fit the window (F3)",
 	"fullscreen": "Toggle fullscreen (F4, F11)",
+	"screenshot": "Take screenshot and copy (F7)",
 	
 	// preferences: audio
 	"audio": "Audio",
@@ -217,6 +221,9 @@ Strings["zh-CN"] = {
 	// browse history
 	
 	// in-game
+	"failedToLoad": "加载文件失败",
+	"infoForBeatmapper": "向谱师提供下列信息:",
+	"copy": "复制",
 	"quitGame": "返回",
 	"restartGame": "重开",
 	"perfect": "完美",
@@ -316,6 +323,7 @@ Strings["zh-CN"] = {
 	"showFPS": "切换 FPS 显示 (F2)",
 	"stretchGraphics": "缩放以适配窗口 (F3)",
 	"fullscreen": "切换全屏 (F4, F11)",
+	"screenshot": "截屏并复制 (F7)",
 	
 	// preferences: audio
 	"audio": "音频",
@@ -396,6 +404,9 @@ Strings["zh-TW"] = {
 	// browse history
 	
 	// in-game
+	"failedToLoad": "載入文件失敗",
+	"infoForBeatmapper": "向譜師提供下列信息:",
+	"copy": "複製",
 	"quitGame": "返回",
 	"restartGame": "重開",
 	"perfect": "完美",
@@ -495,6 +506,7 @@ Strings["zh-TW"] = {
 	"showFPS": "切換 FPS 顯示 (F2)",
 	"stretchGraphics": "縮放以適配窗口 (F3)",
 	"fullscreen": "切換全屏 (F4, F11)",
+	"screenshot": "截屏並複製 (F7)",
 	
 	// preferences: audio
 	"audio": "音頻",

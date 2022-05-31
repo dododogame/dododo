@@ -30,6 +30,7 @@ window.onload = () => {
 	function performUpdate(newTime) {
 		Graphics.tickStart();
 		requestAnimationFrame(performUpdate);
+		Graphics.render(window.scene);
 		if (currentTime === undefined) currentTime = newTime;
 		var fTime = (newTime - currentTime).clamp(0, 250);
 		currentTime = newTime;
@@ -40,7 +41,6 @@ window.onload = () => {
 			window.scene.update();
 			accumulator -= deltaTime;
 		}
-		Graphics.render(window.scene);
 		window.scene.onrender();
 		Graphics.tickEnd();
 	}

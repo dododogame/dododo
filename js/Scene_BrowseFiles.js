@@ -142,6 +142,7 @@ Scene_BrowseFiles.prototype.update = function () {
 };
 
 Scene_BrowseFiles.prototype.stop = function () {
+	Scene_Base.prototype.stop.call(this);
 	document.removeEventListener('keydown', this._keydownEventListener);
 };
 

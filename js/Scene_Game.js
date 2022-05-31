@@ -607,6 +607,8 @@ Scene_Game.prototype._changeSceneIfShould = function () {
 		window.scene = this._offsetWizard ? new Scene_Preferences() : new Scene_Title();
 	if (this._shouldReplay)
 		window.scene = new Scene_Game(this._musicUrl, this._beatmapUrl, this._newRecording);
+	if (this._shouldError)
+		window.scene = new Scene_Error(this._error);
 };
 
 Scene_Game.prototype._finishIfShould = function (now) {
@@ -627,7 +629,7 @@ Scene_Game.prototype._finishIfShould = function (now) {
 
 Scene_Game.prototype._updateKeyboard = function () {
 	this._keyboardSprite.bitmap.clear();
-	this._keyboardSprite.bitmap.drawText(Object.keys(this._pressings).join(''), 0, 0,
+	this._keyboardSprite.bitmap.drawText(Object.keys(this._pressings).join(' '), 0, 0,
 		this._keyboardSprite.width, preferences.textHeight, 'left');
 };
 
@@ -698,6 +700,7 @@ Scene_Game.prototype._setUpNewLine = function () {
 };
 
 Scene_Game.prototype.stop = function () {
+	Scene_Base.prototype.stop.call(this);
 	if (this._audioPlayer) {
 		this._audioPlayer.stop();
 		this._audioPlayer.clear();
@@ -710,7 +713,16 @@ Scene_Game.prototype.stop = function () {
 };
 
 Scene_Game.prototype._onLoad = async function () {
-	await this._beatmap.load();
+	try {
+		await this._beatmap.load();
+	} catch (e) {
+		if (e instanceof TypeError || e instanceof BeatmapError) {
+			this._error = e;
+			this._shouldError = true;
+			return;
+		} else
+			throw e;
+	}
 	this._beatmap.drawLines(this._visuals.reverseVoices);
 	if (!this._hasMusic && this._beatmap.audioUrl) {
 		this._hasMusic = true;
