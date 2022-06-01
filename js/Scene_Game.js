@@ -297,7 +297,7 @@ Scene_Game.prototype._createComboSprite = function () {
 };
 
 Scene_Game.prototype._createKeyboardSprite = function () {
-	this._keyboardSprite = new Sprite(new Bitmap(256, preferences.textHeight));
+	this._keyboardSprite = new Sprite(new Bitmap(512, preferences.textHeight));
 	this._keyboardSprite.y = Graphics.height - 2*preferences.textHeight;
 	this._keyboardSprite.visible = false;
 	this._HUDLayer.addChild(this._keyboardSprite);
