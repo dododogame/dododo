@@ -373,6 +373,7 @@ Beatmap.prototype.drawVoiceAndGetLastNote = function (bitmap, voice, isFirstVoic
 				const firstNote = this.getFirstNoteRecursive(event);
 				firstNote.tiedNote = lastNote;
 				firstNote.multiplicity = lastNote.multiplicity;
+				firstNote.big = false;
 			}
 			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, isFirstVoice, event, y, lastNote,
 					i === 0, i === voice.length - 1, this.getGroupHeightRecursive(event), timeLengthPassed, 1);
@@ -413,6 +414,7 @@ Beatmap.prototype.getGroupHeightRecursive = function (group) {
 Beatmap.prototype.drawIndividualNote = function (bitmap, note, y, shouldHit) {
 	if (!shouldHit) {
 		note.multiplicity = note.tiedNote.multiplicity;
+		note.big = false;
 	}
 	if (note.multiplicity === 0) {
 		this.drawRest(bitmap, note, y);
@@ -628,6 +630,7 @@ Beatmap.prototype.drawGroupAndGetLastNoteRecursive = function (bitmap, isFirstVo
 				const firstNote = this.getFirstNoteRecursive(event);
 				firstNote.tiedNote = lastNote;
 				firstNote.multiplicity = lastNote.multiplicity;
+				firstNote.big = false;
 			}
 			lastNote = this.drawGroupAndGetLastNoteRecursive(bitmap, isFirstVoice, event, y, lastNote,
 				i === 0, isLast && i === notes.length - 1, height, timeLengthPassed, previousNote, nextNote, layer + 1);
@@ -775,6 +778,7 @@ Beatmap.prototype.drawUnconnectedBeams = function (bitmap, note, y, height, begi
 Beatmap.prototype.drawBeamedNote = function (bitmap, note, y, previous, next, shouldHit, height, timeLengthPassed) {
 	if (!shouldHit) {
 		note.multiplicity = note.tiedNote.multiplicity;
+		note.big = false;
 	}
 	if (note.multiplicity === 0) {
 		this.drawRest(bitmap, note, y);

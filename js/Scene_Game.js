@@ -1041,8 +1041,10 @@ Scene_Game.prototype._goodClear = function (event) {
 };
 
 Scene_Game.prototype._refreshMeasureStateAfterClearing = function (event, judge) {
-	if (event.time >= this._unclearedMeasures[0])
-		this._clearMeasure();
+	while (this._unclearedMeasures.length > 0) {
+		if (event.time >= this._unclearedMeasures[0])
+			this._clearMeasure();
+	}
 	this._currentMeasureJudge = Math.min(judge, this._currentMeasureJudge);
 };
 
