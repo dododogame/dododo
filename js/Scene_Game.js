@@ -25,7 +25,8 @@ Scene_Game.VISUALS = [
 	'fadeOut',
 	'reverseVoices',
 	'mirror',
-	'showKeyboard'
+	'showKeyboard',
+	'subtractScore'
 ];
 Scene_Game.PERFECT = 3;
 Scene_Game.GOOD = 2;
@@ -76,13 +77,7 @@ Scene_Game.prototype.start = function () {
 	this._createViewRecordingButton();
 	this._createSaveRecordingButton();
 	this._createModifiersListSprite();
-	if (this._visuals.flashWarningGood)
-		this._createFlashBitmap(Scene_Game.GOOD);
-	if (this._visuals.flashWarningMiss) {
-		this._createFlashBitmap(Scene_Game.BAD);
-		this._createFlashBitmap(Scene_Game.MISS);
-		this._createFlashBitmap('excess');
-	}
+	this._createFlashBitmapsIfNeeded();
 	if (this._visuals.TPSIndicator)
 		this._createTPSIndicatorSprite();
 	
@@ -105,6 +100,17 @@ Scene_Game.prototype.start = function () {
 	this._shouldRestart = false;
 	this._shouldBack = false;
 	this._shouldReplay = false;
+};
+
+Scene_Game.prototype._createFlashBitmapsIfNeeded = function () {
+	this._flashBitmaps = [];
+	if (this._visuals.flashWarningGood)
+		this._createFlashBitmap(Scene_Game.GOOD);
+	if (this._visuals.flashWarningMiss) {
+		this._createFlashBitmap(Scene_Game.BAD);
+		this._createFlashBitmap(Scene_Game.MISS);
+		this._createFlashBitmap(Scene_Game.EXCEESS);
+	}
 };
 
 Scene_Game.prototype._initializeJudgeCounters = function () {
@@ -419,7 +425,6 @@ Scene_Game.prototype._createTPSIndicatorSprite = function () {
 };
 
 Scene_Game.prototype._createFlashBitmap = function (judge) {
-	this._flashBitmaps ||= {};
 	this._flashBitmaps[judge] = new Bitmap(Graphics.width, Graphics.height);
 	this._flashBitmaps[judge].fillAll(Scene_Game.getColorFromJudge(judge));
 };
@@ -568,7 +573,7 @@ Scene_Game.prototype._autoPlayUpdateAndProcessMiss = function (now) {
 
 Scene_Game.prototype._missHit = function () {
 	const event = this._unclearedEvents.shift();
-	this._refreshMeasureStateAfterClearing(event, Scene_Game.MISS);
+	this._refreshMeasureStateAfterHitting(event, Scene_Game.MISS);
 	this._onDestinedMiss();
 	this._missClear(event);
 };
@@ -666,21 +671,23 @@ Scene_Game.prototype._updateKeyboard = function () {
 Scene_Game.prototype.update = function () {
 	const now = this._now();
 	this._updateProgress(now);
-	if (!this._resumingCountdown && !this._paused && !this._ended) {
-		if (!this._isRecording)
-			this._updateRecordingApply(now);
-		this._updateJudgeLine(now);
-		if (this._visuals.TPSIndicator)
-			this._updateTPSIndicator(now);
+	if (!this._paused && !this._ended) {
 		if (this._visuals.showKeyboard)
 			this._updateKeyboard();
-		if (this._hitSoundEnabled() && (this._modifiers.autoPlay || preferences.hitSoundWithMusic))
-			this._updateHitSoundWithMusic(now);
-		this._autoPlayUpdateAndProcessMiss(now);
-		this._updateHoldings(now);
-		if (now >= this._line1.bitmap.endTime)
-			this._switchLine();
-		this._finishIfShould(now);
+		if (!this._resumingCountdown) {
+			if (!this._isRecording)
+				this._updateRecordingApply(now);
+			this._updateJudgeLine(now);
+			if (this._visuals.TPSIndicator)
+				this._updateTPSIndicator(now);
+			if (this._hitSoundEnabled() && (this._modifiers.autoPlay || preferences.hitSoundWithMusic))
+				this._updateHitSoundWithMusic(now);
+			this._autoPlayUpdateAndProcessMiss(now);
+			this._updateHoldings(now);
+			if (now >= this._line1.bitmap.endTime)
+				this._switchLine();
+			this._finishIfShould(now);
+		}
 	}
 	this._changeSceneIfShould();
 	Scene_Base.prototype.update.call(this);
@@ -899,24 +906,25 @@ Scene_Game.prototype.actualResume = function () {
 Scene_Game.prototype._onKeydown = function (event) {
 	if (!this._loadingFinished)
 		return;
-	if (event.key === 'Escape' || event.key === 'F7' && preferences.F7Pause) {
+	const key = event.key === ' ' ? 'Spacebar' : event.key;
+	if (key === 'Escape' || key === 'F7' && preferences.F7Pause) {
 		this._pause();
-	} else if (!event.ctrlKey && !event.altKey && !event.metaKey && TyphmConstants.HITTABLE_KEYS.includes(event.key)) {
-		if (this._pressings[event.key])
+	} else if (!event.ctrlKey && !event.altKey && !event.metaKey && TyphmConstants.HITTABLE_KEYS.includes(key)) {
+		if (this._pressings[key])
 			return;
-		this._pressings[event.key] = true;
-		if (preferences.backtickRestart && event.key === '`') {
+		this._pressings[key] = true;
+		if (preferences.backtickRestart && key === '`') {
 			this._shouldRestart = true;
 		} else if (this._restart.visible) {
-			if (event.key === 'r') {
+			if (key === 'r') {
 				this._shouldRestart = true;
-			} else if (event.key === 'b') {
+			} else if (key === 'b') {
 				this._shouldBack = true;
 			}
 		} else if (!this._modifiers.autoPlay && this._isRecording) {
 			const now = this._now();
 			this._processHit(now);
-			this._newRecording.hit.push({time: now, key: event.key});
+			this._newRecording.hit.push({time: now, key: key});
 		}
 	}
 };
@@ -924,11 +932,12 @@ Scene_Game.prototype._onKeydown = function (event) {
 Scene_Game.prototype._onKeyup = function (event) {
 	if (!this._loadingFinished)
 		return;
-	delete this._pressings[event.key];
+	const key = event.key === ' ' ? 'Spacebar' : event.key;
+	delete this._pressings[key];
 	if (!this._paused && !this._modifiers.autoPlay && this._isRecording) {
 		const now = this._now();
 		this._processLoosen(now);
-		this._newRecording.loosen.push({time: now, key: event.key});
+		this._newRecording.loosen.push({time: now, key: key});
 	}
 };
 
@@ -986,7 +995,7 @@ Scene_Game.prototype._playHitSound = function () {
 
 Scene_Game.prototype._perfectHit = function () {
 	const event = this._unclearedEvents.shift();
-	this._refreshMeasureStateAfterClearing(event, Scene_Game.PERFECT);
+	this._refreshMeasureStateAfterHitting(event, Scene_Game.PERFECT);
 	if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 		this._playHitSound();
 	if (event.hold) {
@@ -1010,7 +1019,7 @@ Scene_Game.prototype._perfectClear = function (event) {
 
 Scene_Game.prototype._goodHit = function () {
 	const event = this._unclearedEvents.shift();
-	this._refreshMeasureStateAfterClearing(event, Scene_Game.GOOD);
+	this._refreshMeasureStateAfterHitting(event, Scene_Game.GOOD);
 	if (this._hitSoundEnabled() && !preferences.hitSoundWithMusic)
 		this._playHitSound();
 	this._onDestinedGood();
@@ -1040,17 +1049,15 @@ Scene_Game.prototype._goodClear = function (event) {
 	this._updateCombo();
 };
 
-Scene_Game.prototype._refreshMeasureStateAfterClearing = function (event, judge) {
-	while (this._unclearedMeasures.length > 0) {
-		if (event.time >= this._unclearedMeasures[0])
-			this._clearMeasure();
-	}
+Scene_Game.prototype._refreshMeasureStateAfterHitting = function (event, judge) {
+	while (this._unclearedMeasures.length > 0 && event.time >= this._unclearedMeasures[0])
+		this._clearMeasure();
 	this._currentMeasureJudge = Math.min(judge, this._currentMeasureJudge);
 };
 
 Scene_Game.prototype._badHit = function () {
 	const event = this._unclearedEvents.shift();
-	this._refreshMeasureStateAfterClearing(event, Scene_Game.BAD);
+	this._refreshMeasureStateAfterHitting(event, Scene_Game.BAD);
 	this._onDestinedBad();
 	this._badClear(event);
 	this._createHitEffect(event, Scene_Game.BAD);
@@ -1110,7 +1117,7 @@ Scene_Game.prototype._excessHit = function (now) {
 	if (this._isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 		this._shouldRestart = true;
 	if (this._visuals.flashWarningMiss)
-		this._flashWarn('excess')
+		this._flashWarn(Scene_Game.EXCEESS)
 	this._updateScore();
 };
 
@@ -1137,10 +1144,24 @@ Scene_Game.prototype._onDestinedMiss = function () {
 
 Scene_Game.prototype._updateScore = function () {
 	this._scoreSprite.bitmap.clear();
-	this._score = Math.floor(500000 * (
-		((this._perfectNumber+this._perfectBig) + (this._goodNumber+this._goodBig)/4 - this._excessNumber)/(this._beatmap.notes.length+this._totalBig) + // 准度分
-		(this._perfectMeasures + this._goodMeasures/2) / this._beatmap.barlines.length // 连击分
-	));
+	if (this._visuals.subtractScore) {
+		this._score = Math.floor(500000 * (
+			(
+				this._beatmap.notes.length+this._totalBig-this._goodNumber-this._badNumber-this._missNumber-this._goodBig-this._badBig-this._missBig +
+				(this._goodNumber+this._goodBig)/4 - this._excessNumber
+			) / (this._beatmap.notes.length + this._totalBig) + (
+				this._beatmap.barlines.length-this._goodMeasures-this._badMeasures-this._missMeasures + this._goodMeasures/2
+			) / this._beatmap.barlines.length
+		));
+	} else {
+		this._score = Math.floor(500000 * (
+			(
+				this._perfectNumber+this._perfectBig + (this._goodNumber+this._goodBig)/4 - this._excessNumber
+			) / (this._beatmap.notes.length + this._totalBig) + (
+				this._perfectMeasures + this._goodMeasures/2
+			) / this._beatmap.barlines.length
+		));
+	}
 	this._scoreSprite.bitmap.textColor = this._getScoreColor();
 	this._scoreSprite.bitmap.drawText(this._score, 0, 0, this._scoreSprite.width, preferences.textHeight, 'right');
 	if (!this._unclearedEvents || this._unclearedEvents.length === this._beatmap.notes.length)
@@ -1406,7 +1427,7 @@ Scene_Game.prototype._drawSummary = function () {
 	this._summarySprite.bitmap.textColor = preferences.excessColor;
 	this._summarySprite.bitmap.drawText(`${Strings.excess}: ${this._excessNumber}`,
 		0, preferences.textHeight*4, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
-	this._summarySprite.bitmap.textColor = 'white';
+	this._summarySprite.bitmap.textColor = preferences.textColor;
 	this._summarySprite.bitmap.drawText(`${Strings.maxCombo}: ${this._maxCombo}`,
 		0, preferences.textHeight*5, this._summarySprite.bitmap.width, preferences.textHeight, 'left');
 	this._drawInaccuraciesDistribution();
@@ -1449,11 +1470,13 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene) {
 	this._scene = scene;
 	const maxCount = 3;
 	for (let i = 0; i <= maxCount; i++) {
-		setTimeout(sprite => sprite._countTo(i), (maxCount - i)*1000, this);
+		setTimeout(() => this._countTo(i), (maxCount - i)*1000);
 	}
 };
 
 Scene_Game.Sprite_ResumingCountdown.prototype._countTo = function (n) {
+	if (!this.parent)
+		return;
 	if (n === 0) {
 		this._scene.actualResume();
 	} else {

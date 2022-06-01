@@ -104,6 +104,7 @@ Strings["en-US"] = {
 	"reverseVoices": "Reverse voices",
 	"mirror": "Mirror (flip horizontally)",
 	"showKeyboard": "Show keyboard pressings",
+	"subtractScore": "Subtract instead of adding score",
 	
 	// preferences: geometry
 	"geometry": "Geometry",
@@ -287,6 +288,7 @@ Strings["zh-CN"] = {
 	"reverseVoices": "声部反转",
 	"mirror": "镜像 (左右反转)",
 	"showKeyboard": "显示按键情况",
+	"subtractScore": "从满分减分代替从零分加分",
 	
 	// preferences: geometry
 	"geometry": "几何",
@@ -470,6 +472,7 @@ Strings["zh-TW"] = {
 	"reverseVoices": "聲部反轉",
 	"mirror": "鏡像 (左右反轉)",
 	"showKeyboard": "顯示按鍵情況",
+	"subtractScore": "從滿分減分代替從零分加分",
 	
 	// preferences: geometry
 	"geometry": "幾何",

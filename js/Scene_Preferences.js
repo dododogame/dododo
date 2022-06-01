@@ -179,6 +179,12 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				type: 'boolean',
 				args: {
 				}
+			},
+			{
+				name: 'subtractScore',
+				type: 'boolean',
+				args: {
+				}
 			}
 		]
 	},
@@ -554,6 +560,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	reverseVoices: false,
 	mirror: false,
 	showKeyboard: !Utils.isMobileDevice(),
+	subtractScore: false,
 	fontSize: 28,
 	textHeight: 40,
 	margin: 16,
