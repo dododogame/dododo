@@ -602,20 +602,23 @@ Scene_Game.getColorFromJudge = function (judge) {
 };
 
 Scene_Game.prototype._updateHoldings = function (now) {
-	for (let i = 0; i < this._holdings.length; i++) {
-		const {event, judge} = this._holdings[i];
+	while (this._holdings.length > 0) {
+		const {event, judge} = this._holdings[0];
 		if (now >= event.timeEnd) {
 			if (judge === Scene_Game.PERFECT) {
 				this._perfectClear(event);
-			} else {
+			} else if (judge === Scene_Game.GOOD) {
 				this._goodClear(event);
 			}
 			this._holdings.shift();
-			i--;
 		} else {
-			const xNow = this._visuals.mirror ? Graphics.width - this._judgeLine.x : this._judgeLine.x;
-			this._beatmap.trackHoldTo(now, xNow, event, judge, this._line1Index);
+			break;
 		}
+	}
+	for (let i = 0; i < this._holdings.length; i++) {
+		const {event, judge} = this._holdings[i];
+		const xNow = this._visuals.mirror ? Graphics.width - this._judgeLine.x : this._judgeLine.x;
+		this._beatmap.trackHoldTo(now, xNow, event, judge, this._line1Index);
 	}
 };
 
@@ -1000,7 +1003,7 @@ Scene_Game.prototype._perfectHit = function () {
 		this._playHitSound();
 	if (event.hold) {
 		this._holdings.push({'event': event, judge: Scene_Game.PERFECT});
-		this._holdings.sort((a, b) => a.timeEnd - b.timeEnd);
+		this._holdings.sort((a, b) => a.event.timeEnd - b.event.timeEnd);
 	} else {
 		this._perfectClear(event);
 	}
@@ -1025,7 +1028,7 @@ Scene_Game.prototype._goodHit = function () {
 	this._onDestinedGood();
 	if (event.hold) {
 		this._holdings.push({'event': event, judge: Scene_Game.GOOD});
-		this._holdings.sort((a, b) => a.timeEnd - b.timeEnd);
+		this._holdings.sort((a, b) => a.event.timeEnd - b.event.timeEnd);
 	} else {
 		this._goodClear(event);
 	}
