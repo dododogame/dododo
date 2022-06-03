@@ -674,7 +674,7 @@ Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, lineno) {
 	let y = hitEvent.y;
 	let x = hitEvent.x + preferences.headsRadius;
 	let eventLineno = hitEvent.lineno;
-	let reachedEnd = true;
+	//let reachedEnd = true;
 	if (hitEvent.ySwitches) {
 		for (let i = 0; i < hitEvent.ySwitches.length; i++) {
 			if (now >= hitEvent.ySwitches[i].time) {
@@ -684,15 +684,15 @@ Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, lineno) {
 					eventLineno = hitEvent.ySwitches[i].lineno;
 				}
 			} else {
-				reachedEnd = false;
+				//reachedEnd = false;
 				break;
 			}
 		}
 	}
 	if (eventLineno !== lineno)
 		return;
-	if (reachedEnd)
-		xNow = Math.min(xNow, hitEvent.xEnd - preferences.headsRadius);
+	//if (reachedEnd)
+	//	xNow = Math.min(xNow, hitEvent.xEnd - preferences.headsRadius);
 	const context = this.lines[lineno]._context;
 	context.save();
 	context.beginPath();
