@@ -185,6 +185,12 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				type: 'boolean',
 				args: {
 				}
+			},
+			{
+				name: 'numbersHUD',
+				type: 'boolean',
+				args: {
+				}
 			}
 		]
 	},
@@ -567,6 +573,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	mirror: false,
 	showKeyboard: !Utils.isMobileDevice(),
 	subtractScore: false,
+	numbersHUD: true,
 	fontSize: 28,
 	textHeight: 40,
 	margin: 16,
@@ -591,7 +598,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	backgroundColor: '#000000',
 	graphicsWidth: 1024,
 	graphicsHeight: 768,
-	useWebGL: true,
+	useWebGL: PIXI.utils.isWebGLSupported(),
 	enableHitSound: true,
 	hitSound: 'snare_drum_1.ogg',
 	hitSoundWithMusic: false,

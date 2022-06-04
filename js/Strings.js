@@ -105,6 +105,7 @@ Strings["en-US"] = {
 	"mirror": "Mirror (flip horizontally)",
 	"showKeyboard": "Show keyboard pressings",
 	"subtractScore": "Subtract instead of adding score",
+	"numbersHUD": "Show numbers of perfect hits etc. in-game",
 	
 	// preferences: geometry
 	"geometry": "Geometry",
@@ -290,6 +291,7 @@ Strings["zh-CN"] = {
 	"mirror": "镜像 (左右反转)",
 	"showKeyboard": "显示按键情况",
 	"subtractScore": "从满分减分代替从零分加分",
+	"numbersHUD": "在游戏中显示完美等的数量",
 	
 	// preferences: geometry
 	"geometry": "几何",
@@ -475,6 +477,7 @@ Strings["zh-TW"] = {
 	"mirror": "鏡像 (左右反轉)",
 	"showKeyboard": "顯示按鍵情況",
 	"subtractScore": "從滿分減分代替從零分加分",
+	"numbersHUD": "在遊戲中顯示完美等的數量",
 	
 	// preferences: geometry
 	"geometry": "幾何",
