@@ -451,6 +451,12 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
+				name: 'countdownBeats',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
 				name: 'musicVolume',
 				type: 'number',
 				args: {
@@ -589,6 +595,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	enableHitSound: true,
 	hitSound: 'snare_drum_1.ogg',
 	hitSoundWithMusic: false,
+	countdownBeats: false,
 	musicVolume: 1.0,
 	hitSoundVolume: 2.0,
 	masterVolume: 1.0,

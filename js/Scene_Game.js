@@ -377,6 +377,7 @@ Scene_Game.prototype._createProgressIndicatorSprite = function () {
 	this._progressIndicator = new Sprite(new Bitmap(Graphics.width, 1));
 	this._progressIndicator.bitmap.fillAll('white');
 	this._progressIndicator.anchor.x = 1;
+	this._progressIndicator.visible = false;
 	this._HUDLayer.addChild(this._progressIndicator);
 };
 
@@ -800,9 +801,9 @@ Scene_Game.prototype._onLoad = async function () {
 Scene_Game.prototype._makeTitle = function () {
 	const trueTitle = new Sprite(new Bitmap(this._restart.bitmap.measureTextWidth(this._beatmap.title), preferences.textHeight));
 	trueTitle.bitmap.drawText(this._beatmap.title, 0, 0, trueTitle.width, preferences.textHeight, 'center');
-	const maskSprite = new Sprite(new Bitmap(this._title.x + this._title.width, this._title.y + this._title.height));
-	maskSprite.bitmap.fillRect(this._title.x, this._title.y, this._title.width, this._title.height, 'white');
-	trueTitle.filters = [new PIXI.SpriteMaskFilter(maskSprite)];
+	trueTitle.mask = new PIXI.Graphics();
+	trueTitle.mask.beginFill(0x000000);
+	trueTitle.mask.drawRect(this._title.x, this._title.y, this._title.width, this._title.height);
 	this._title.addChild(trueTitle);
 	if (trueTitle.width > this._title.width) {
 		let speed = 0.06; // pixels per milliseconds
@@ -845,6 +846,7 @@ Scene_Game.prototype._postLoadingAudio = function () {
 	this._scoreSprite.visible = true;
 	this._comboSprite.visible = true;
 	this._title.visible = true;
+	this._progressIndicator.visible = true;
 	this._modifiersListSprite.visible = true;
 	if (this._visuals.showKeyboard)
 		this._keyboardSprite.visible = true;
@@ -887,13 +889,33 @@ Scene_Game.prototype._resume = function () {
 	if (!this._ended) {
 		this._setButtonsVisible(false);
 		if (preferences.countdown) {
-			this._resumingCountdown = new Scene_Game.Sprite_ResumingCountdown(this);
-			this._overHUDLayer.addChild(this._resumingCountdown);
+			this._createResumingCountdown();
 		} else
 			this.actualResume();
 	} else {
 		this.actualResume();
 	}
+};
+
+Scene_Game.prototype._createResumingCountdown = function () {
+	const now = this._lastPos;
+	const line = this._line1.bitmap;
+	let millisecondsPerWhole, beatOffset;
+	if (preferences.countdownBeats) {
+		if (now >= line.startTime) {
+			const lengthPosition = this._getLengthPositionFromTime(now);
+			const derivative = (line.timeFormula(lengthPosition + 1e-4) - line.timeFormula(lengthPosition - 1e-4)) / 2e-4;
+			millisecondsPerWhole = derivative * line.totalTime / line.totalLength.valueOf();
+			beatOffset = (lengthPosition * line.totalLength.valueOf() % 0.25) * millisecondsPerWhole;
+		} else {
+			const derivative = (line.timeFormula(1e-4) - line.timeFormula(0)) / 1e-4;
+			millisecondsPerWhole = derivative * line.totalTime / line.totalLength.valueOf();
+			const millisecondsPerQuarter = millisecondsPerWhole / 4;
+			beatOffset = millisecondsPerQuarter - (line.startTime - now) % millisecondsPerQuarter;
+		}
+	}
+	this._resumingCountdown = new Scene_Game.Sprite_ResumingCountdown(this, millisecondsPerWhole, beatOffset);
+	this._overHUDLayer.addChild(this._resumingCountdown);
 };
 
 Scene_Game.prototype.actualResume = function () {
@@ -1476,7 +1498,7 @@ Scene_Game.Sprite_ResumingCountdown = function () {
 Scene_Game.Sprite_ResumingCountdown.prototype = Object.create(Sprite.prototype);
 Scene_Game.Sprite_ResumingCountdown.prototype.constructor = Scene_Game.Sprite_ResumingCountdown;
 
-Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene) {
+Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene, millisecondsPerWhole, beatsOffset) {
 	Sprite.prototype.initialize.call(this, new Bitmap(preferences.fontSize*8, preferences.textHeight*8));
 	this.anchor.x = 0.5;
 	this.anchor.y = 0.5;
@@ -1484,9 +1506,25 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene) {
 	this.y = Graphics.height / 2;
 	this.bitmap.fontSize = preferences.fontSize*8;
 	this._scene = scene;
+	this._start = performance.now();
 	const maxCount = 3;
 	for (let i = 0; i <= maxCount; i++) {
 		setTimeout(() => this._countTo(i), (maxCount - i)*1000);
+	}
+	if (millisecondsPerWhole) {
+		let time = maxCount * 1000 - beatsOffset + preferences.offset;
+		const millisecondsPerQuarter = millisecondsPerWhole / 4;
+		while (true) {
+			time -= millisecondsPerQuarter;
+			if (time < 0)
+				break;
+			if (time < maxCount*1000) {
+				setTimeout(() => {
+					if (this.parent)
+						this._scene._playHitSound();
+				}, time);
+			}
+		}
 	}
 };
 
@@ -1498,5 +1536,14 @@ Scene_Game.Sprite_ResumingCountdown.prototype._countTo = function (n) {
 	} else {
 		this.bitmap.clear();
 		this.bitmap.drawText(n, 0, 0, this.width, this.height, 'center');
+		this.scale.x = 1;
+		this.scale.y = 1;
 	}
+};
+
+Scene_Game.Sprite_ResumingCountdown.prototype.update = function () {
+	Sprite.prototype.update.call(this);
+	const scale = 1 - (performance.now() - this._start) % 1000 / 1000
+	this.scale.x = scale;
+	this.scale.y = scale;
 };
