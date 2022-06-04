@@ -15,9 +15,10 @@ recordingInput.type = 'file';
 recordingInput.accept = 'application/json'
 
 window.onload = () => {
-	Graphics.initialize(1024, 768, 'webgl');
-	Graphics.boxWidth = 1024;
-	Graphics.boxHeight = 768;
+	document.body.style.backgroundColor = preferences.backgroundColor;
+	Graphics.initialize(preferences.graphicsWidth, preferences.graphicsHeight, preferences.useWebGL ? 'webgl' : 'canvas');
+	Graphics.boxWidth = preferences.graphicsWidth;
+	Graphics.boxHeight = preferences.graphicsHeight;
 	WebAudio.initialize(false);
 	Input.initialize();
 	TouchInput.initialize();

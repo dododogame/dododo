@@ -54,9 +54,6 @@ Scene_Title.prototype.start = function () {
 };
 
 Scene_Title.prototype._loadPreferences = function () {
-	const string = localStorage.getItem('preferences');
-	if (string)
-		Object.assign(preferences, JSON.parse(LZString.decompressFromBase64(string)));
 	if (Graphics.width !== preferences.graphicsWidth || Graphics.height !== preferences.graphicsHeight) {
 		Graphics._width = preferences.graphicsWidth;
 		Graphics._height = preferences.graphicsHeight;

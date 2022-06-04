@@ -138,6 +138,7 @@ Strings["en-US"] = {
 	"graphics": "Graphics",
 	"graphicsWidth": "Resolution (width)",
 	"graphicsHeight": "Resolution (height)",
+	"useWebGL": "Use WebGL to render (restart to take effect)",
 	"showFPS": "Switch view of FPS (F2)",
 	"stretchGraphics": "Stretch to fit the window (F3)",
 	"fullscreen": "Toggle fullscreen (F4, F11)",
@@ -155,7 +156,6 @@ Strings["en-US"] = {
 	// preferences: system
 	"system": "System",
 	"language": "Language",
-	"save": "Save preferences in the web storage",
 	"reset": "Reset all preferences to default",
 	"confirmReset": "Reset all preferences to default?",
 	"export": "Export preferences as JSON file",
@@ -322,6 +322,7 @@ Strings["zh-CN"] = {
 	"graphics": "图像",
 	"graphicsWidth": "分辨率 (宽)",
 	"graphicsHeight": "分辨率 (高)",
+	"useWebGL": "使用 WebGL 渲染 (重启生效)",
 	"showFPS": "切换 FPS 显示 (F2)",
 	"stretchGraphics": "缩放以适配窗口 (F3)",
 	"fullscreen": "切换全屏 (F4, F11)",
@@ -339,7 +340,6 @@ Strings["zh-CN"] = {
 	// preferences: system
 	"system": "系统",
 	"language": "语言",
-	"save": "在网页存储中存储设置",
 	"reset": "将所有设置项重设为默认状态",
 	"confirmReset": "将所有设置项重设为默认状态?",
 	"export": "导出设置为文件",
@@ -506,6 +506,7 @@ Strings["zh-TW"] = {
 	"graphics": "圖像",
 	"graphicsWidth": "分辨率 (寬)",
 	"graphicsHeight": "分辨率 (高)",
+	"useWebGL": "使用 WebGL 渲染 (重啓生效)",
 	"showFPS": "切換 FPS 顯示 (F2)",
 	"stretchGraphics": "縮放以適配窗口 (F3)",
 	"fullscreen": "切換全屏 (F4, F11)",
@@ -523,7 +524,6 @@ Strings["zh-TW"] = {
 	// preferences: system
 	"system": "系統",
 	"language": "語言",
-	"save": "在網頁存儲中存儲設定",
 	"reset": "將所有設定項重設為默認狀態",
 	"confirmReset": "將所有設定項重設為默認狀態?",
 	"export": "導出設定為文件",
