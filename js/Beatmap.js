@@ -260,7 +260,8 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 					blueFormula: x => 1,
 					alphaFormula: x => 1,
 					widthFormula: x => 1,
-					heightFormula: x => line.voicesNumber * preferences.voicesHeight
+					heightFormula: x => line.voicesNumber * preferences.voicesHeight,
+					blend_mode: 'NORMAL'
 				});
 				break;
 			case 'space_x':
@@ -278,6 +279,9 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 				const expression = math.parse(event.parameters.join(' ')).compile();
 				(line.fakeJudgeLines ? line.fakeJudgeLines.last() : line)[property] =
 						x => Number(expression.evaluate({'x': Number(x), ...preferences}));
+				break;
+			case 'blend_mode':
+				(line.fakeJudgeLines ? line.fakeJudgeLines.last() : line).blend_mode = event.parameters[0];
 				break;
 			case 'line':
 				line.lineno = this.lines.length - 1;
@@ -307,6 +311,7 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 				line.heightFormula ||= x => line.voicesNumber * preferences.voicesHeight;
 				line.note_xFormula ||= line.space_xFormula;
 				line.hit_xFormula ||= line.note_xFormula;
+				line.blend_mode ||= 'NORMAL';
 				if (line.BPMMarkers) {
 					for (let i = 0; i < line.BPMMarkers.length; i++) {
 						const {length, dots, bpm, position} = line.BPMMarkers[i];

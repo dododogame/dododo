@@ -245,6 +245,7 @@ Scene_Game.prototype._createFakeJudgeLines = function () {
 			sprite.bitmap.fillAll('white');
 			sprite.anchor.x = 0.5;
 			sprite.anchor.y = 0.5;
+			sprite.blendMode = PIXI.BLEND_MODES[line.fakeJudgeLines[i].blend_mode.toUpperCase()];
 			this._judgeLineLayer.addChild(sprite);
 			this._fakeJudgeLines.push(sprite);
 		}
@@ -737,6 +738,7 @@ Scene_Game.prototype._setUpNewLine = function () {
 	this._drawInaccuracyBar(this._perfectTolerance, this._goodTolerance, this._badTolerance);
 	if (this._visuals.judgeLinePerformances) {
 		this._destroyFakeJudgeLines();
+		this._judgeLine.blendMode = PIXI.BLEND_MODES[line.blend_mode.toUpperCase()];
 		this._createFakeJudgeLines();
 	}
 };

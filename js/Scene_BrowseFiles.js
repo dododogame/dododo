@@ -165,25 +165,34 @@ Scene_BrowseFiles.prototype._refreshPreview = async function () {
 	if (beatmapFile) {
 		this._beatmapUploaded = true;
 		const beatmap = new Beatmap(URL.createObjectURL(beatmapFile));
-		await beatmap.load().then(async r => {
-			let length;
-			if (beatmap.length) {
-				length = beatmap.length;
-			} else {
-				const audioFile = musicInput.files[0];
-				if (audioFile) {
-					length = await TyphmUtils.getAudioDuration(URL.createObjectURL(audioFile)) - beatmap.start;
+		try {
+			await beatmap.load().then(async r => {
+				let length;
+				if (beatmap.length) {
+					length = beatmap.length;
 				} else {
-					length = beatmap.events[beatmap.events.length - 1].time - beatmap.start;
+					const audioFile = musicInput.files[0];
+					if (audioFile) {
+						length = await TyphmUtils.getAudioDuration(URL.createObjectURL(audioFile)) - beatmap.start;
+					} else {
+						length = beatmap.events[beatmap.events.length - 1].time - beatmap.start;
+					}
 				}
+				this._preview.bitmap.clear();
+				this._preview.bitmap.drawText(`${Strings.title}: ${beatmap.title}`, 0, 0, Graphics.width, 40);
+				this._preview.bitmap.drawText(`${Strings.musicAuthor}: ${beatmap.musicAuthor}`, 0, 40, Graphics.width, 40);
+				this._preview.bitmap.drawText(`${Strings.beatmapAuthor}: ${beatmap.beatmapAuthor}`, 0, 80, Graphics.width, 40);
+				this._preview.bitmap.drawText(`${Strings.difficulty}: ${beatmap.difficulty}`, 0, 120, Graphics.width, 40);
+				this._preview.bitmap.drawText(`${Strings.length}: ${length}ms`, 0, 160, Graphics.width, 40);
+			});
+		} catch (e) {
+			if (e instanceof TypeError) {
+				beatmapInput.value = '';
+				beatmapInput.oninput();
+			} else {
+				throw e;
 			}
-			this._preview.bitmap.clear();
-			this._preview.bitmap.drawText(`${Strings.title}: ${beatmap.title}`, 0, 0, Graphics.width, 40);
-			this._preview.bitmap.drawText(`${Strings.musicAuthor}: ${beatmap.musicAuthor}`, 0, 40, Graphics.width, 40);
-			this._preview.bitmap.drawText(`${Strings.beatmapAuthor}: ${beatmap.beatmapAuthor}`, 0, 80, Graphics.width, 40);
-			this._preview.bitmap.drawText(`${Strings.difficulty}: ${beatmap.difficulty}`, 0, 120, Graphics.width, 40);
-			this._preview.bitmap.drawText(`${Strings.length}: ${length}ms`, 0, 160, Graphics.width, 40);
-		});
+		}
 	} else {
 		this._beatmapUploaded = false;
 		this._preview.bitmap.clear();
