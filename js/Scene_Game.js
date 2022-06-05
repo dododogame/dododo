@@ -805,11 +805,7 @@ Scene_Game.prototype._onLoad = async function () {
 	this._inaccuraciesArray = [];
 	this._lastPos = this._beatmap.start;
 	this._makeTitle();
-	this._unclearedEvents = [...this._beatmap.notes];
-	this._unclearedHitSounds = [...this._beatmap.notes];
-	this._unclearedMeasures = this._beatmap.barlines.map(barline => barline.time);
-	this._currentMeasureJudge = Scene_Game.PERFECT;
-	this._totalBig = this._beatmap.notes.reduce((bigCount, event) => bigCount + (event.big ? 1 : 0), 0);
+	this._preprocessHitEvents();
 	this._updateScore();
 	this._updateCombo();
 	if (this._hasMusic) {
@@ -824,6 +820,24 @@ Scene_Game.prototype._onLoad = async function () {
 		this._length = this._unclearedEvents.last().timeEnd - this._beatmap.start;
 		this._postLoadingAudio();
 	}
+};
+
+Scene_Game.prototype._preprocessHitEvents = function () {
+	this._unclearedEvents = [...this._beatmap.notes];
+	this._unclearedHitSounds = [...this._beatmap.notes];
+	const n = this._unclearedEvents.length;
+	for (let i = 0, j = 0; i < this._beatmap.barlines.length && j < n; i++, j++) {
+		const barlineTime = this._beatmap.barlines[i].time;
+		if (barlineTime <= this._unclearedEvents[j].time)
+			continue;
+		while (j < n - 1 && this._unclearedEvents[j + 1].time < barlineTime) {
+			this._unclearedEvents[j].isLastInMeasure = false;
+			j++;
+		}
+		this._unclearedEvents[j].isLastInMeasure = true;
+	}
+	this._currentMeasureJudge = Scene_Game.PERFECT;
+	this._totalBig = this._beatmap.notes.reduce((bigCount, event) => bigCount + (event.big ? 1 : 0), 0);
 };
 
 Scene_Game.prototype._makeTitle = function () {
@@ -1121,9 +1135,9 @@ Scene_Game.prototype._goodClear = function (event) {
 };
 
 Scene_Game.prototype._refreshMeasureStateAfterHitting = function (event, judge) {
-	while (this._unclearedMeasures.length > 0 && event.time >= this._unclearedMeasures[0])
-		this._clearMeasure();
 	this._currentMeasureJudge = Math.min(judge, this._currentMeasureJudge);
+	if (event.isLastInMeasure)
+		this._clearMeasure();
 };
 
 Scene_Game.prototype._badHit = function () {
@@ -1485,7 +1499,6 @@ Scene_Game.prototype._clearMeasure = function () {
 		this._badMeasures++;
 	else if (this._currentMeasureJudge === Scene_Game.MISS)
 		this._missMeasures++;
-	this._unclearedMeasures.shift();
 	this._currentMeasureJudge = Scene_Game.PERFECT;
 };
 
@@ -1506,7 +1519,6 @@ Scene_Game.prototype._missNumberString = function () {
 };
 
 Scene_Game.prototype._drawSummary = function () {
-	this._clearMeasure();
 	this._updateScore();
 	this._markSprite.bitmap.fontSize = 108;
 	this._markSprite.bitmap.textColor = this._getScoreColor();
