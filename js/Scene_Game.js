@@ -1596,7 +1596,7 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene, mill
 				break;
 			if (time < maxCount*1000) {
 				setTimeout(() => {
-					if (window.scene === this.parent.parent)
+					if (this.parent && window.scene === this.parent.parent)
 						this._scene._playHitSound();
 				}, time);
 			}
@@ -1605,7 +1605,7 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene, mill
 };
 
 Scene_Game.Sprite_ResumingCountdown.prototype._countTo = function (n) {
-	if (scene !== this.parent.parent)
+	if (!this.parent || scene !== this.parent.parent)
 		return;
 	if (n === 0) {
 		this._scene.actualResume();
