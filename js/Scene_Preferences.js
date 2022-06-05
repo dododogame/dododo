@@ -586,7 +586,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	unconnectedBeamsLength: 20,
 	barlinesHeight: 256,
 	hitEffectRadius: 32,
-	distanceBetweenLines: 384,
+	distanceBetweenLines: 300,
 	notesColor: '#ffffff',
 	auxiliariesColor: '#4c4c4c',
 	perfectColor: '#ffff00',
