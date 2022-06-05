@@ -825,16 +825,18 @@ Scene_Game.prototype._onLoad = async function () {
 Scene_Game.prototype._preprocessHitEvents = function () {
 	this._unclearedEvents = [...this._beatmap.notes];
 	this._unclearedHitSounds = [...this._beatmap.notes];
-	const n = this._unclearedEvents.length;
-	for (let i = 0, j = 0; i < this._beatmap.barlines.length && j < n; i++, j++) {
+	this._totalMeasures = 0;
+	this._totalNotes = this._unclearedEvents.length;
+	for (let i = 0, j = 0; i < this._beatmap.barlines.length && j < this._totalNotes; i++, j++) {
 		const barlineTime = this._beatmap.barlines[i].time;
 		if (barlineTime <= this._unclearedEvents[j].time)
 			continue;
-		while (j < n - 1 && this._unclearedEvents[j + 1].time < barlineTime) {
+		while (j < this._totalNotes - 1 && this._unclearedEvents[j + 1].time < barlineTime) {
 			this._unclearedEvents[j].isLastInMeasure = false;
 			j++;
 		}
 		this._unclearedEvents[j].isLastInMeasure = true;
+		this._totalMeasures++;
 	}
 	this._currentMeasureJudge = Scene_Game.PERFECT;
 	this._totalBig = this._beatmap.notes.reduce((bigCount, event) => bigCount + (event.big ? 1 : 0), 0);
@@ -1234,19 +1236,19 @@ Scene_Game.prototype._updateScore = function () {
 	if (this._visuals.subtractScore) {
 		this._score = Math.floor(500000 * (
 			(
-				this._beatmap.notes.length+this._totalBig-this._goodNumber-this._badNumber-this._missNumber-this._goodBig-this._badBig-this._missBig +
+				this._totalNotes+this._totalBig-this._goodNumber-this._badNumber-this._missNumber-this._goodBig-this._badBig-this._missBig +
 				(this._goodNumber+this._goodBig)/4 - this._excessNumber
-			) / (this._beatmap.notes.length + this._totalBig) + (
-				this._beatmap.barlines.length-this._goodMeasures-this._badMeasures-this._missMeasures + this._goodMeasures/2
-			) / this._beatmap.barlines.length
+			) / (this._totalNotes + this._totalBig) + (
+				this._totalMeasures-this._goodMeasures-this._badMeasures-this._missMeasures + this._goodMeasures/2
+			) / this._totalMeasures
 		));
 	} else {
 		this._score = Math.floor(500000 * (
 			(
 				this._perfectNumber+this._perfectBig + (this._goodNumber+this._goodBig)/4 - this._excessNumber
-			) / (this._beatmap.notes.length + this._totalBig) + (
+			) / (this._totalNotes + this._totalBig) + (
 				this._perfectMeasures + this._goodMeasures/2
-			) / this._beatmap.barlines.length
+			) / this._totalMeasures
 		));
 	}
 	this._scoreSprite.bitmap.textColor = this._getScoreColor();
