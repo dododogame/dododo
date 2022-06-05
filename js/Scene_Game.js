@@ -706,10 +706,10 @@ Scene_Game.prototype._updateKeyboard = function () {
 Scene_Game.prototype.update = function () {
 	const now = this._now();
 	this._updateProgress(now);
-	if (!this._paused && !this._ended) {
-		if (this._visuals.showKeyboard)
+	if (!this._ended) {
+		if (this._visuals.showKeyboard && !this._modifiers.autoPlay)
 			this._updateKeyboard();
-		if (!this._resumingCountdown) {
+		if (!this._paused && !this._resumingCountdown) {
 			if (!this._isRecording)
 				this._updateRecordingApply(now);
 			this._updateJudgeLine(now);
@@ -913,21 +913,31 @@ Scene_Game.prototype._postLoadingAudio = function () {
 
 Scene_Game.prototype._onBlur = function () {
 	if (preferences.autoPause && !this._paused && !this._ended)
-		this._pause();
+		this._actualPause();
+	if (!this._ended && this._isRecording) {
+		for (const key in this._pressings)
+			delete this._pressings[key];
+	}
 };
 
 Scene_Game.prototype._pause = function () {
 	if (this._paused) {
 		this._resume();
 	} else if (!this._musicEnded) {
-		this._lastPos = this._now();
-		this._paused = true;
-		this._setButtonsVisible(true);
-		if (this._resumingCountdown)
-			this._overHUDLayer.removeChild(this._resumingCountdown);
-		if (this._hasMusic)
-			this._audioPlayer.stop();
+		this._actualPause();
 	}
+};
+
+Scene_Game.prototype._actualPause = function () {
+	this._lastPos = this._now();
+	this._paused = true;
+	this._setButtonsVisible(true);
+	if (this._isRecording)
+		this._lastPressings = {...this._pressings};
+	if (this._resumingCountdown)
+		this._overHUDLayer.removeChild(this._resumingCountdown);
+	if (this._hasMusic)
+		this._audioPlayer.stop();
 };
 
 Scene_Game.prototype._resume = function () {
@@ -940,6 +950,17 @@ Scene_Game.prototype._resume = function () {
 			this._createResumingCountdown();
 		} else
 			this.actualResume();
+		if (this._isRecording) {
+			for (const key in this._lastPressings) {
+				if (!this._pressings[key])
+					this._processAndRecordLoosen(this._lastPos, key);
+			}
+			for (const key in this._pressings) {
+				if (!this._lastPressings[key])
+					this._processAndRecordHit(this._lastPos, key);
+			}
+			this._lastPressings = null;
+		}
 	} else {
 		this.actualResume();
 	}
@@ -989,7 +1010,8 @@ Scene_Game.prototype._onKeydown = function (event) {
 	} else if (!event.ctrlKey && !event.altKey && !event.metaKey && TyphmConstants.HITTABLE_KEYS.includes(key)) {
 		if (this._pressings[key])
 			return;
-		this._pressings[key] = true;
+		if (this._isRecording)
+			this._pressings[key] = true;
 		if (preferences.backtickRestart && key === '`') {
 			this._shouldRestart = true;
 		} else if (this._restart.visible) {
@@ -1004,11 +1026,8 @@ Scene_Game.prototype._onKeydown = function (event) {
 					this._saveRecording();
 				}
 			}
-		} else if (!this._modifiers.autoPlay && this._isRecording) {
-			const now = this._now();
-			this._processHit(now);
-			this._newRecording.hit.push({time: now, key: key});
-		}
+		} else if (!this._modifiers.autoPlay && this._isRecording)
+			this._processAndRecordHit(this._now(), key);
 	}
 };
 
@@ -1016,12 +1035,10 @@ Scene_Game.prototype._onKeyup = function (event) {
 	if (!this._loadingFinished)
 		return;
 	const key = event.key === ' ' ? 'Spacebar' : event.key;
-	delete this._pressings[key];
-	if (!this._paused && !this._modifiers.autoPlay && this._isRecording) {
-		const now = this._now();
-		this._processLoosen(now);
-		this._newRecording.loosen.push({time: now, key: key});
-	}
+	if (this._isRecording)
+		delete this._pressings[key];
+	if (!this._paused && !this._modifiers.autoPlay && this._isRecording)
+		this._processAndRecordLoosen(this._now(), key);
 };
 
 Scene_Game.prototype._onTouchEnd = function (event) {
@@ -1033,11 +1050,19 @@ Scene_Game.prototype._onTouchEnd = function (event) {
 	}
 	if (!this._paused && !this._modifiers.autoPlay && this._isRecording) {
 		const now = this._now();
-		for (let i = 0; i < changedTouches.length; i++) {
-			this._processLoosen(now);
-			this._newRecording.loosen.push({time: now, key: changedTouches.item(i).identifier});
-		}
+		for (let i = 0; i < changedTouches.length; i++)
+			this._processAndRecordLoosen(now, changedTouches.item(i).identifier);
 	}
+};
+
+Scene_Game.prototype._processAndRecordLoosen = function (time, key) {
+	this._processLoosen(time);
+	this._newRecording.loosen.push({'time': time, 'key': key});
+};
+
+Scene_Game.prototype._processAndRecordHit = function (time, key) {
+	this._processHit(time);
+	this._newRecording.hit.push({'time': time, 'key': key});
 };
 
 Scene_Game.prototype._onTouchStart = function (event) {
@@ -1059,10 +1084,8 @@ Scene_Game.prototype._onTouchStart = function (event) {
 			}
 		}
 		const now = this._now();
-		for (let i = 0; i < identifiers.length; i++) {
-			this._processHit(now);
-			this._newRecording.hit.push({time: now, key: identifiers[i]});
-		}
+		for (let i = 0; i < identifiers.length; i++)
+			this._processAndRecordHit(now, identifiers[i]);
 	}
 };
 
