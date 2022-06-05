@@ -567,14 +567,14 @@ Scene_Game.prototype._updateTPSIndicator = function (now) {
 };
 
 Scene_Game.prototype._updateHitSoundWithMusic = function (now) {
+	const offsetNow = now - preferences.offset * this._modifiers.playRate;
 	while (this._unclearedHitSounds.length > 0) {
 		const event = this._unclearedHitSounds[0];
-		const offsetNow = now - preferences.offset * this._modifiers.playRate;
 		if (offsetNow >= event.time - TyphmConstants.HIT_SOUND_ADVANCE*this._modifiers.playRate) {
 			if (offsetNow <= event.time + this._perfectTolerance) {
 				setTimeout(() => this._playHitSound(), (event.time - offsetNow)/this._modifiers.playRate);
 			}
-			this._unclearedHitSounds.splice(0, 1);
+			this._unclearedHitSounds.shift();
 		} else
 			break;
 	}
@@ -715,7 +715,7 @@ Scene_Game.prototype.update = function () {
 			this._updateJudgeLine(now);
 			if (this._visuals.TPSIndicator)
 				this._updateTPSIndicator(now);
-			if (this._hitSoundEnabled() && (this._modifiers.autoPlay || preferences.hitSoundWithMusic))
+			if (this._hitSoundWithMusic())
 				this._updateHitSoundWithMusic(now);
 			this._autoPlayUpdateAndProcessMiss(now);
 			this._updateHoldings(now);
@@ -1091,6 +1091,10 @@ Scene_Game.prototype._onTouchStart = function (event) {
 
 Scene_Game.prototype._hitSoundEnabled = function () {
 	return !!(preferences.enableHitSound && !this._offsetWizard);
+};
+
+Scene_Game.prototype._hitSoundWithMusic = function () {
+	return this._hitSoundEnabled() && (this._modifiers.autoPlay || preferences.hitSoundWithMusic);
 };
 
 Scene_Game.prototype._playHitSound = function () {
@@ -1607,24 +1611,38 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene, mill
 	this._scene = scene;
 	this._start = performance.now();
 	const maxCount = 3;
+	const actualResumingTimeout = maxCount*1000;
 	for (let i = 0; i <= maxCount; i++) {
 		setTimeout(() => this._countTo(i), (maxCount - i)*1000);
 	}
 	if (millisecondsPerWhole) {
-		let time = maxCount * 1000 - beatsOffset + preferences.offset;
+		let time = actualResumingTimeout - beatsOffset + preferences.offset;
 		const millisecondsPerQuarter = millisecondsPerWhole / 4;
 		while (true) {
 			time -= millisecondsPerQuarter;
 			if (time < 0)
 				break;
-			if (time < maxCount*1000) {
-				setTimeout(() => {
-					if (this.parent && window.scene === this.parent.parent)
-						this._scene._playHitSound();
-				}, time);
-			}
+			if (time < actualResumingTimeout)
+				setTimeout(this._playHitSound.bind(this), time);
 		}
 	}
+	if (this._scene._hitSoundWithMusic()) {
+		const unclearedHitSounds = this._scene._unclearedHitSounds;
+		const offsetNow = this._scene._lastPos - preferences.offset * this._scene._modifiers.playRate;
+		while (unclearedHitSounds.length > 0) {
+			const event = unclearedHitSounds[0];
+			if (offsetNow >= event.time - TyphmConstants.HIT_SOUND_ADVANCE*this._scene._modifiers.playRate) {
+				setTimeout(this._playHitSound.bind(this), (event.time - offsetNow)/this._scene._modifiers.playRate + actualResumingTimeout);
+				unclearedHitSounds.shift();
+			} else
+				break;
+		}
+	}
+};
+
+Scene_Game.Sprite_ResumingCountdown.prototype._playHitSound = function () {
+	if (this.parent && window.scene === this.parent.parent)
+		this._scene._playHitSound();
 };
 
 Scene_Game.Sprite_ResumingCountdown.prototype._countTo = function (n) {
