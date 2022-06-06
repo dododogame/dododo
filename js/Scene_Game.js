@@ -993,13 +993,15 @@ Scene_Game.prototype.actualResume = function () {
 	if (!this._ended)
 		this._judgeLine.visible = true;
 	if (this._hasMusic) {
-		this._audioPlayer.pitch = this._modifiers.playRate;
-		this._audioPlayer.play(false,
-			Math.max(this._lastPos - preferences.offset*this._modifiers.playRate, 0)/1000);
+		if (!this._audioPlayer.isPlaying()) {
+			this._audioPlayer.pitch = this._modifiers.playRate;
+			this._audioPlayer.play(false,
+				Math.max(this._lastPos - preferences.offset * this._modifiers.playRate, 0) / 1000);
+		}
 	} else {
 		this._starting = performance.now() - this._lastPos/this._modifiers.playRate;
 	}
-}
+};
 
 Scene_Game.prototype._onKeydown = function (event) {
 	if (!this._loadingFinished)
@@ -1215,7 +1217,7 @@ Scene_Game.prototype._processHit = function (now) {
 					this._missHit();
 					continue;
 				}
-				this._inaccuraciesArray.push(inaccuracy);
+				this._inaccuraciesArray.push(inaccuracy / this._modifiers.playRate);
 				this._createInaccuracyIndicator(inaccuracy);
 			} else if (!this._modifiers.noExcess) {
 				this._excessHit(now);
@@ -1358,7 +1360,7 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 	if (this._visuals.showInaccuracyData) {
 		this._inaccuracyDataSprite.bitmap.clear();
 		this._inaccuracyDataSprite.bitmap.textColor = Scene_Game.getColorFromJudge(this._getJudgeFromInaccuracy(inaccuracy));
-		this._inaccuracyDataSprite.bitmap.drawText(sprintf('%+.0fms', inaccuracy), 0, 0,
+		this._inaccuracyDataSprite.bitmap.drawText(sprintf('%+.0fms', inaccuracy/this._modifiers.playRate), 0, 0,
 			this._inaccuracyDataSprite.width, preferences.textHeight, 'center');
 	}
 };
@@ -1616,12 +1618,8 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene, mill
 		setTimeout(() => this._countTo(i), (maxCount - i)*1000);
 	}
 	if (millisecondsPerWhole) {
-		let time = actualResumingTimeout - beatsOffset + preferences.offset;
-		const millisecondsPerQuarter = millisecondsPerWhole / 4;
-		while (true) {
-			time -= millisecondsPerQuarter;
-			if (time < 0)
-				break;
+		const millisecondsPerQuarter = millisecondsPerWhole / 4 / this._scene._modifiers.playRate;
+		for (let time = actualResumingTimeout + preferences.offset - beatsOffset/this._scene._modifiers.playRate; time >= 0; time -= millisecondsPerQuarter) {
 			if (time < actualResumingTimeout)
 				setTimeout(this._playHitSound.bind(this), time);
 		}
@@ -1637,6 +1635,15 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene, mill
 			} else
 				break;
 		}
+	}
+	if (this._scene._hasMusic) {
+		const audioPlayer = this._scene._audioPlayer;
+		setTimeout(() => {
+			if (this.parent && window.scene === this.parent.parent && !audioPlayer.isPlaying()) {
+				audioPlayer.pitch = this._scene._modifiers.playRate;
+				audioPlayer.play(false, Math.max(this._scene._lastPos, 0) / 1000);
+			}
+		}, actualResumingTimeout + preferences.offset)
 	}
 };
 
