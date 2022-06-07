@@ -254,3 +254,4 @@ window.frac = math.fraction.bind(math);
 window.fracmath = math.create({number: 'Fraction'});
 window.fraceval = fracmath.evaluate.bind(fracmath);
 window.matheval = math.evaluate.bind(math);
+window.numre = (...arguments) => Number(math.re(math.evaluate(...arguments)))

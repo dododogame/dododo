@@ -217,7 +217,7 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 						continue;
 					}
 					const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({'length': lastBeatLength, 'dots': lastBeatDots});
-					const duration = math.evaluate('bignumber((position-lastPosition)/trueLength)/lastBPM',
+					const duration = numre('bignumber((position-lastPosition)/trueLength)/lastBPM',
 						{'lastBPM':lastBPM,'trueLength':beatTrueLength,'position':position,'lastPosition':positions.last()||0});
 					durations.push(normalizationDenominator = normalizationDenominator + duration);
 					positions.push(position);
@@ -226,7 +226,7 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 					lastBeatDots = dots;
 				}
 				const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({'length': lastBeatLength, 'dots': lastBeatDots});
-				const duration = math.evaluate('bignumber((position-lastPosition)/trueLength)/lastBPM',
+				const duration = numre('bignumber((position-lastPosition)/trueLength)/lastBPM',
 					{'lastBPM':lastBPM,'trueLength':beatTrueLength,'position':frac(1),'lastPosition':positions.last()||0});
 				durations.push(normalizationDenominator = normalizationDenominator + duration);
 				positions.push(frac(1));
@@ -235,11 +235,11 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 				line.timeFormula = x => {
 					let i = 0;
 					for (; i < positions.length-1; i++) {
-						if  (Number(x) <= Number(positions[i+1]))
+						if (Number(x) <= Number(positions[i+1]))
 							break;
 					}
-					return Number(math.evaluate('((d2 - d1)*(x - p1)/(p2 - p1) + d1)/d',
-							{'x':Number(x),p1:Number(positions[i]),p2:Number(positions[i+1]),d1:durations[i],d2:durations[i+1],d:normalizationDenominator}));
+					return numre('((d2 - d1)*(x - p1)/(p2 - p1) + d1)/d',
+							{'x':Number(x),p1:Number(positions[i]),p2:Number(positions[i+1]),d1:durations[i],d2:durations[i+1],d:normalizationDenominator});
 				};
 				break;
 			case 'ms_per_whole':
@@ -278,7 +278,7 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 				const property = event.event + 'Formula'
 				const expression = math.parse(event.parameters.join(' ')).compile();
 				(line.fakeJudgeLines ? line.fakeJudgeLines.last() : line)[property] =
-						x => Number(expression.evaluate({'x': Number(x), ...preferences}));
+						x => Number(math.re(expression.evaluate({'x': Number(x), ...preferences})));
 				break;
 			case 'blend_mode':
 				(line.fakeJudgeLines ? line.fakeJudgeLines.last() : line).blend_mode = event.parameters[0];
@@ -293,8 +293,8 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 							'length': lastBeatLength,
 							'dots': lastBeatDots
 						});
-						const duration = Number(math.evaluate('1/(bignumber(lastBPM)*bignumber(trueLength))',
-							{'lastBPM': lastBPM, 'trueLength': beatTrueLength}));
+						const duration = numre('1/(bignumber(lastBPM)*bignumber(trueLength))',
+							{'lastBPM': lastBPM, 'trueLength': beatTrueLength});
 						line.millisecondsPerWhole = 60000 * duration;
 					} else {
 						line.millisecondsPerWhole = lastMillisecondsPerWhole;
