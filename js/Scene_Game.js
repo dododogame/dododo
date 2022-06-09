@@ -1007,7 +1007,7 @@ Scene_Game.prototype._onKeydown = function (event) {
 	if (!this._loadingFinished)
 		return;
 	const key = event.key === ' ' ? 'Spacebar' : event.key;
-	if (key === 'Escape' || key === 'F7' && preferences.F7Pause) {
+	if (key === 'Escape' || key === 'F8' && preferences.F7Pause) {
 		this._pause();
 	} else if (!event.ctrlKey && !event.altKey && !event.metaKey && TyphmConstants.HITTABLE_KEYS.includes(key)) {
 		if (this._pressings[key])

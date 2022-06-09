@@ -78,7 +78,7 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {}
 			},
 			{
-				name: 'F7Pause',
+				name: 'F8Pause',
 				type: 'boolean',
 				args: {}
 			},
@@ -556,7 +556,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	countdown: true,
 	autoRestartGood: false,
 	autoRestartMiss: false,
-	F7Pause: true,
+	F8Pause: true,
 	backtickRestart: true,
 	autoPause: true,
 	recordVisual: true,

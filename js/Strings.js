@@ -85,7 +85,7 @@ Strings["en-US"] = {
 	"countdown": "Show countdown before resuming",
 	"autoRestartGood": "Automatically restart when failing to AP",
 	"autoRestartMiss": "Automatically restart when failing to FC",
-	"F7Pause": "Press F7 to pause",
+	"F8Pause": "Press F8 to pause",
 	"backtickRestart": "Press backtick to restart",
 	"autoPause": "Automatically pause when losing focus",
 	"recordVisual": "Record visual preferences to replay",
@@ -143,7 +143,7 @@ Strings["en-US"] = {
 	"showFPS": "Switch view of FPS (F2)",
 	"stretchGraphics": "Stretch to fit the window (F3)",
 	"fullscreen": "Toggle fullscreen (F4, F11)",
-	"screenshot": "Take screenshot and copy (F7)",
+	"screenshot": "Take screenshot and copy (F9)",
 	
 	// preferences: audio
 	"audio": "Audio",
@@ -271,7 +271,7 @@ Strings["zh-CN"] = {
 	"countdown": "继续前倒计时",
 	"autoRestartGood": "全完美失败时自动重开",
 	"autoRestartMiss": "全连失败时自动重开",
-	"F7Pause": "按 F7 暂停",
+	"F8Pause": "按 F8 暂停",
 	"backtickRestart": "按反引号重开",
 	"autoPause": "失焦时自动暂停",
 	"recordVisual": "在回放中记录视觉设置",
@@ -329,7 +329,7 @@ Strings["zh-CN"] = {
 	"showFPS": "切换 FPS 显示 (F2)",
 	"stretchGraphics": "缩放以适配窗口 (F3)",
 	"fullscreen": "切换全屏 (F4, F11)",
-	"screenshot": "截屏并复制 (F7)",
+	"screenshot": "截屏并复制 (F9)",
 	
 	// preferences: audio
 	"audio": "音频",
@@ -457,7 +457,7 @@ Strings["zh-TW"] = {
 	"countdown": "繼續前倒計時",
 	"autoRestartGood": "全完美失敗時自動重開",
 	"autoRestartMiss": "全連失敗時自動重開",
-	"F7Pause": "按 F7 暫停",
+	"F8Pause": "按 F8 暫停",
 	"backtickRestart": "按反引號重開",
 	"autoPause": "失焦時自動暫停",
 	"recordVisual": "在回放中記錄視覺設定",
@@ -515,7 +515,7 @@ Strings["zh-TW"] = {
 	"showFPS": "切換 FPS 顯示 (F2)",
 	"stretchGraphics": "縮放以適配窗口 (F3)",
 	"fullscreen": "切換全屏 (F4, F11)",
-	"screenshot": "截屏並複製 (F7)",
+	"screenshot": "截屏並複製 (F9)",
 	
 	// preferences: audio
 	"audio": "音頻",

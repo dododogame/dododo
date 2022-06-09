@@ -35,7 +35,7 @@ Scene_Base.prototype.stop = function () {
 };
 
 Scene_Base.prototype._globalOnKeyDown = function (event) {
-	if (event.key === 'F7')
+	if (event.key === 'F9')
 		this._shouldTakeScreenShot = true;
 };
 
