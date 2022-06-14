@@ -5,7 +5,8 @@ function Strings() {
 Strings.LANGUAGES = {
 	"en-US": "English (United States)",
 	"zh-CN": "中文 (中国)",
-	"zh-TW": "中文 (臺灣)"
+	"zh-TW": "中文 (臺灣)",
+	"ja-JP": "日本語 (日本)",
 };
 
 Strings["en-US"] = {
@@ -24,6 +25,7 @@ Strings["en-US"] = {
 	// browse files
 	"uploadAudio": "Upload audio",
 	"uploadBeatmap": "Upload beatmap",
+	"uploadRecording": "Upload replay",
 	"noBeatmapWarning": "Upload a beatmap first",
 	"title": "Music",
 	"musicAuthor": "Artist",
@@ -59,7 +61,6 @@ Strings["en-US"] = {
 	"fullCombo": "FC",
 	"viewRecording": "Watch replay",
 	"saveRecording": "Save replay",
-	"uploadRecording": "Upload replay",
 	
 	// in-game display of modifiers
 	"inGame_playRate": "%fx speed",
@@ -75,7 +76,7 @@ Strings["en-US"] = {
 	"autoPlay": "Auto-play",
 	"noBad": "No-bad mode",
 	"noExcess": "No-excess mode",
-	"judgeWindow": "Judge window (smaller is stricter)",
+	"judgeWindow": "Judgement window (smaller is stricter)",
 	"autoCompleteHolds": "Automatically hold for hold notes",
 	
 	// preferences: gameplay
@@ -88,13 +89,13 @@ Strings["en-US"] = {
 	"F8Pause": "Press F8 to pause",
 	"backtickRestart": "Press backtick to restart",
 	"autoPause": "Automatically pause when losing focus",
-	"recordVisual": "Record visual preferences to replay",
+	"recordVisual": "Record visual preferences to replay file",
 	
 	// preferences: visual
 	"visual": "Visual",
 	"FCAPIndicator": "Full combo / all perfect indicator",
 	"TPSIndicator": "Taps per second indicator",
-	"judgeLinePerformances": "Enable ornamental judge line effects",
+	"judgeLinePerformances": "Enable ornamental judgement line effects",
 	"flashWarningGood": "Warn by flash the screen at good hits",
 	"flashWarningMiss": "Warn by flash the screen at combo breaks",
 	"showInaccuracyData": "Show inaccuracy data",
@@ -139,7 +140,7 @@ Strings["en-US"] = {
 	"graphics": "Graphics",
 	"graphicsWidth": "Resolution (width)",
 	"graphicsHeight": "Resolution (height)",
-	"useWebGL": "Use WebGL to render (restart to take effect)",
+	"useWebGL": "Use WebGL to render (refresh to take effect)",
 	"showFPS": "Switch view of FPS (F2)",
 	"stretchGraphics": "Stretch to fit the window (F3)",
 	"fullscreen": "Toggle fullscreen (F4, F11)",
@@ -181,7 +182,7 @@ Strings["en-US"] = {
 	"cowbell2": "Cowbell 2",
 	"djembe": "Djembe",
 	"djundjun": "Dunun",
-	"sheepsToenails": "Sheep's toenails",
+	"sheepsToenails": "Chajchas",
 	"sleighBells": "Sleigh bells",
 	"snareDrum1": "Snare drum 1",
 	"snareDrum2": "Snare drum 2",
@@ -285,8 +286,8 @@ Strings["zh-CN"] = {
 	"flashWarningMiss": "断连时闪屏警告",
 	"showInaccuracyData": "显示误差数据",
 	"comboPopupInterval": "连击数弹出间隔 (0 为不弹出)",
-	"fadeIn": "上隐距离 (0 为不上隐)",
-	"fadeOut": "下隐距离 (0 为不下隐)",
+	"fadeIn": "上隐距离 (与分辨率的比值, 0 为不上隐)",
+	"fadeOut": "下隐距离 (与分辨率的比值, 0 为不下隐)",
 	"reverseVoices": "声部反转",
 	"mirror": "镜像 (左右反转)",
 	"showKeyboard": "显示按键情况",
@@ -325,7 +326,7 @@ Strings["zh-CN"] = {
 	"graphics": "图像",
 	"graphicsWidth": "分辨率 (宽)",
 	"graphicsHeight": "分辨率 (高)",
-	"useWebGL": "使用 WebGL 渲染 (重启生效)",
+	"useWebGL": "使用 WebGL 渲染 (刷新生效)",
 	"showFPS": "切换 FPS 显示 (F2)",
 	"stretchGraphics": "缩放以适配窗口 (F3)",
 	"fullscreen": "切换全屏 (F4, F11)",
@@ -377,7 +378,7 @@ Strings["zh-CN"] = {
 	"tambourine1": "铃鼓 1",
 	"tambourine2": "铃鼓 2",
 	"whip": "鞭",
-	"woodblock": "木块"
+	"woodblock": "响木"
 };
 
 Strings["zh-TW"] = {
@@ -471,8 +472,8 @@ Strings["zh-TW"] = {
 	"flashWarningMiss": "斷連時閃屏警告",
 	"showInaccuracyData": "顯示誤差數據",
 	"comboPopupInterval": "連擊數彈出間隔 (0 為不彈出)",
-	"fadeIn": "上隱距離 (0 爲不上隱)",
-	"fadeOut": "下隱距離 (0 爲不下隱)",
+	"fadeIn": "上隱距離 (與分辨率的比值, 0 爲不上隱)",
+	"fadeOut": "下隱距離 (與分辨率的比值, 0 爲不下隱)",
 	"reverseVoices": "聲部反轉",
 	"mirror": "鏡像 (左右反轉)",
 	"showKeyboard": "顯示按鍵情況",
@@ -511,7 +512,7 @@ Strings["zh-TW"] = {
 	"graphics": "圖像",
 	"graphicsWidth": "分辨率 (寬)",
 	"graphicsHeight": "分辨率 (高)",
-	"useWebGL": "使用 WebGL 渲染 (重啓生效)",
+	"useWebGL": "使用 WebGL 渲染 (刷新生效)",
 	"showFPS": "切換 FPS 顯示 (F2)",
 	"stretchGraphics": "縮放以適配窗口 (F3)",
 	"fullscreen": "切換全屏 (F4, F11)",
@@ -562,8 +563,194 @@ Strings["zh-TW"] = {
 	"surdo2": "巴西低音鼓 2",
 	"tambourine1": "鈴鼓 1",
 	"tambourine2": "鈴鼓 2",
-	"whip": "鞭",
-	"woodblock": "木塊"
+	"whip": "樂鞭",
+	"woodblock": "響木"
+};
+
+Strings["ja-JP"] = {
+	// miscellaneous
+	"gameTitle": "ドドド",
+	"ok": "確認",
+	"back": "戻る",
+	"loading": "ロード中...",
+	
+	// title page
+	"browseFiles": "ブラウズファイル",
+	"browseStore": "ストアー",
+	"browseHistory": "閲覧履歴",
+	"preferences": "设置",
+	
+	// browse files
+	"uploadAudio": "音声ファイルをアップロードする",
+	"uploadBeatmap": "譜面ファイルをアップロードする",
+	"uploadRecording": "リプレイをアップロードする",
+	"noBeatmapWarning": "最初に譜面ファイルをアップロードしてください",
+	"title": "曲名",
+	"musicAuthor": "作曲家",
+	"beatmapAuthor": "譜面制作者",
+	"difficulty": "難易度",
+	"defaultDifficulty": "未知",
+	"length": "長さ",
+	
+	// browse store
+	
+	// browse history
+	
+	// in-game
+	"failedToLoad": "データの読み込みに失敗しました",
+	"infoForBeatmapper": "譜面制作者に次の情報を提供する:",
+	"copy": "コピー",
+	"quitGame": "戻る",
+	"restartGame": "リスタート",
+	"perfect": "Perfect",
+	"good": "Good",
+	"bad": "Bad",
+	"miss": "ミス~",
+	"excess": "Excess",
+	"maxCombo": "最大コンボ数",
+	"markP": "P",
+	"markS": "S",
+	"markA": "A",
+	"markB": "B",
+	"markC": "C",
+	"markD": "D",
+	"markE": "E",
+	"markF": "F",
+	"fullCombo": "FC",
+	"viewRecording": "リプレイを見る",
+	"saveRecording": "リプレイを保存する",
+	
+	// in-game display of modifiers
+	"inGame_playRate": "%fx スピード",
+	"inGame_autoPlay": "オートプレイ",
+	"inGame_noBad": "No-bad",
+	"inGame_noExcess": "No-excess",
+	"inGame_judgeWindow": "%fx 判",
+	"inGame_autoCompleteHolds": "Auto-hold",
+	
+	// preferences: modifiers
+	"modifiers": "モード",
+	"playRate": "倍速",
+	"autoPlay": "オートプレイ",
+	"noBad": "No-Bad モード",
+	"noExcess": "No-excess モード",
+	"judgeWindow": "判定幅 (小さいほど厳しい)",
+	"autoCompleteHolds": "Hold ノートを自動的にコンボする",
+	
+	// preferences: gameplay
+	"gameplay": "ゲームプレイ",
+	"offset": "オフセット (ms)",
+	"offsetWizard": "オフセットウィザード",
+	"countdown": "ゲームに戻る前にカウントダウンを表示する",
+	"autoRestartGood": "APに失敗すると自動的にリスタートする",
+	"autoRestartMiss": "FCに失敗すると自動的にリスタートする",
+	"F8Pause": "F8 で一時停止する",
+	"backtickRestart": "バックティックでリスタートする",
+	"autoPause": "フォーカスを失うと自動的に一時停止する",
+	"recordVisual": "ビジュアル設定をリプレイファイルに記録する",
+	
+	// preferences: visual
+	"visual": "ビジュアル",
+	"FCAPIndicator": "Full combo / all perfect インジケータ",
+	"TPSIndicator": "Taps per second インジケータ",
+	"judgeLinePerformances": "装飾的な判定ライン効果を有効にする",
+	"flashWarningGood": "Good ヒットで画面をフラッシュして警告する",
+	"flashWarningMiss": "コンボブレイク時に画面をフラッシュして警告する",
+	"showInaccuracyData": "不正確なデータを表示する",
+	"comboPopupInterval": "コンボポップアップの間隔（無効にするには0を設定してください）",
+	"fadeIn": "フェードイン (解像度に対する比率 無効にするには0を設定してください)",
+	"fadeOut": "フェードアウト (解像度に対する比率 無効にするには0を設定してください)",
+	"reverseVoices": "声部反転",
+	"mirror": "ミラー (左右反転)",
+	"showKeyboard": "キーボードの押下を表示する",
+	"subtractScore": "スコアを追加する代わりに減算する",
+	"numbersHUD": "ゲーム内の Perfect ヒット数などを表示する",
+	
+	// preferences: geometry
+	"geometry": "ジオメトリ",
+	"fontSize": "フォントサイズ",
+	"textHeight": "テキストの高さ",
+	"margin": "マージン",
+	"voicesHeight": "声部の高さ",
+	"stemsLength": "符幹の長さ",
+	"headsRadius": "符頭の半径",
+	"holdWidth": "Hold ノートの幅",
+	"beamsWidth": "ビームの幅",
+	"beamsSpacing": "ビームの間隔",
+	"unconnectedBeamsLength": "孤立ビームの長さ",
+	"barlinesHeight": "小節線の長さ",
+	"hitEffectRadius": "ヒット効果の半径",
+	"distanceBetweenLines": "譜面の行間隔",
+	
+	// preferences: colors
+	"colors": "色",
+	"notesColor": "ノートの色",
+	"auxiliariesColor": "マイナーパート (小節線など) の色",
+	"perfectColor": "Perfect の色",
+	"goodColor": "Good の色",
+	"badColor": "Bad の色",
+	"missColor": "Miss の色",
+	"excessColor": "Excess の色",
+	"textColor": "前景色 (テキストなど)",
+	"backgroundColor": "背景色",
+	
+	// preferences: graphics
+	"graphics": "グラフィック",
+	"graphicsWidth": "解像度 (横の長さ)",
+	"graphicsHeight": "解像度 (縦の長さ)",
+	"useWebGL": "WebGL を使用したレンダリング (サイトを更新して有効にする)",
+	"showFPS": "FPSを表示を切り替える (F2)",
+	"stretchGraphics": "ウィンドウに合わせてストレッチ (F3)",
+	"fullscreen": "フルスクリーン切り替える (F4, F11)",
+	"screenshot": "クリップボードへのスクリーンショット (F9)",
+	
+	// preferences: audio
+	"audio": "オーディオ",
+	"enableHitSound": "ヒットサウンドを有効にする",
+	"hitSound": "ヒットサウンド",
+	"hitSoundWithMusic": "ヒットサウンドはキーボード入力ではなく音楽で再生する",
+	"countdownBeats": "カウントダウン時にヒットサウンドでビートをキューに入れる",
+	"musicVolume": "ミュージックのボリューム",
+	"hitSoundVolume": "ヒットサウンドのボリューム",
+	"masterVolume": "全体のボリューム",
+	
+	// preferences: system
+	"system": "システム",
+	"language": "言語",
+	"reset": "リセット",
+	"confirmReset": "すべての設定をデフォルトの状態にリセットしますか?",
+	"export": "設定をファイルにエクスポートする",
+	"import": "設定をインポートする",
+	"importFailure": "インポートは次の理由で失敗しました: %s",
+	"wiki": "ドドドの wiki (英語ページ) を開く",
+	"github": "ドドドの GitHub リポジトリを開く",
+	"discord": "ドドドの Discord サーバーに参加する",
+	
+	// hit sounds
+	"agogoBells": 'アゴゴベル',
+	"bassDrum": 'ベースドラム',
+	"bellTree": 'ベルツリー',
+	"cabasa": "カバサ",
+	"castanets": "カスタネット",
+	"chineseCymbal": "中華シンバル",
+	"chineseHandCymbals1": "中華ハンドシンバル 1",
+	"chineseHandCymbals2": "中華ハンドシンバル 2",
+	"clashCymbals": "ハンドシンバル",
+	"cowbell1": "カウベル 1",
+	"cowbell2": "カウベル 2",
+	"djembe": "アフリカンドラム 1",
+	"djundjun": "アフリカンドラム 2",
+	"sheepsToenails": "チャフチャス",
+	"sleighBells": "スレイベル",
+	"snareDrum1": "スネアドラム 1",
+	"snareDrum2": "スネアドラム 2",
+	"springCoil": "巻きばね",
+	"surdo1": "スルド 1",
+	"surdo2": "スルド 2",
+	"tambourine1": "タンバリン 1",
+	"tambourine2": "タンバリン 2",
+	"whip": "むち",
+	"woodblock": "ウッドブロック"
 };
 
 for (const key of Object.keys(Strings["en-US"])) {
