@@ -118,9 +118,7 @@ TouchInput._onTouchStart = function(event) {
 			TouchInput._preventDefault(event);
 		}
 	}
-	if (window.cordova || window.navigator.standalone) {
-		TouchInput._preventDefault(event);
-	}
+	TouchInput._preventDefault(event);
 };
 
 TouchInput._preventDefault = function (event) {
