@@ -55,8 +55,14 @@ Row.prototype.applyControlSentence = function (control, parameters, lastEnv) {
 		this.hitXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
 	} else if (control === 'bar_line_x') {
 		this.barLineXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
+	} else if (control === 'time') {
+		this.timeFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
 	} else if (control === 'blend_mode') {
 		(this.fakeJudgementLines ? this.fakeJudgementLines.last() : this.judgementLine).blend_mode = parameters[0];
+	} else if (control === 'let') {
+		this._beatmap.letExpression(parameters[0], parameters.slice(1).join(' '));
+	} else if (control === 'function') {
+		this._beatmap.functionExpression(parameters[0], parameters[1].split(','), parameters.slice(2).join(' '));
 	}
 };
 

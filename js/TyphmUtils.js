@@ -66,6 +66,13 @@ TyphmUtils.fromRGBAToHex = function () {
 	return '#' + Array.from(arguments, x => Math.round(x * 0xff).toString(16).padStart(2, '0')).join('');
 };
 
+Object.fromKeysAndValues = function (keys, values) {
+	const result = {};
+	for (let i = 0; i < keys.length; i++)
+		result[keys[i]] = values[i];
+	return result;
+};
+
 const oldSwitchStretchMode = Graphics._switchStretchMode;
 Graphics._switchStretchMode = function() {
 	oldSwitchStretchMode.apply(this, arguments);
@@ -262,10 +269,15 @@ window.fraceval = fracmath.evaluate.bind(fracmath);
 window.matheval = math.evaluate.bind(math);
 window.numre = (...arguments) => Number(math.re(math.evaluate(...arguments)))
 
-TyphmUtils.generateFunctionFromFormula = function (formula, environments) {
+TyphmUtils.generateFunctionFromFormula = function (formula, environments, parameters) {
+	parameters ||= [];
 	const environment = {};
 	for (const e of environments)
 		Object.assign(environment, e);
 	const expression = math.parse(formula).compile();
-	return x => Number(math.re(expression.evaluate({'x': Number(x), ...environment})));
+	return (x, ...param) => Number(math.re(expression.evaluate({
+		...environment,
+		'x': Number(x),
+		...Object.fromKeysAndValues(parameters, param.map(a => Number(a)))
+	})));
 };

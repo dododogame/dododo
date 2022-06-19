@@ -216,9 +216,29 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 Beatmap.prototype.setUpDefaultPreferencesAliases = function () {
 	for (const alias in Scene_Preferences.DEFAULT_ALIASES) {
 		Object.defineProperty(this.expressions, alias, {
-			get: () => preferences[Scene_Preferences.DEFAULT_ALIASES[alias]]
+			get: () => preferences[Scene_Preferences.DEFAULT_ALIASES[alias]],
+			configurable: true,
+			enumerable: true
 		});
 	}
+};
+
+Beatmap.prototype.letExpression = function (name, expression) {
+	const formula = TyphmUtils.generateFunctionFromFormula(expression, [preferences, this.expressions]);
+	Object.defineProperty(this.expressions, name, {
+		get: () => x => formula(x),
+		configurable: true,
+		enumerable: true
+	});
+};
+
+Beatmap.prototype.functionExpression = function (name, arguments, expression) {
+	const formula = TyphmUtils.generateFunctionFromFormula(expression, [preferences, this.expressions], arguments);
+	Object.defineProperty(this.expressions, name, {
+		get: () => (...args) => formula(...args),
+		configurable: true,
+		enumerable: true
+	});
 };
 
 Beatmap.prototype.recordHitEvent = function (rowIndex, note, y, shouldHit) {

@@ -12,7 +12,7 @@ JudgementLine.prototype.initialize = function (row) {
 	this.alphaFormula = x => 1;
 	this.widthFormula = x => 1;
 	this.heightFormula = x => this._row.voicesNumber * preferences.voicesHeight;
-	this.blend_mode = 'NORMAL';
+	this.blendMode = 'NORMAL';
 };
 
 JudgementLine.prototype.applyToSprite = function (sprite, lengthPosition, rowY, mirror) {
@@ -26,7 +26,7 @@ JudgementLine.prototype.applyToSprite = function (sprite, lengthPosition, rowY, 
 	sprite.bitmap.fillAll(TyphmUtils.fromRGBAToHex(
 		this.redFormula(lengthPosition), this.greenFormula(lengthPosition),
 		this.blueFormula(lengthPosition), this.alphaFormula(lengthPosition)));
-	sprite.blendMode = PIXI.BLEND_MODES[this.blend_mode.toUpperCase()]
+	sprite.blendMode = PIXI.BLEND_MODES[this.blendMode]
 };
 
 JudgementLine.prototype.setAttribute = function (attribute, parameters) {
