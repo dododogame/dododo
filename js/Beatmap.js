@@ -50,8 +50,8 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 			let i = 0;
 			for (; i < parameters.length && parameters[i][0] !== '#'; i++);
 			this.events.push({"event": name.toLowerCase(), "parameters": parameters.slice(0, i), "lineno": lineno + dataLineno});
-		} else if (line === '') { // new line
-			this.events.push({"event": "line", "voices": voices, "lineno": lineno + dataLineno});
+		} else if (line === '') { // new row
+			this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
 			voices = [];
 		} else { // voice
 			voices.push([]);
@@ -162,35 +162,35 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 	}
 }
 
-Beatmap.prototype.drawLines = function (reverseVoices) {
+Beatmap.prototype.drawRows = function (reverseVoices) {
 	Row.prepare();
-	this.lines = [new Row(this)];
+	this.rows = [new Row(this)];
 	this.notes = [];
-	this.barlines = [];
-	let lastLineNotes = [];
-	let lastLineEndTime = this.offset;
+	this.barLines = [];
+	let lastRowNotes = [];
+	let lastRowEndTime = this.offset;
 	let lastBPM = undefined;
 	let lastBeatLength = 2;
 	let lastBeatDots = 0;
 	let lastMillisecondsPerWhole = 2000;
 	for (let i = 0; i < this.events.length; i++) {
 		const event = this.events[i];
-		const line = this.lines.last();
+		const row = this.rows.last();
 		switch (event.event) {
 			case 'bpm':
-				[lastBPM, lastBeatLength, lastBeatDots] = line.setUpBPM(event.parameters, lastBPM, lastBeatLength, lastBeatDots);
+				[lastBPM, lastBeatLength, lastBeatDots] = row.setUpBPM(event.parameters, lastBPM, lastBeatLength, lastBeatDots);
 				break;
 			case 'ms_per_whole':
-				line.millisecondsPerWhole = parseFloat(event.parameters[0]);
+				row.millisecondsPerWhole = parseFloat(event.parameters[0]);
 				break;
 			case 'perfect':
 			case 'good':
 			case 'bad':
-				line[event.event] = parseFloat(event.parameters[0]);
+				row[event.event] = parseFloat(event.parameters[0]);
 				break;
-			case 'fake_judge_line':
-				line.fakeJudgeLines ||= [];
-				line.fakeJudgeLines.push(new JudgementLine(line));
+			case 'fake_judgement_line':
+				row.fakeJudgementLines ||= [];
+				row.fakeJudgementLines.push(new JudgementLine(row));
 				break;
 			case 'space_x':
 			case 'space_y':
@@ -203,42 +203,42 @@ Beatmap.prototype.drawLines = function (reverseVoices) {
 			case 'height':
 				const property = event.event + 'Formula'
 				const expression = math.parse(event.parameters.join(' ')).compile();
-				(line.fakeJudgeLines ? line.fakeJudgeLines.last() : line.judgementLine)[property] =
+				(row.fakeJudgementLines ? row.fakeJudgementLines.last() : row.judgementLine)[property] =
 						x => Number(math.re(expression.evaluate({'x': Number(x), ...preferences})));
 				break;
 			case 'note_x':
 			case 'hit_x':
 				const expression1 = math.parse(event.parameters.join(' ')).compile();
-				line[event.event + 'Formula'] = x => Number(math.re(expression1.evaluate({'x': Number(x), ...preferences})));
+				row[event.event + 'Formula'] = x => Number(math.re(expression1.evaluate({'x': Number(x), ...preferences})));
 				break;
 			case 'blend_mode':
-				(line.fakeJudgeLines ? line.fakeJudgeLines.last() : line.judgementLine).blend_mode = event.parameters[0];
+				(row.fakeJudgementLines ? row.fakeJudgementLines.last() : row.judgementLine).blend_mode = event.parameters[0];
 				break;
-			case 'line':
-				line.lineno = this.lines.length - 1;
-				line.startTime = lastLineEndTime;
-				line.voices = event.voices;
-				line.voicesNumber = event.voices.length;
-				lastMillisecondsPerWhole = line.setMillisecondsPerWholeIfHasnt(lastBPM, lastBeatLength, lastBeatDots, lastMillisecondsPerWhole);
-				line.setXFormulasIfHasnt();
-				line.drawBPMIfHas();
-				line.setTotalLength();
-				lastLineNotes = line.drawVoicesAndGetLastNotes(reverseVoices, lastLineNotes);
-				lastLineEndTime = line.setEndTime();
-				this.lines.push(new Row(this));
+			case 'row':
+				row.index = this.rows.length - 1;
+				row.startTime = lastRowEndTime;
+				row.voices = event.voices;
+				row.voicesNumber = event.voices.length;
+				lastMillisecondsPerWhole = row.setMillisecondsPerWholeIfHasnt(lastBPM, lastBeatLength, lastBeatDots, lastMillisecondsPerWhole);
+				row.setXFormulasIfHasnt();
+				row.drawBPMIfHas();
+				row.setTotalLength();
+				lastRowNotes = row.drawVoicesAndGetLastNotes(reverseVoices, lastRowNotes);
+				lastRowEndTime = row.setEndTime();
+				this.rows.push(new Row(this));
 				break;
 		}
 	}
 	this.notes.sort((n1, n2) => n1.time - n2.time);
 };
 
-Beatmap.prototype.recordHitEvent = function (lineno, note, y, shouldHit) {
+Beatmap.prototype.recordHitEvent = function (rowIndex, note, y, shouldHit) {
 	y -= (note.multiplicity - 1) * preferences.headsRadius;
 	if (shouldHit) {
 		note.hitEvents = [];
 		for (let i = 0; i < note.multiplicity; i++) {
 			const hitEvent = {"x": note.x, "hitX": note.hitX, "y": y+i*preferences.headsRadius*2, "xEnd": note.xEnd, "time": note.time, "timeEnd": note.timeEnd,
-				"big": note.big, "hold": note.hold, "solid": note.length > 1, "lineno": lineno};
+				"big": note.big, "hold": note.hold, "solid": note.length > 1, "rowIndex": rowIndex};
 			note.hitEvents.push(hitEvent);
 			this.notes.push(hitEvent);
 		}
@@ -251,7 +251,7 @@ Beatmap.prototype.recordHitEvent = function (lineno, note, y, shouldHit) {
 			tiedNote.hitEvents[i].ySwitches ||= [];
 			tiedNote.hitEvents[i].timeEnd = note.timeEnd;
 			tiedNote.hitEvents[i].xEnd = note.xEnd;
-			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y + i*preferences.headsRadius*2, "lineno": lineno});
+			tiedNote.hitEvents[i].ySwitches.push({"time": note.time, "y": y + i*preferences.headsRadius*2, "rowIndex": rowIndex});
 		}
 		note.hold = tiedNote.hold;
 	}
@@ -260,15 +260,15 @@ Beatmap.prototype.recordHitEvent = function (lineno, note, y, shouldHit) {
 Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, row) {
 	let y = hitEvent.y;
 	let x = hitEvent.x + preferences.headsRadius;
-	let eventLineno = hitEvent.lineno;
+	let eventRowIndex = hitEvent.rowIndex;
 	//let reachedEnd = true;
 	if (hitEvent.ySwitches) {
 		for (let i = 0; i < hitEvent.ySwitches.length; i++) {
 			if (now >= hitEvent.ySwitches[i].time) {
 				y = hitEvent.ySwitches[i].y;
-				if (eventLineno !== hitEvent.ySwitches[i].lineno) {
+				if (eventRowIndex !== hitEvent.ySwitches[i].rowIndex) {
 					x = preferences.margin;
-					eventLineno = hitEvent.ySwitches[i].lineno;
+					eventRowIndex = hitEvent.ySwitches[i].rowIndex;
 				}
 			} else {
 				//reachedEnd = false;
@@ -276,7 +276,7 @@ Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, row) {
 			}
 		}
 	}
-	if (eventLineno !== row.lineno)
+	if (eventRowIndex !== row.index)
 		return;
 	//if (reachedEnd)
 	//	xNow = Math.min(xNow, hitEvent.xEnd - preferences.headsRadius);
@@ -284,5 +284,5 @@ Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, row) {
 };
 
 Beatmap.prototype.clearNote = function (event, judge) {
-	this.lines[event.lineno].drawNoteHead(event.x, event.y, event.solid, false, Scene_Game.getColorFromJudge(judge));
+	this.rows[event.rowIndex].drawNoteHead(event.x, event.y, event.solid, false, Scene_Game.getColorFromJudge(judge));
 };

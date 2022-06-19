@@ -116,7 +116,7 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
-				name: 'judgeLinePerformances',
+				name: 'judgementLinePerformances',
 				type: 'boolean',
 				args: {
 				}
@@ -268,7 +268,7 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
-				name: 'barlinesHeight',
+				name: 'barLinesHeight',
 				type: 'number',
 				args: {
 					min: 0
@@ -562,7 +562,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	recordVisual: true,
 	FCAPIndicator: true,
 	TPSIndicator: true,
-	judgeLinePerformances: true,
+	judgementLinePerformances: true,
 	flashWarningGood: false,
 	flashWarningMiss: true,
 	showInaccuracyData: true,
@@ -584,7 +584,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	beamsWidth: 6,
 	beamsSpacing: 4,
 	unconnectedBeamsLength: 20,
-	barlinesHeight: 256,
+	barLinesHeight: 256,
 	hitEffectRadius: 32,
 	distanceBetweenLines: 300,
 	notesColor: '#ffffff',

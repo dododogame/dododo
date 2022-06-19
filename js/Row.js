@@ -236,10 +236,10 @@ Row.prototype.drawVoiceAndGetLastNote = function (voice, isFirstVoice, y, lastNo
 				i === 0, i === voice.length - 1, Row.getGroupHeightRecursive(event), timeLengthPassed, 1);
 		} else if (event.event === 'barline') {
 			if (isFirstVoice) {
-				this._beatmap.barlines.push({
+				this._beatmap.barLines.push({
 					"time": event.time,
 					"x": event.x,
-					"lineno": this.lineno
+					"rowIndex": this.index
 				});
 			}
 			this.drawBarline(event.x);
@@ -277,7 +277,7 @@ Row.prototype.drawIndividualNote = function (note, y, shouldHit) {
 		this.drawRest(note, y);
 		return;
 	}
-	this._beatmap.recordHitEvent(this.lineno, note, y, shouldHit);
+	this._beatmap.recordHitEvent(this.index, note, y, shouldHit);
 	this.drawStemIfHas(note, y);
 	this.drawFlagIfHas(note, y);
 	this.drawNoteHeadsAndDots(note, y, shouldHit);
@@ -458,7 +458,7 @@ Row.prototype.drawGroupAndGetLastNoteRecursive = function (isFirstVoice, group, 
 				i === 0, isLast && i === notes.length - 1, height, timeLengthPassed, previousNote, nextNote, layer + 1);
 		} else if (event.event === 'barline') {
 			if (isFirstVoice)
-				this._beatmap.barlines.push({"time": event.time, "x": event.x, "lineno": bitmap.lineno});
+				this._beatmap.barLines.push({"time": event.time, "x": event.x, "rowIndex": this.index});
 			this.drawBarline(event.x);
 		}
 		timeLengthPassed = timeLengthPassed.add(event.trueLength);
@@ -567,7 +567,7 @@ Row.prototype.drawBeamedNote = function (note, y, previous, next, shouldHit, hei
 		this.drawRest(note, y);
 		return;
 	}
-	this._beatmap.recordHitEvent(this.lineno, note, y, shouldHit);
+	this._beatmap.recordHitEvent(this.index, note, y, shouldHit);
 	const beams = Row.getBeamsNumber(note);
 	const nextBeams = next && Row.getBeamsNumber(Row.getFirstNoteRecursive(next))
 	const previousBeams = previous && Row.getBeamsNumber(Row.getLastNoteRecursive(previous));
@@ -611,8 +611,8 @@ Row.prototype.drawBeamedNote = function (note, y, previous, next, shouldHit, hei
 Row.prototype.drawBarline = function (x) {
 	const context = this._bitmap._context;
 	context.globalCompositeOperation = 'destination-over';
-	this._bitmap.fillRect(x, (TyphmConstants.LINES_HEIGHT - preferences.barlinesHeight) / 2, 1,
-		preferences.barlinesHeight, preferences.auxiliariesColor);
+	this._bitmap.fillRect(x, (TyphmConstants.LINES_HEIGHT - preferences.barLinesHeight) / 2, 1,
+		preferences.barLinesHeight, preferences.auxiliariesColor);
 	context.globalCompositeOperation = 'source-over';
 };
 
