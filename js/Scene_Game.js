@@ -208,12 +208,12 @@ Scene_Game.prototype._createTwoLines = function () {
 	this._row1Sprite = new Sprite();
 	this._row1Sprite.width = Graphics.width;
 	this._row1Sprite.anchor.y = 0.5;
-	this._center(this._row1Sprite, (Graphics.height - preferences.distanceBetweenLines)/2);
+	this._center(this._row1Sprite, (Graphics.height - preferences.distanceBetweenRows)/2);
 	this._beatmapLayer.addChild(this._row1Sprite);
 	this._row2Sprite = new Sprite();
 	this._row2Sprite.width = Graphics.width;
 	this._row2Sprite.anchor.y = 0.5;
-	this._center(this._row2Sprite, (Graphics.height + preferences.distanceBetweenLines)/2);
+	this._center(this._row2Sprite, (Graphics.height + preferences.distanceBetweenRows)/2);
 	this._nextBeatmapLayer.addChild(this._row2Sprite);
 	if (this._visuals.mirror) {
 		this._row1Sprite.scale.x = -1;
@@ -1364,7 +1364,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 	if (this._visuals.mirror)
 		hitEffect.x = Graphics.width - hitEffect.x;
 	const rowSprite = this._row1.index === event.rowIndex ? this._row1Sprite : this._row2Sprite;
-	hitEffect.y = rowSprite.y - TyphmConstants.LINES_HEIGHT / 2 + event.y;
+	hitEffect.y = rowSprite.y - Row.ROWS_HEIGHT / 2 + event.y;
 	this._hitEffectLayer.addChild(hitEffect);
 	let n = 1;
 	hitEffect.update = () => {

@@ -282,7 +282,7 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
-				name: 'distanceBetweenLines',
+				name: 'distanceBetweenRows',
 				type: 'number',
 				args: {
 					min: 0
@@ -586,7 +586,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	unconnectedBeamsLength: 20,
 	barLinesHeight: 256,
 	hitEffectRadius: 32,
-	distanceBetweenLines: 300,
+	distanceBetweenRows: 300,
 	notesColor: '#ffffff',
 	auxiliariesColor: '#4c4c4c',
 	perfectColor: '#ffff00',

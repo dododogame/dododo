@@ -4,6 +4,7 @@ function Row () {
 
 Row.prepare = function () {
 	this._createBigNoteHalo();
+	this.ROWS_HEIGHT = Graphics.height + preferences.distanceBetweenRows;
 };
 
 Row._createBigNoteHalo = function () {
@@ -27,7 +28,7 @@ Row._createBigNoteHalo = function () {
 };
 
 Row.prototype.initialize = function (beatmap, index) {
-	this._bitmap = new Bitmap(Graphics.width, TyphmConstants.LINES_HEIGHT);
+	this._bitmap = new Bitmap(Graphics.width, Row.ROWS_HEIGHT);
 	this._beatmap = beatmap;
 	this.index = index;
 	this.timeFormula = x => Number(x);
@@ -123,7 +124,7 @@ Row.prototype.drawBPM = function (beatNote, dots, bpm, position) {
 	context.fillStyle = preferences.auxiliariesColor;
 	context.strokeStyle = preferences.auxiliariesColor;
 	const x = preferences.margin + (Graphics.width - 2*preferences.margin)*this.noteXFormula(position);
-	const y = TyphmConstants.LINES_HEIGHT/2-96 + (beatNote - 3)*preferences.headsRadius*2;
+	const y = Row.ROWS_HEIGHT/2-96 + (beatNote - 3)*preferences.headsRadius*2;
 	for (let i = 0; i < dots; i++) {
 		context.beginPath();
 		context.arc(x+preferences.headsRadius+5*(i+1), y, 2, 0, 2*Math.PI);
@@ -210,14 +211,14 @@ Row.prototype.setEndTime = function () {
 };
 
 Row.prototype.drawVoicesAndGetLastNotes = function (reverseVoices, lastNotes) {
-	const y0 = (TyphmConstants.LINES_HEIGHT - preferences.voicesHeight*(this.voicesNumber-1))/2;
+	const y0 = (Row.ROWS_HEIGHT - preferences.voicesHeight*(this.voicesNumber-1))/2;
 	for (let i = 0; i < this.voices.length; i++) {
 		if (i > 0)
 			for (let j = 0; j < this.voices[i].length; j++)
 				Row.calculateLengthRecursive(this.voices[i][j]);
 		let y = y0+preferences.voicesHeight*i;
 		if (reverseVoices)
-			y = TyphmConstants.LINES_HEIGHT - y;
+			y = Row.ROWS_HEIGHT - y;
 		this.drawStaffLine(y);
 		lastNotes[i] = this.drawVoiceAndGetLastNote(this.voices[i], i === 0, y, lastNotes[i]);
 	}
@@ -657,7 +658,7 @@ Row.prototype.drawBeamedNote = function (note, y, previous, next, shouldHit, hei
 Row.prototype.drawBarLine = function (x) {
 	const context = this._bitmap._context;
 	context.globalCompositeOperation = 'destination-over';
-	this._bitmap.fillRect(x, (TyphmConstants.LINES_HEIGHT - preferences.barLinesHeight) / 2, 1,
+	this._bitmap.fillRect(x, (Row.ROWS_HEIGHT - preferences.barLinesHeight) / 2, 1,
 		preferences.barLinesHeight, preferences.auxiliariesColor);
 	context.globalCompositeOperation = 'source-over';
 };

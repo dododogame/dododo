@@ -122,7 +122,7 @@ Strings["en-US"] = {
 	"unconnectedBeamsLength": "Length of unconnected note beams",
 	"barLinesHeight": "Height of bar lines",
 	"hitEffectRadius": "Radius of hit effects",
-	"distanceBetweenLines": "Distance between beatmap rows",
+	"distanceBetweenRows": "Distance between beatmap rows",
 	
 	// preferences: colors
 	"colors": "Colors",
@@ -308,7 +308,7 @@ Strings["zh-CN"] = {
 	"unconnectedBeamsLength": "孤符杠的长度",
 	"barLinesHeight": "小节线的长度",
 	"hitEffectRadius": "打击效果的半径",
-	"distanceBetweenLines": "谱面行间距",
+	"distanceBetweenRows": "谱面行间距",
 	
 	// preferences: colors
 	"colors": "颜色",
@@ -494,7 +494,7 @@ Strings["zh-TW"] = {
 	"unconnectedBeamsLength": "孤符槓的長度",
 	"barLinesHeight": "小節線的長度",
 	"hitEffectRadius": "打擊效果的半徑",
-	"distanceBetweenLines": "譜面行間距",
+	"distanceBetweenRows": "譜面行間距",
 	
 	// preferences: colors
 	"colors": "顏色",
@@ -680,7 +680,7 @@ Strings["ja-JP"] = {
 	"unconnectedBeamsLength": "孤立ビームの長さ",
 	"barLinesHeight": "小節線の長さ",
 	"hitEffectRadius": "ヒット効果の半径",
-	"distanceBetweenLines": "譜面の行間隔",
+	"distanceBetweenRows": "譜面の行間隔",
 	
 	// preferences: colors
 	"colors": "色",
