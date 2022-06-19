@@ -146,6 +146,14 @@ String.prototype.alpha = function () {
 	return parseInt(this.substring(7, 9), 16) / 255 || 1;
 };
 
+String.prototype.capitalizeFirstLetter = function () {
+	return this.length <= 1 ? this.toUpperCase() : this[0].toUpperCase() + this.slice(1);
+};
+
+String.prototype.fromSnakeToCamel = function () {
+	return this.length <= 1 ? this : this[0] + this.split('_').map(s => s.capitalizeFirstLetter()).join().slice(1);
+};
+
 const oldInitialize = Bitmap.prototype.initialize;
 Bitmap.prototype.initialize = function (width, height) {
 	oldInitialize.apply(this, arguments);
@@ -253,3 +261,8 @@ window.fracmath = math.create({number: 'Fraction'});
 window.fraceval = fracmath.evaluate.bind(fracmath);
 window.matheval = math.evaluate.bind(math);
 window.numre = (...arguments) => Number(math.re(math.evaluate(...arguments)))
+
+TyphmUtils.generateFunctionFromFormula = function (formula) {
+	const expression = math.parse(formula).compile();
+	return x => Number(math.re(expression.evaluate({'x': Number(x), ...preferences})));
+};

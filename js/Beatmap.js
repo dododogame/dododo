@@ -5,6 +5,22 @@ function Beatmap () {
 Beatmap.TRUE_LENGTH_CALC = fracmath.parse('(1/2)^length*(2-(1/2)^dots)').compile();
 Beatmap.TRUE_LENGTH_CALC = Beatmap.TRUE_LENGTH_CALC.evaluate.bind(Beatmap.TRUE_LENGTH_CALC);
 
+Beatmap.DEFAULT_ALIASES = {
+	beats_per_minute: 'bpm',
+	milliseconds_per_whole: 'ms_per_whole',
+	space_x: 'judgement_line_x',
+	space_y: 'judgement_line_y',
+	width: 'judgement_line_width',
+	height: 'judgement_line_height',
+	red: 'judgement_line_red',
+	green: 'judgement_line_green',
+	blue: 'judgement_line_blue',
+	alpha: 'judgement_line_alpha',
+	opacity: 'judgement_line_alpha',
+	judgement_line_opacity: 'judgement_line_alpha',
+	fake_judge_line: 'fake_judgement_line'
+};
+
 Beatmap.prototype.initialize = function (url) {
 	this.url = url;
 };
@@ -176,57 +192,36 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 	for (let i = 0; i < this.events.length; i++) {
 		const event = this.events[i];
 		const row = this.rows.last();
-		switch (event.event) {
-			case 'bpm':
-				[lastBPM, lastBeatLength, lastBeatDots] = row.setUpBPM(event.parameters, lastBPM, lastBeatLength, lastBeatDots);
-				break;
-			case 'ms_per_whole':
-				row.millisecondsPerWhole = parseFloat(event.parameters[0]);
-				break;
-			case 'perfect':
-			case 'good':
-			case 'bad':
-				row[event.event] = parseFloat(event.parameters[0]);
-				break;
-			case 'fake_judgement_line':
-				row.fakeJudgementLines ||= [];
-				row.fakeJudgementLines.push(new JudgementLine(row));
-				break;
-			case 'space_x':
-			case 'space_y':
-			case 'time':
-			case 'red':
-			case 'green':
-			case 'blue':
-			case 'alpha':
-			case 'width':
-			case 'height':
-				const property = event.event + 'Formula'
-				const expression = math.parse(event.parameters.join(' ')).compile();
-				(row.fakeJudgementLines ? row.fakeJudgementLines.last() : row.judgementLine)[property] =
-						x => Number(math.re(expression.evaluate({'x': Number(x), ...preferences})));
-				break;
-			case 'note_x':
-			case 'hit_x':
-				const expression1 = math.parse(event.parameters.join(' ')).compile();
-				row[event.event + 'Formula'] = x => Number(math.re(expression1.evaluate({'x': Number(x), ...preferences})));
-				break;
-			case 'blend_mode':
-				(row.fakeJudgementLines ? row.fakeJudgementLines.last() : row.judgementLine).blend_mode = event.parameters[0];
-				break;
-			case 'row':
-				row.index = this.rows.length - 1;
-				row.startTime = lastRowEndTime;
-				row.voices = event.voices;
-				row.voicesNumber = event.voices.length;
-				lastMillisecondsPerWhole = row.setMillisecondsPerWholeIfHasnt(lastBPM, lastBeatLength, lastBeatDots, lastMillisecondsPerWhole);
-				row.setXFormulasIfHasnt();
-				row.drawBPMIfHas();
-				row.setTotalLength();
-				lastRowNotes = row.drawVoicesAndGetLastNotes(reverseVoices, lastRowNotes);
-				lastRowEndTime = row.setEndTime();
-				this.rows.push(new Row(this));
-				break;
+		event.event = Beatmap.DEFAULT_ALIASES[event.event] || event.event;
+		if (event.event === 'bpm') {
+			[lastBPM, lastBeatLength, lastBeatDots] = row.setUpBPM(event.parameters, lastBPM, lastBeatLength, lastBeatDots);
+		} else if (event.event === 'ms_per_whole') {
+			row.millisecondsPerWhole = parseFloat(event.parameters[0]);
+		} else if (event.event === 'perfect' || event.event === 'good' || event.event === 'bad') {
+			row[event.event] = parseFloat(event.parameters[0]);
+		} else if (event.event === 'fake_judgement_line') {
+			row.fakeJudgementLines ||= [];
+			row.fakeJudgementLines.push(new JudgementLine(row));
+		} else if (event.event.startsWith('judgement_line_')) {
+			row.setJudgementLineAttribute(event.event.slice('judgement_line_'.length), event.parameters);
+		} else if (event.event === 'note_x') {
+			row.noteXFormula = TyphmUtils.generateFunctionFromFormula(event.parameters.join(' '));
+		} else if (event.event === 'hit_x') {
+			row.hitXFormula = TyphmUtils.generateFunctionFromFormula(event.parameters.join(' '));
+		} else if (event.event === 'blend_mode') {
+			(row.fakeJudgementLines ? row.fakeJudgementLines.last() : row.judgementLine).blend_mode = event.parameters[0];
+		} else if (event.event === 'row') {
+			row.index = this.rows.length - 1;
+			row.startTime = lastRowEndTime;
+			row.voices = event.voices;
+			row.voicesNumber = event.voices.length;
+			lastMillisecondsPerWhole = row.setMillisecondsPerWholeIfHasnt(lastBPM, lastBeatLength, lastBeatDots, lastMillisecondsPerWhole);
+			row.setXFormulasIfHasnt();
+			row.drawBPMIfHas();
+			row.setTotalLength();
+			lastRowNotes = row.drawVoicesAndGetLastNotes(reverseVoices, lastRowNotes);
+			lastRowEndTime = row.setEndTime();
+			this.rows.push(new Row(this));
 		}
 	}
 	this.notes.sort((n1, n2) => n1.time - n2.time);

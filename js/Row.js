@@ -34,8 +34,12 @@ Row.prototype.initialize = function (beatmap) {
 };
 
 Row.prototype.setXFormulasIfHasnt = function () {
-	this.note_xFormula ||= this.judgementLine.space_xFormula;
-	this.hit_xFormula ||= this.note_xFormula;
+	this.noteXFormula ||= this.judgementLine.xFormula;
+	this.hitXFormula ||= this.noteXFormula;
+};
+
+Row.prototype.setJudgementLineAttribute = function (attribute, parameters) {
+	(this.fakeJudgementLines ? this.fakeJudgementLines.last() : this.judgementLine).setAttribute(attribute, parameters);
 };
 
 Row.prototype.setUpBPM = function (BPMData, lastBPM, lastBeatLength, lastBeatDots) {
@@ -92,7 +96,7 @@ Row.prototype.drawBPM = function (beatNote, dots, bpm, position) {
 	context.save();
 	context.fillStyle = preferences.auxiliariesColor;
 	context.strokeStyle = preferences.auxiliariesColor;
-	const x = preferences.margin + (Graphics.width - 2*preferences.margin)*this.note_xFormula(position);
+	const x = preferences.margin + (Graphics.width - 2*preferences.margin)*this.noteXFormula(position);
 	const y = TyphmConstants.LINES_HEIGHT/2-96 + (beatNote - 3)*preferences.headsRadius*2;
 	for (let i = 0; i < dots; i++) {
 		context.beginPath();
@@ -189,9 +193,9 @@ Row.prototype.drawStaffLine = function (y) {
 Row.prototype.setupNoteXAndTime = function (event, timeLengthPassed) {
 	const position = timeLengthPassed.div(this.totalLength);
 	const positionEnd = timeLengthPassed.add(event.trueLength).div(this.totalLength);
-	event.x = Row.denormalizeX(this.note_xFormula(position));
-	event.xEnd = Row.denormalizeX(this.note_xFormula(positionEnd));
-	event.hitX = Row.denormalizeX(this.hit_xFormula(position));
+	event.x = Row.denormalizeX(this.noteXFormula(position));
+	event.xEnd = Row.denormalizeX(this.noteXFormula(positionEnd));
+	event.hitX = Row.denormalizeX(this.hitXFormula(position));
 	event.time = this.getTimeFromPosition(position);
 	event.timeEnd = this.getTimeFromPosition(positionEnd);
 };

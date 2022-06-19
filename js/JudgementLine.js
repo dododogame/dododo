@@ -4,8 +4,8 @@ function JudgementLine () {
 
 JudgementLine.prototype.initialize = function (row) {
 	this._row = row;
-	this.space_xFormula = x => Number(x);
-	this.space_yFormula = x => 0;
+	this.xFormula = x => Number(x);
+	this.yFormula = x => 0;
 	this.redFormula = x => 1;
 	this.greenFormula = x => 1;
 	this.blueFormula = x => 1;
@@ -16,10 +16,10 @@ JudgementLine.prototype.initialize = function (row) {
 };
 
 JudgementLine.prototype.applyToSprite = function (sprite, lengthPosition, rowY, mirror) {
-	sprite.x = preferences.margin + this.space_xFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
+	sprite.x = preferences.margin + this.xFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
 	if (mirror)
 		sprite.x = Graphics.width - sprite.x;
-	sprite.y = rowY - this.space_yFormula(lengthPosition);
+	sprite.y = rowY - this.yFormula(lengthPosition);
 	sprite.scale.x = this.widthFormula(lengthPosition);
 	sprite.scale.y = this.heightFormula(lengthPosition);
 	sprite.bitmap.clear();
@@ -27,4 +27,21 @@ JudgementLine.prototype.applyToSprite = function (sprite, lengthPosition, rowY, 
 		this.redFormula(lengthPosition), this.greenFormula(lengthPosition),
 		this.blueFormula(lengthPosition), this.alphaFormula(lengthPosition)));
 	sprite.blendMode = PIXI.BLEND_MODES[this.blend_mode.toUpperCase()]
+};
+
+JudgementLine.prototype.setAttribute = function (attribute, parameters) {
+	switch (attribute) {
+		case 'x':
+		case 'y':
+		case 'width':
+		case 'height':
+		case 'red':
+		case 'green':
+		case 'blue':
+		case 'alpha':
+			this[attribute.fromSnakeToCamel() + 'Formula'] = TyphmUtils.generateFunctionFromFormula(parameters.join(' '));
+			break;
+		case 'blend_mode':
+			this.blendMode = parameters[0].toUpperCase();
+	}
 };

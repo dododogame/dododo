@@ -1413,12 +1413,12 @@ Scene_Game.prototype._getLengthPositionFromTime = function (time) {
 
 Scene_Game.prototype._getXFromLengthPosition = function (lengthPosition) {
 	if (this._row1Sprite && this._row1Sprite.bitmap)
-		return preferences.margin + this._row1.judgementLine.space_xFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
+		return preferences.margin + this._row1.judgementLine.xFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
 };
 
 Scene_Game.prototype._getNoteXFromLengthPosition = function (lengthPosition) {
 	if (this._row1Sprite && this._row1Sprite.bitmap)
-		return preferences.margin + this._row1.note_xFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
+		return preferences.margin + this._row1.noteXFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
 };
 
 Scene_Game.prototype._getXFromTime = function (time) {
