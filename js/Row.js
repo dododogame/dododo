@@ -38,7 +38,7 @@ Row.prototype.initialize = function (beatmap, index) {
 Row.prototype.applyControlSentence = function (control, parameters, lastEnv) {
 	control = Beatmap.DEFAULT_ALIASES[control] || control;
 	if (control === 'bpm') {
-		Object.assign(lastEnv, this.setUpBPM(parameters, lastEnv.BPM, lastEnv.beatLength, lastEnv.beatDots));
+		this.setUpBPM(parameters, lastEnv);
 	} else if (control === 'ms_per_whole') {
 		this.millisecondsPerWhole = parseFloat(parameters[0]);
 	} else if (control === 'perfect' || control === 'good' || control === 'bad') {
@@ -69,7 +69,7 @@ Row.prototype.setJudgementLineAttribute = function (attribute, parameters) {
 	(this.fakeJudgementLines ? this.fakeJudgementLines.last() : this.judgementLine).setAttribute(attribute, parameters);
 };
 
-Row.prototype.setUpBPM = function (BPMData, lastBPM, lastBeatLength, lastBeatDots) {
+Row.prototype.setUpBPM = function (BPMData, lastEnv) {
 	let normalizationDenominator = 0;
 	const positions = [frac(0)];
 	const durations = [0];
@@ -83,23 +83,23 @@ Row.prototype.setUpBPM = function (BPMData, lastBPM, lastBeatLength, lastBeatDot
 		const position = frac(BPMData[i + 2] || 0);
 		this.BPMMarkers.push({'length': length, 'dots': dots, 'bpm': bpm, 'position': position});
 		if (i === 0 && position.compare(0) <= 0) {
-			lastBPM = bpm;
-			lastBeatLength = length;
-			lastBeatDots = dots;
+			lastEnv.BPM = bpm;
+			lastEnv.beatLength = length;
+			lastEnv.beatDots = dots;
 			continue;
 		}
-		const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({'length': lastBeatLength, 'dots': lastBeatDots});
+		const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({'length': lastEnv.beatLength, 'dots': lastEnv.beatDots});
 		const duration = numre('bignumber((position-lastPosition)/trueLength)/lastBPM',
-			{'lastBPM':lastBPM,'trueLength':beatTrueLength,'position':position,'lastPosition':positions.last()||0});
+			{'lastBPM':lastEnv.BPM,'trueLength':beatTrueLength,'position':position,'lastPosition':positions.last()||0});
 		durations.push(normalizationDenominator = normalizationDenominator + duration);
 		positions.push(position);
-		lastBPM = bpm;
-		lastBeatLength = length;
-		lastBeatDots = dots;
+		lastEnv.BPM = bpm;
+		lastEnv.beatLength = length;
+		lastEnv.beatDots = dots;
 	}
-	const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({'length': lastBeatLength, 'dots': lastBeatDots});
+	const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({'length': lastEnv.beatLength, 'dots': lastEnv.beatDots});
 	const duration = numre('bignumber((position-lastPosition)/trueLength)/lastBPM',
-		{'lastBPM':lastBPM,'trueLength':beatTrueLength,'position':frac(1),'lastPosition':positions.last()||0});
+		{'lastBPM':lastEnv.BPM,'trueLength':beatTrueLength,'position':frac(1),'lastPosition':positions.last()||0});
 	durations.push(normalizationDenominator = normalizationDenominator + duration);
 	positions.push(frac(1));
 	this.millisecondsPerWhole = 60000*Number(normalizationDenominator);
@@ -113,8 +113,6 @@ Row.prototype.setUpBPM = function (BPMData, lastBPM, lastBeatLength, lastBeatDot
 		return numre('((d2 - d1)*(x - p1)/(p2 - p1) + d1)/d',
 			{'x':Number(x),p1:Number(positions[i]),p2:Number(positions[i+1]),d1:durations[i],d2:durations[i+1],d:normalizationDenominator});
 	};
-	
-	return [lastBPM, lastBeatLength, lastBeatDots];
 };
 
 Row.prototype.drawBPM = function (beatNote, dots, bpm, position) {
@@ -124,7 +122,7 @@ Row.prototype.drawBPM = function (beatNote, dots, bpm, position) {
 	context.fillStyle = preferences.auxiliariesColor;
 	context.strokeStyle = preferences.auxiliariesColor;
 	const x = preferences.margin + (Graphics.width - 2*preferences.margin)*this.noteXFormula(position);
-	const y = Row.ROWS_HEIGHT/2-96 + (beatNote - 3)*preferences.headsRadius*2;
+	const y = Row.ROWS_HEIGHT/2-(this.voicesNumber+1)/2*preferences.voicesHeight;
 	for (let i = 0; i < dots; i++) {
 		context.beginPath();
 		context.arc(x+preferences.headsRadius+5*(i+1), y, 2, 0, 2*Math.PI);
