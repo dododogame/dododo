@@ -65,7 +65,7 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 			let [name, ...parameters] = line.split(' ');
 			let i = 0;
 			for (; i < parameters.length && parameters[i][0] !== '#'; i++);
-			this.events.push({"event": name.toLowerCase(), "parameters": parameters.slice(0, i), "lineno": lineno + dataLineno});
+			this.events.push({"event": "control", "control": name.toLowerCase(), "parameters": parameters.slice(0, i), "lineno": lineno + dataLineno});
 		} else if (line === '') { // new row
 			this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
 			voices = [];
@@ -180,48 +180,27 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 
 Beatmap.prototype.drawRows = function (reverseVoices) {
 	Row.prepare();
-	this.rows = [new Row(this)];
+	this.rows = [new Row(this, 0)];
 	this.notes = [];
 	this.barLines = [];
-	let lastRowNotes = [];
-	let lastRowEndTime = this.offset;
-	let lastBPM = undefined;
-	let lastBeatLength = 2;
-	let lastBeatDots = 0;
-	let lastMillisecondsPerWhole = 2000;
+	const lastEnv = {
+		rowNotes: [],
+		rowEndTime: this.offset,
+		BPM: undefined,
+		beatLength: 2,
+		beatDots: 0,
+		millisecondsPerWhole: 2000
+	};
 	for (let i = 0; i < this.events.length; i++) {
 		const event = this.events[i];
 		const row = this.rows.last();
-		event.event = Beatmap.DEFAULT_ALIASES[event.event] || event.event;
-		if (event.event === 'bpm') {
-			[lastBPM, lastBeatLength, lastBeatDots] = row.setUpBPM(event.parameters, lastBPM, lastBeatLength, lastBeatDots);
-		} else if (event.event === 'ms_per_whole') {
-			row.millisecondsPerWhole = parseFloat(event.parameters[0]);
-		} else if (event.event === 'perfect' || event.event === 'good' || event.event === 'bad') {
-			row[event.event] = parseFloat(event.parameters[0]);
-		} else if (event.event === 'fake_judgement_line') {
-			row.fakeJudgementLines ||= [];
-			row.fakeJudgementLines.push(new JudgementLine(row));
-		} else if (event.event.startsWith('judgement_line_')) {
-			row.setJudgementLineAttribute(event.event.slice('judgement_line_'.length), event.parameters);
-		} else if (event.event === 'note_x') {
-			row.noteXFormula = TyphmUtils.generateFunctionFromFormula(event.parameters.join(' '));
-		} else if (event.event === 'hit_x') {
-			row.hitXFormula = TyphmUtils.generateFunctionFromFormula(event.parameters.join(' '));
-		} else if (event.event === 'blend_mode') {
-			(row.fakeJudgementLines ? row.fakeJudgementLines.last() : row.judgementLine).blend_mode = event.parameters[0];
-		} else if (event.event === 'row') {
-			row.index = this.rows.length - 1;
-			row.startTime = lastRowEndTime;
-			row.voices = event.voices;
-			row.voicesNumber = event.voices.length;
-			lastMillisecondsPerWhole = row.setMillisecondsPerWholeIfHasnt(lastBPM, lastBeatLength, lastBeatDots, lastMillisecondsPerWhole);
-			row.setXFormulasIfHasnt();
-			row.drawBPMIfHas();
-			row.setTotalLength();
-			lastRowNotes = row.drawVoicesAndGetLastNotes(reverseVoices, lastRowNotes);
-			lastRowEndTime = row.setEndTime();
-			this.rows.push(new Row(this));
+		switch (event.event) {
+			case 'control':
+				row.applyControlSentence(event.control, event.parameters, lastEnv);
+				break;
+			case 'row':
+				row.finalSetUp(event.voices, reverseVoices, lastEnv);
+				this.rows.push(new Row(this, this.rows.length));
 		}
 	}
 	this.notes.sort((n1, n2) => n1.time - n2.time);

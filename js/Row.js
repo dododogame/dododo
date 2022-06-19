@@ -26,16 +26,42 @@ Row._createBigNoteHalo = function () {
 	this._bigNoteHalo._setDirty();
 };
 
-Row.prototype.initialize = function (beatmap) {
+Row.prototype.initialize = function (beatmap, index) {
 	this._bitmap = new Bitmap(Graphics.width, TyphmConstants.LINES_HEIGHT);
 	this._beatmap = beatmap;
+	this.index = index;
 	this.timeFormula = x => Number(x);
 	this.judgementLine = new JudgementLine(this);
+};
+
+Row.prototype.applyControlSentence = function (control, parameters, lastEnv) {
+	control = Beatmap.DEFAULT_ALIASES[control] || control;
+	if (control === 'bpm') {
+		Object.assign(lastEnv, this.setUpBPM(parameters, lastEnv.BPM, lastEnv.beatLength, lastEnv.beatDots));
+	} else if (control === 'ms_per_whole') {
+		this.millisecondsPerWhole = parseFloat(parameters[0]);
+	} else if (control === 'perfect' || control === 'good' || control === 'bad') {
+		this[control] = parseFloat(parameters[0]);
+	} else if (control === 'fake_judgement_line') {
+		this.fakeJudgementLines ||= [];
+		this.fakeJudgementLines.push(new JudgementLine(this));
+	} else if (control.startsWith('judgement_line_')) {
+		this.setJudgementLineAttribute(control.slice('judgement_line_'.length), parameters);
+	} else if (control === 'note_x') {
+		this.noteXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '));
+	} else if (control === 'hit_x') {
+		this.hitXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '));
+	} else if (control === 'bar_line_x') {
+		this.barLineXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '));
+	} else if (control === 'blend_mode') {
+		(this.fakeJudgementLines ? this.fakeJudgementLines.last() : this.judgementLine).blend_mode = parameters[0];
+	}
 };
 
 Row.prototype.setXFormulasIfHasnt = function () {
 	this.noteXFormula ||= this.judgementLine.xFormula;
 	this.hitXFormula ||= this.noteXFormula;
+	this.barLineXFormula ||= this.noteXFormula;
 };
 
 Row.prototype.setJudgementLineAttribute = function (attribute, parameters) {
@@ -149,21 +175,33 @@ Row.prototype.setTotalLength = function () {
 	return this.totalLength;
 };
 
-Row.prototype.setMillisecondsPerWholeIfHasnt = function (lastBPM, lastBeatLength, lastBeatDots, lastMillisecondsPerWhole) {
+Row.prototype.setMillisecondsPerWholeIfHasnt = function (lastEnv) {
 	if (this.millisecondsPerWhole === undefined) {
-		if (lastBPM) {
+		if (lastEnv.BPM) {
 			const beatTrueLength = Beatmap.TRUE_LENGTH_CALC({
-				'length': lastBeatLength,
-				'dots': lastBeatDots
+				'length': lastEnv.beatLength,
+				'dots': lastEnv.beatDots
 			});
 			const duration = numre('1/(bignumber(lastBPM)*bignumber(trueLength))',
-				{'lastBPM': lastBPM, 'trueLength': beatTrueLength});
+				{'lastBPM': lastEnv.BPM, 'trueLength': beatTrueLength});
 			this.millisecondsPerWhole = 60000 * duration;
 		} else {
-			this.millisecondsPerWhole = lastMillisecondsPerWhole;
+			this.millisecondsPerWhole = lastEnv.millisecondsPerWhole;
 		}
 	}
 	return this.millisecondsPerWhole;
+};
+
+Row.prototype.finalSetUp = function (voices, reverseVoices, lastEnv) {
+	this.startTime = lastEnv.rowEndTime;
+	this.voices = voices;
+	this.voicesNumber = voices.length;
+	lastEnv.millisecondsPerWhole = this.setMillisecondsPerWholeIfHasnt(lastEnv);
+	this.setXFormulasIfHasnt();
+	this.drawBPMIfHas();
+	this.setTotalLength();
+	lastEnv.rowNotes = this.drawVoicesAndGetLastNotes(reverseVoices, lastEnv.rowNotes);
+	lastEnv.rowEndTime = this.setEndTime();
 };
 
 Row.prototype.setEndTime = function () {
@@ -192,13 +230,17 @@ Row.prototype.drawStaffLine = function (y) {
 
 Row.prototype.setupNoteXAndTime = function (event, timeLengthPassed) {
 	const position = timeLengthPassed.div(this.totalLength);
-	const positionEnd = timeLengthPassed.add(event.trueLength).div(this.totalLength);
-	event.x = Row.denormalizeX(this.noteXFormula(position));
-	event.xEnd = Row.denormalizeX(this.noteXFormula(positionEnd));
-	event.hitX = Row.denormalizeX(this.hitXFormula(position));
+	if (event.event === 'note' || event.event === 'group') {
+		const positionEnd = timeLengthPassed.add(event.trueLength).div(this.totalLength);
+		event.x = Row.denormalizeX(this.noteXFormula(position));
+		event.xEnd = Row.denormalizeX(this.noteXFormula(positionEnd));
+		event.hitX = Row.denormalizeX(this.hitXFormula(position));
+		event.timeEnd = this.getTimeFromPosition(positionEnd);
+	} else if (event.event === 'barline') {
+		event.x = Row.denormalizeX(this.barLineXFormula(position));
+	}
 	event.time = this.getTimeFromPosition(position);
-	event.timeEnd = this.getTimeFromPosition(positionEnd);
-};
+};``
 
 Row.prototype.getTimeFromPosition = function (position) {
 	return this.timeFormula(position) * this.totalTime + this.startTime;
@@ -246,7 +288,7 @@ Row.prototype.drawVoiceAndGetLastNote = function (voice, isFirstVoice, y, lastNo
 					"rowIndex": this.index
 				});
 			}
-			this.drawBarline(event.x);
+			this.drawBarLine(event.x);
 		}
 		timeLengthPassed = timeLengthPassed.add(event.trueLength);
 	}
@@ -463,7 +505,7 @@ Row.prototype.drawGroupAndGetLastNoteRecursive = function (isFirstVoice, group, 
 		} else if (event.event === 'barline') {
 			if (isFirstVoice)
 				this._beatmap.barLines.push({"time": event.time, "x": event.x, "rowIndex": this.index});
-			this.drawBarline(event.x);
+			this.drawBarLine(event.x);
 		}
 		timeLengthPassed = timeLengthPassed.add(event.trueLength);
 	}
@@ -612,7 +654,7 @@ Row.prototype.drawBeamedNote = function (note, y, previous, next, shouldHit, hei
 	this.drawHoldBarIfHas(note, y, shouldHit);
 };
 
-Row.prototype.drawBarline = function (x) {
+Row.prototype.drawBarLine = function (x) {
 	const context = this._bitmap._context;
 	context.globalCompositeOperation = 'destination-over';
 	this._bitmap.fillRect(x, (TyphmConstants.LINES_HEIGHT - preferences.barLinesHeight) / 2, 1,
