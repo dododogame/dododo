@@ -36,7 +36,8 @@ Row.prototype.initialize = function (beatmap, index) {
 };
 
 Row.prototype.applyControlSentence = function (control, parameters, lastEnv) {
-	control = Beatmap.DEFAULT_ALIASES[control] || control;
+	while (this._beatmap.aliases[control])
+		control = this._beatmap.aliases[control];
 	if (control === 'bpm') {
 		this.setUpBPM(parameters, lastEnv);
 	} else if (control === 'ms_per_whole') {
@@ -49,11 +50,11 @@ Row.prototype.applyControlSentence = function (control, parameters, lastEnv) {
 	} else if (control.startsWith('judgement_line_')) {
 		this.setJudgementLineAttribute(control.slice('judgement_line_'.length), parameters);
 	} else if (control === 'note_x') {
-		this.noteXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '));
+		this.noteXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
 	} else if (control === 'hit_x') {
-		this.hitXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '));
+		this.hitXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
 	} else if (control === 'bar_line_x') {
-		this.barLineXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '));
+		this.barLineXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
 	} else if (control === 'blend_mode') {
 		(this.fakeJudgementLines ? this.fakeJudgementLines.last() : this.judgementLine).blend_mode = parameters[0];
 	}

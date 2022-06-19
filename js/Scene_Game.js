@@ -10,7 +10,7 @@ Scene_Game.MODIFIERS = [
 	'autoPlay',
 	'noBad',
 	'noExcess',
-	'judgeWindow',
+	'judgementWindow',
 	'autoCompleteHolds'
 ];
 Scene_Game.VISUALS = [
@@ -566,11 +566,11 @@ Scene_Game.prototype._autoPlayUpdateAndProcessMiss = function (now) {
 	while (this._unclearedEvents.length > 0) {
 		const event = this._unclearedEvents[0];
 		if (now >= event.time) {
-			if (this._modifiers.autoPlay && now <= event.time + this._perfectTolerance * this._modifiers.judgeWindow) {
+			if (this._modifiers.autoPlay && now <= event.time + this._perfectTolerance * this._modifiers.judgementWindow) {
 				this._perfectHit();
 				if (this._visuals.TPSIndicator)
 					this._hitsLastSecond.push(now);
-			} else if (now >= event.time + this._missBoundary() * this._modifiers.judgeWindow) {
+			} else if (now >= event.time + this._missBoundary() * this._modifiers.judgementWindow) {
 				this._missHit();
 			} else
 				break;
@@ -1181,7 +1181,7 @@ Scene_Game.prototype._processHit = function (now) {
 	if (!this._ended) {
 		while (this._unclearedEvents.length > 0) {
 			const event = this._unclearedEvents[0];
-			if (now >= event.time - this._missBoundary() * this._modifiers.judgeWindow) {
+			if (now >= event.time - this._missBoundary() * this._modifiers.judgementWindow) {
 				const inaccuracy = now - event.time;
 				const judge = this._getJudgeFromInaccuracy(inaccuracy);
 				if (judge === Scene_Game.PERFECT)
@@ -1219,7 +1219,7 @@ Scene_Game.prototype._excessHit = function (now) {
 Scene_Game.prototype._processLoosen = function (now) {
 	if (!this._modifiers.autoCompleteHolds && Object.keys(this._pressings).length < this._holdings.length) {
 		const {event, judge} = this._holdings.shift();
-		if (now < event.timeEnd - this._goodTolerance * this._modifiers.judgeWindow) {
+		if (now < event.timeEnd - this._goodTolerance * this._modifiers.judgementWindow) {
 			this._onDestinedMiss();
 			this._missClear(event);
 		} else if (judge === Scene_Game.PERFECT) {
@@ -1326,7 +1326,7 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 	inaccuracyIndicator.anchor.x = 0.5;
 	inaccuracyIndicator.anchor.y = 0.5;
 	inaccuracyIndicator.x = this._inaccuracyBar.x + 
-			this._inaccuracyBar.width/2 * inaccuracy/(this._missBoundary() * this._modifiers.judgeWindow);
+			this._inaccuracyBar.width/2 * inaccuracy/(this._missBoundary() * this._modifiers.judgementWindow);
 	inaccuracyIndicator.y = this._inaccuracyBar.y;
 	this._overHUDLayer.addChild(inaccuracyIndicator);
 	inaccuracyIndicator.update = () => {
@@ -1344,11 +1344,11 @@ Scene_Game.prototype._createInaccuracyIndicator = function (inaccuracy) {
 
 Scene_Game.prototype._getJudgeFromInaccuracy = function (inaccuracy) {
 	const absInaccuracy = Math.abs(inaccuracy);
-	if (absInaccuracy <= this._perfectTolerance * this._modifiers.judgeWindow)
+	if (absInaccuracy <= this._perfectTolerance * this._modifiers.judgementWindow)
 		return Scene_Game.PERFECT;
-	if (absInaccuracy <= this._goodTolerance * this._modifiers.judgeWindow)
+	if (absInaccuracy <= this._goodTolerance * this._modifiers.judgementWindow)
 		return Scene_Game.GOOD;
-	if (absInaccuracy <= this._badTolerance * this._modifiers.judgeWindow)
+	if (absInaccuracy <= this._badTolerance * this._modifiers.judgementWindow)
 		return Scene_Game.BAD;
 	return Scene_Game.MISS;
 };

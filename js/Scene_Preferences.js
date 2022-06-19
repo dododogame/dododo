@@ -30,7 +30,7 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {}
 			},
 			{
-				name: 'judgeWindow',
+				name: 'judgementWindow',
 				type: 'number',
 				args: {
 					min: 0,
@@ -545,12 +545,19 @@ Scene_Preferences.PREFERENCES_PAGES = [
 	}
 ];
 
+Scene_Preferences.DEFAULT_ALIASES = {
+	judgeWindow: 'judgementWindow',
+	judgeLinePerformances: 'judgementLinePerformances',
+	barlinesHeight: 'barLinesHeight',
+	distanceBetweenLines: 'distanceBetweenRows'
+};
+
 Scene_Preferences.DEFAULT_PREFERENCES = {
 	playRate: 1.0,
 	autoPlay: false,
 	noBad: false,
 	noExcess: false,
-	judgeWindow: 1.0,
+	judgementWindow: 1.0,
 	autoCompleteHolds: false,
 	offset: 0.0,
 	countdown: true,

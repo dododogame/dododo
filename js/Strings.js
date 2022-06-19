@@ -67,7 +67,7 @@ Strings["en-US"] = {
 	"inGame_autoPlay": "Auto-play",
 	"inGame_noBad": "No-bad",
 	"inGame_noExcess": "No-excess",
-	"inGame_judgeWindow": "%fx judge",
+	"inGame_judgementWindow": "%fx judge",
 	"inGame_autoCompleteHolds": "Auto-hold",
 	
 	// preferences: modifiers
@@ -76,7 +76,7 @@ Strings["en-US"] = {
 	"autoPlay": "Auto-play",
 	"noBad": "No-bad mode",
 	"noExcess": "No-excess mode",
-	"judgeWindow": "Judgement window (smaller is stricter)",
+	"judgementWindow": "Judgement window (smaller is stricter)",
 	"autoCompleteHolds": "Automatically hold for hold notes",
 	
 	// preferences: gameplay
@@ -253,7 +253,7 @@ Strings["zh-CN"] = {
 	"inGame_autoPlay": "自动",
 	"inGame_noBad": "无坏",
 	"inGame_noExcess": "无多余",
-	"inGame_judgeWindow": "%fx 判",
+	"inGame_judgementWindow": "%fx 判",
 	"inGame_autoCompleteHolds": "自动长押",
 	
 	// preferences: modifiers
@@ -262,7 +262,7 @@ Strings["zh-CN"] = {
 	"autoPlay": "自动",
 	"noBad": "无坏模式",
 	"noExcess": "无多余模式",
-	"judgeWindow": "判定区间 (越小越严格)",
+	"judgementWindow": "判定区间 (越小越严格)",
 	"autoCompleteHolds": "自动长押",
 	
 	// preferences: gameplay
@@ -439,7 +439,7 @@ Strings["zh-TW"] = {
 	"inGame_autoPlay": "自動",
 	"inGame_noBad": "無壞",
 	"inGame_noExcess": "無多餘",
-	"inGame_judgeWindow": "%fx 判",
+	"inGame_judgementWindow": "%fx 判",
 	"inGame_autoCompleteHolds": "自動長押",
 	
 	// preferences: modifiers
@@ -448,7 +448,7 @@ Strings["zh-TW"] = {
 	"autoPlay": "自動",
 	"noBad": "無壞模式",
 	"noExcess": "無多餘模式",
-	"judgeWindow": "判定區間 (越小越嚴格)",
+	"judgementWindow": "判定區間 (越小越嚴格)",
 	"autoCompleteHolds": "自動長押",
 	
 	// preferences: gameplay
@@ -625,7 +625,7 @@ Strings["ja-JP"] = {
 	"inGame_autoPlay": "オートプレイ",
 	"inGame_noBad": "No-bad",
 	"inGame_noExcess": "No-excess",
-	"inGame_judgeWindow": "%fx 判",
+	"inGame_judgementWindow": "%fx 判",
 	"inGame_autoCompleteHolds": "Auto-hold",
 	
 	// preferences: modifiers
@@ -634,7 +634,7 @@ Strings["ja-JP"] = {
 	"autoPlay": "オートプレイ",
 	"noBad": "No-Bad モード",
 	"noExcess": "No-excess モード",
-	"judgeWindow": "判定幅 (小さいほど厳しい)",
+	"judgementWindow": "判定幅 (小さいほど厳しい)",
 	"autoCompleteHolds": "Hold ノートを自動的にコンボする",
 	
 	// preferences: gameplay

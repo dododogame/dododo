@@ -262,7 +262,10 @@ window.fraceval = fracmath.evaluate.bind(fracmath);
 window.matheval = math.evaluate.bind(math);
 window.numre = (...arguments) => Number(math.re(math.evaluate(...arguments)))
 
-TyphmUtils.generateFunctionFromFormula = function (formula) {
+TyphmUtils.generateFunctionFromFormula = function (formula, environments) {
+	const environment = {};
+	for (const e of environments)
+		Object.assign(environment, e);
 	const expression = math.parse(formula).compile();
-	return x => Number(math.re(expression.evaluate({'x': Number(x), ...preferences})));
+	return x => Number(math.re(expression.evaluate({'x': Number(x), ...environment})));
 };
