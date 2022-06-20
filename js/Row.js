@@ -49,21 +49,21 @@ Row.prototype.applyControlSentence = function (control, parameters, lastEnv) {
 		this.fakeJudgementLines.push(new JudgementLine(this));
 	} else if (control.startsWith('judgement_line_')) {
 		this.setJudgementLineAttribute(control.slice('judgement_line_'.length), parameters);
-	} else if (control === 'note_x') {
-		this.noteXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
-	} else if (control === 'hit_x') {
-		this.hitXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
-	} else if (control === 'bar_line_x') {
-		this.barLineXFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
-	} else if (control === 'time') {
-		this.timeFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), [preferences, this._beatmap.expressions]);
-	} else if (control === 'blend_mode') {
-		(this.fakeJudgementLines ? this.fakeJudgementLines.last() : this.judgementLine).blend_mode = parameters[0];
+	} else if (control === 'note_x' || control === 'hit_x' || control === 'bar_line_x' || control === 'time') {
+		this[control.fromSnakeToCamel() + 'Formula'] = this.generateFunction(parameters);
 	} else if (control === 'let') {
 		this._beatmap.letExpression(parameters[0], parameters.slice(1).join(' '));
-	} else if (control === 'function') {
-		this._beatmap.functionExpression(parameters[0], parameters[1].split(','), parameters.slice(2).join(' '));
+	} else if (control === 'def') {
+		this._beatmap.defExpression(parameters[0], parameters[1].split(','), parameters.slice(2).join(' '));
+	} else if (control === 'var') {
+		this._beatmap.varExpression(parameters[0], parameters.slice(1).join(' '));
+	} else if (control === 'fun') {
+		this._beatmap.funExpression(parameters[0], parameters[1].split(','), parameters.slice(2).join(' '));
 	}
+};
+
+Row.prototype.generateFunction = function (formulaParts) {
+	return TyphmUtils.generateFunctionFromFormula(formulaParts.join(' '), this._beatmap.getEnvironments(), this._beatmap);
 };
 
 Row.prototype.setXFormulasIfHasnt = function () {

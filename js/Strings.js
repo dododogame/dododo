@@ -538,7 +538,7 @@ Strings["zh-TW"] = {
 	"importFailure": "導入失敗, 由於 %s",
 	"wiki": "打開 Dododo 的 wiki (英文網頁)",
 	"github": "打開 Dododo 的 GitHub 倉庫",
-	"discord": "加入 Dododo 的 Discord 服務器",
+	"discord": "加入 Dododo 的 Discord 伺服器",
 	
 	// hit sounds
 	"agogoBells": '阿哥哥鈴',

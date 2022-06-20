@@ -269,15 +269,31 @@ window.fraceval = fracmath.evaluate.bind(fracmath);
 window.matheval = math.evaluate.bind(math);
 window.numre = (...arguments) => Number(math.re(math.evaluate(...arguments)))
 
-TyphmUtils.generateFunctionFromFormula = function (formula, environments, parameters) {
+TyphmUtils.generateFunctionFromFormula = function (formula, environments, xAcceptor, parameters) {
 	parameters ||= [];
 	const environment = {};
 	for (const e of environments)
-		Object.assign(environment, e);
+		Object.defineProperties(environment, Object.getOwnPropertyDescriptors(e));
 	const expression = math.parse(formula).compile();
-	return (x, ...param) => Number(math.re(expression.evaluate({
+	return (x, ...param) => {
+		if (xAcceptor)
+			xAcceptor.currentX = x;
+		return Number(math.re(expression.evaluate({
+			...environment,
+			'x': Number(x),
+			...Object.fromKeysAndValues(parameters, param.map(a => Number(a)))
+		})));
+	};
+};
+
+TyphmUtils.generateFunctionFromFormulaWithoutX = function (formula, environments, parameters) {
+	parameters ||= [];
+	const environment = {};
+	for (const e of environments)
+		Object.defineProperties(environment, Object.getOwnPropertyDescriptors(e));
+	const expression = math.parse(formula).compile();
+	return (...param) => Number(math.re(expression.evaluate({
 		...environment,
-		'x': Number(x),
 		...Object.fromKeysAndValues(parameters, param.map(a => Number(a)))
 	})));
 };

@@ -8,6 +8,11 @@ Beatmap.TRUE_LENGTH_CALC = Beatmap.TRUE_LENGTH_CALC.evaluate.bind(Beatmap.TRUE_L
 Beatmap.DEFAULT_ALIASES = {
 	beats_per_minute: 'bpm',
 	milliseconds_per_whole: 'ms_per_whole',
+	judgement_line_opacity: 'judgement_line_alpha',
+	variable: 'var',
+	define: 'def',
+	function: 'fun',
+	// following are obsolete
 	space_x: 'judgement_line_x',
 	space_y: 'judgement_line_y',
 	width: 'judgement_line_width',
@@ -17,7 +22,7 @@ Beatmap.DEFAULT_ALIASES = {
 	blue: 'judgement_line_blue',
 	alpha: 'judgement_line_alpha',
 	opacity: 'judgement_line_alpha',
-	judgement_line_opacity: 'judgement_line_alpha',
+	blend_mode: 'judgement_line_blend_mode',
 	fake_judge_line: 'fake_judgement_line'
 };
 
@@ -184,8 +189,10 @@ Beatmap.prototype.defineControlSentenceAlias = function (alias, original) {
 
 Beatmap.prototype.drawRows = function (reverseVoices) {
 	Row.prepare();
+	this.currentX = 0;
 	this.aliases = {...Beatmap.DEFAULT_ALIASES};
 	this.expressions = {};
+	this.expressionsWithoutX = {};
 	this.setUpDefaultPreferencesAliases();
 	this.rows = [new Row(this, 0)];
 	this.notes = [];
@@ -215,7 +222,7 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 
 Beatmap.prototype.setUpDefaultPreferencesAliases = function () {
 	for (const alias in Scene_Preferences.DEFAULT_ALIASES) {
-		Object.defineProperty(this.expressions, alias, {
+		Object.defineProperty(this.expressionsWithoutX, alias, {
 			get: () => preferences[Scene_Preferences.DEFAULT_ALIASES[alias]],
 			configurable: true,
 			enumerable: true
@@ -223,18 +230,48 @@ Beatmap.prototype.setUpDefaultPreferencesAliases = function () {
 	}
 };
 
+Beatmap.prototype.getEnvironments = function () {
+	return [preferences, this.expressions, this.expressionsWithoutX];
+};
+
+Beatmap.prototype.getEnvironmentsWithoutX = function () {
+	return [preferences, this.expressionsWithoutX]
+};
+
+// with x, variable: let
+// with x, function: def
+// without x, variable: var
+// with x, function: fun
 Beatmap.prototype.letExpression = function (name, expression) {
-	const formula = TyphmUtils.generateFunctionFromFormula(expression, [preferences, this.expressions]);
+	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null);
 	Object.defineProperty(this.expressions, name, {
-		get: () => x => formula(x),
+		get: () => formula(this.currentX),
 		configurable: true,
 		enumerable: true
 	});
 };
 
-Beatmap.prototype.functionExpression = function (name, arguments, expression) {
-	const formula = TyphmUtils.generateFunctionFromFormula(expression, [preferences, this.expressions], arguments);
+Beatmap.prototype.defExpression = function (name, arguments, expression) {
+	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null, arguments);
 	Object.defineProperty(this.expressions, name, {
+		get: () => (...args) => formula(this.currentX, ...args),
+		configurable: true,
+		enumerable: true
+	});
+};
+
+Beatmap.prototype.varExpression = function (name, expression) {
+	const value = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX())()
+	Object.defineProperty(this.expressionsWithoutX, name, {
+		get: () => value,
+		configurable: true,
+		enumerable: true
+	});
+};
+
+Beatmap.prototype.funExpression = function (name, arguments, expression) {
+	const formula = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX(), arguments);
+	Object.defineProperty(this.expressionsWithoutX, name, {
 		get: () => (...args) => formula(...args),
 		configurable: true,
 		enumerable: true
