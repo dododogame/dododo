@@ -35,37 +35,6 @@ Row.prototype.initialize = function (beatmap, index) {
 	this.judgementLine = new JudgementLine(this);
 };
 
-Row.prototype.applyControlSentence = function (control, parameters, lastEnv) {
-	while (this._beatmap.aliases[control])
-		control = this._beatmap.aliases[control];
-	if (control === 'bpm') {
-		this.setUpBPM(parameters, lastEnv);
-	} else if (control === 'ms_per_whole') {
-		this.millisecondsPerWhole = parseFloat(parameters[0]);
-	} else if (control === 'perfect' || control === 'good' || control === 'bad') {
-		this[control] = parseFloat(parameters[0]);
-	} else if (control === 'fake_judgement_line') {
-		this.fakeJudgementLines ||= [];
-		this.fakeJudgementLines.push(new JudgementLine(this));
-	} else if (control.startsWith('judgement_line_')) {
-		this.setJudgementLineAttribute(control.slice('judgement_line_'.length), parameters);
-	} else if (control === 'note_x' || control === 'hit_x' || control === 'bar_line_x' || control === 'time') {
-		this[control.fromSnakeToCamel() + 'Formula'] = this.generateFunction(parameters);
-	} else if (control === 'let') {
-		this._beatmap.letExpression(parameters[0], parameters.slice(1).join(' '));
-	} else if (control === 'def') {
-		this._beatmap.defExpression(parameters[0], parameters[1].split(','), parameters.slice(2).join(' '));
-	} else if (control === 'var') {
-		this._beatmap.varExpression(parameters[0], parameters.slice(1).join(' '));
-	} else if (control === 'fun') {
-		this._beatmap.funExpression(parameters[0], parameters[1].split(','), parameters.slice(2).join(' '));
-	}
-};
-
-Row.prototype.generateFunction = function (formulaParts) {
-	return TyphmUtils.generateFunctionFromFormula(formulaParts.join(' '), this._beatmap.getEnvironments(), this._beatmap);
-};
-
 Row.prototype.setXFormulasIfHasnt = function () {
 	this.noteXFormula ||= this.judgementLine.xFormula;
 	this.hitXFormula ||= this.noteXFormula;

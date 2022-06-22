@@ -5,27 +5,6 @@ function Beatmap () {
 Beatmap.TRUE_LENGTH_CALC = fracmath.parse('(1/2)^length*(2-(1/2)^dots)').compile();
 Beatmap.TRUE_LENGTH_CALC = Beatmap.TRUE_LENGTH_CALC.evaluate.bind(Beatmap.TRUE_LENGTH_CALC);
 
-Beatmap.DEFAULT_ALIASES = {
-	beats_per_minute: 'bpm',
-	milliseconds_per_whole: 'ms_per_whole',
-	judgement_line_opacity: 'judgement_line_alpha',
-	variable: 'var',
-	define: 'def',
-	function: 'fun',
-	// following are obsolete
-	space_x: 'judgement_line_x',
-	space_y: 'judgement_line_y',
-	width: 'judgement_line_width',
-	height: 'judgement_line_height',
-	red: 'judgement_line_red',
-	green: 'judgement_line_green',
-	blue: 'judgement_line_blue',
-	alpha: 'judgement_line_alpha',
-	opacity: 'judgement_line_alpha',
-	blend_mode: 'judgement_line_blend_mode',
-	fake_judge_line: 'fake_judgement_line'
-};
-
 Beatmap.prototype.initialize = function (url) {
 	this.url = url;
 };
@@ -34,6 +13,7 @@ Beatmap.prototype.load = async function () {
 	let [head, data] = eol.lf(await fetch(this.url).then(r => r.text())).split('---\n');
 	head = head.split('\n').map(s => s.split(': '));
 	for (let i = 0; i < head.length; i++) {
+		head[i][0] = head[i][0].trimStart();
 		if (head[i].length > 2)
 			head[i] = [head[i][0], head[i].slice(1).join(': ')];
 		else if (head[i].length === 1)
@@ -63,17 +43,23 @@ Beatmap.prototype.load = async function () {
 
 Beatmap.prototype.parse = function (data, dataLineno) {
 	this.events = [];
-	for (let lineno = 0, voices = []; lineno < data.length; lineno++) {
-		let line = data[lineno];
+	let voices = [];
+	for (let lineno = 0; lineno < data.length; lineno++) {
+		let line = data[lineno].trimStart();
+		const lastEvent = this.events.last();
 		if (line[0] === '#') { // comments
 		} else if (TyphmUtils.isCapitalized(line)) { // control sequence
-			let [name, ...parameters] = line.split(' ');
-			let i = 0;
-			for (; i < parameters.length && parameters[i][0] !== '#'; i++);
-			this.events.push({"event": "control", "control": name.toLowerCase(), "parameters": parameters.slice(0, i), "lineno": lineno + dataLineno});
-		} else if (line === '') { // new row
-			this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
-			voices = [];
+			if (voices.length > 0) {
+				this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
+				voices = [];
+			}
+			const [capitalizedKeyword, ...parameters] = line.split(' ');
+			this.events.push({"event": "control", "keyword": capitalizedKeyword.toLowerCase(), "parameters": parameters, "lineno": lineno + dataLineno});
+		} else if (line === '') { // empty line
+			if (voices.length > 0) {
+				this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
+				voices = [];
+			}
 		} else { // voice
 			voices.push([]);
 			let stackLevel = 0;
@@ -181,16 +167,34 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 			}
 		}
 	}
+	if (voices.length > 0)
+		this.events.push({"event": "row", "voices": voices, "lineno": data.length + 1 + dataLineno});
 };
 
-Beatmap.prototype.defineControlSentenceAlias = function (alias, original) {
+Beatmap.prototype.defineKeywordAlias = function (alias, original) {
 	this.aliases[alias] = original;
+	this.keywords[alias] = true;
+};
+
+Beatmap.prototype.deleteKeyword = function (keyword) {
+	if (this.aliases[keyword])
+		delete this.aliases[keyword];
+	this.keywords[keyword] = false;
+};
+
+Beatmap.prototype.hasKeyword = function (keyword) {
+	return !!this.keywords[keyword];
 };
 
 Beatmap.prototype.drawRows = function (reverseVoices) {
 	Row.prepare();
 	this.currentX = 0;
-	this.aliases = {...Beatmap.DEFAULT_ALIASES};
+	this.aliases = {...ControlSentence.DEFAULT_ALIASES};
+	this.keywords = {};
+	for (const keyword of ControlSentence.PREDEFINED_KEYWORDS)
+		this.keywords[keyword] = true;
+	for (const keyword of Object.keys(ControlSentence.DEFAULT_ALIASES))
+		this.keywords[keyword] = true;
 	this.expressions = {};
 	this.expressionsWithoutX = {};
 	this.setUpDefaultPreferencesAliases();
@@ -210,7 +214,10 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		const row = this.rows.last();
 		switch (event.event) {
 			case 'control':
-				row.applyControlSentence(event.control, event.parameters, lastEnv);
+				const controlSentence = new ControlSentence(event.keyword, event.parameters, this);
+				if (controlSentence.requiresLastEnv)
+					controlSentence.lastEnv = lastEnv;
+				controlSentence.applyTo(row, [{lineno: event.lineno, caller: 'main'}]);
 				break;
 			case 'row':
 				row.finalSetUp(event.voices, reverseVoices, lastEnv);
@@ -238,44 +245,39 @@ Beatmap.prototype.getEnvironmentsWithoutX = function () {
 	return [preferences, this.expressionsWithoutX]
 };
 
+Beatmap.prototype.deleteExpression = function (name) {
+	if (this.expressions.hasOwnProperty(name))
+		delete this.expressions[name];
+	if (this.expressionsWithoutX.hasOwnProperty(name))
+		delete this.expressionsWithoutX[name];
+};
+
 // with x, variable: let
 // with x, function: def
 // without x, variable: var
 // with x, function: fun
 Beatmap.prototype.letExpression = function (name, expression) {
+	this.deleteExpression(name);
 	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null);
-	Object.defineProperty(this.expressions, name, {
-		get: () => formula(this.currentX),
-		configurable: true,
-		enumerable: true
-	});
+	Object.setPropertyWithGetter(this.expressions, name, formula(this.currentX));
 };
 
 Beatmap.prototype.defExpression = function (name, arguments, expression) {
+	this.deleteExpression(name);
 	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null, arguments);
-	Object.defineProperty(this.expressions, name, {
-		get: () => (...args) => formula(this.currentX, ...args),
-		configurable: true,
-		enumerable: true
-	});
+	Object.setPropertyWithGetter(this.expressions, name, (...args) => formula(this.currentX, ...args));
 };
 
 Beatmap.prototype.varExpression = function (name, expression) {
+	this.deleteExpression(name);
 	const value = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX())()
-	Object.defineProperty(this.expressionsWithoutX, name, {
-		get: () => value,
-		configurable: true,
-		enumerable: true
-	});
+	Object.setPropertyWithGetter(this.expressionsWithoutX, name, value);
 };
 
 Beatmap.prototype.funExpression = function (name, arguments, expression) {
+	this.deleteExpression(name);
 	const formula = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX(), arguments);
-	Object.defineProperty(this.expressionsWithoutX, name, {
-		get: () => (...args) => formula(...args),
-		configurable: true,
-		enumerable: true
-	});
+	Object.setPropertyWithGetter(this.expressionsWithoutX, name, (...args) => formula(...args));
 };
 
 Beatmap.prototype.recordHitEvent = function (rowIndex, note, y, shouldHit) {

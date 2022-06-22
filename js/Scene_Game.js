@@ -1382,6 +1382,7 @@ Scene_Game.prototype._createWrongNote = function (time) {
 	wrongNote.anchor.x = 0.5;
 	wrongNote.anchor.y = 0.5;
 	wrongNote.x = this._getNoteXFromTime(time);
+	
 	wrongNote.y = this._row1Sprite.y;
 	this._beatmapLayer.addChild(wrongNote);
 	wrongNote.update = () => {
@@ -1426,7 +1427,10 @@ Scene_Game.prototype._getXFromTime = function (time) {
 };
 
 Scene_Game.prototype._getNoteXFromTime = function (time) {
-	return this._getNoteXFromLengthPosition(this._getLengthPositionFromTime(time));
+	let result = this._getNoteXFromLengthPosition(this._getLengthPositionFromTime(time));
+	if (this._visuals.mirror)
+		result = Graphics.width - result;
+	return result;
 };
 
 Scene_Game.prototype._setButtonsVisible = function (visibility) {

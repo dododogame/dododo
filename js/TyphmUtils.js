@@ -73,6 +73,10 @@ Object.fromKeysAndValues = function (keys, values) {
 	return result;
 };
 
+Object.setPropertyWithGetter = function (target, key, value) {
+	Object.defineProperty(target, key, {get: () => value, configurable: true, enumerable: true});
+};
+
 const oldSwitchStretchMode = Graphics._switchStretchMode;
 Graphics._switchStretchMode = function() {
 	oldSwitchStretchMode.apply(this, arguments);
@@ -158,7 +162,7 @@ String.prototype.capitalizeFirstLetter = function () {
 };
 
 String.prototype.fromSnakeToCamel = function () {
-	return this.length <= 1 ? this : this[0] + this.split('_').map(s => s.capitalizeFirstLetter()).join().slice(1);
+	return this.length <= 1 ? this : this[0] + this.split('_').map(s => s.capitalizeFirstLetter()).join('').slice(1);
 };
 
 const oldInitialize = Bitmap.prototype.initialize;

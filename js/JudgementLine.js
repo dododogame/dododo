@@ -39,7 +39,7 @@ JudgementLine.prototype.setAttribute = function (attribute, parameters) {
 		case 'green':
 		case 'blue':
 		case 'alpha':
-			this[attribute.fromSnakeToCamel() + 'Formula'] = this._row.generateFunction(parameters);
+			this[attribute.fromSnakeToCamel() + 'Formula'] = ControlSentence.generateFunction(parameters, this._row._beatmap);
 			break;
 		case 'blend_mode':
 			this.blendMode = parameters[0].toUpperCase();
