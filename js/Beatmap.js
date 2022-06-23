@@ -48,13 +48,13 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 		let line = data[lineno].trimStart();
 		const lastEvent = this.events.last();
 		if (line[0] === '#') { // comments
-		} else if (TyphmUtils.isCapitalized(line)) { // control sequence
+		} else if (/[A-Z_].*/.test(line)) { // control sentence
 			if (voices.length > 0) {
 				this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
 				voices = [];
 			}
-			const [capitalizedKeyword, ...parameters] = line.split(' ');
-			this.events.push({"event": "control", "keyword": capitalizedKeyword.toLowerCase(), "parameters": parameters, "lineno": lineno + dataLineno});
+			const [keyword, ...parameters] = line.split(' ');
+			this.events.push({"event": "control", "keyword": keyword, "parameters": parameters, "lineno": lineno + dataLineno});
 		} else if (line === '') { // empty line
 			if (voices.length > 0) {
 				this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
@@ -172,29 +172,23 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 };
 
 Beatmap.prototype.defineKeywordAlias = function (alias, original) {
-	this.aliases[alias] = original;
-	this.keywords[alias] = true;
+	this.controlSentenceApplications[alias] = this.controlSentenceApplications[original];
 };
 
 Beatmap.prototype.deleteKeyword = function (keyword) {
-	if (this.aliases[keyword])
-		delete this.aliases[keyword];
-	this.keywords[keyword] = false;
+	delete this.controlSentenceApplications[keyword];
 };
 
 Beatmap.prototype.hasKeyword = function (keyword) {
-	return !!this.keywords[keyword];
+	return !!this.controlSentenceApplications[keyword];
 };
 
 Beatmap.prototype.drawRows = function (reverseVoices) {
 	Row.prepare();
 	this.currentX = 0;
-	this.aliases = {...ControlSentence.DEFAULT_ALIASES};
-	this.keywords = {};
-	for (const keyword of ControlSentence.PREDEFINED_KEYWORDS)
-		this.keywords[keyword] = true;
-	for (const keyword of Object.keys(ControlSentence.DEFAULT_ALIASES))
-		this.keywords[keyword] = true;
+	this.controlSentenceApplications = {...ControlSentence.DEFAULT_APPLICATIONS};
+	for (const [alias, original] of Object.entries(ControlSentence.DEFAULT_ALIASES))
+		this.defineKeywordAlias(alias, original);
 	this.expressions = {};
 	this.expressionsWithoutX = {};
 	this.setUpDefaultPreferencesAliases();

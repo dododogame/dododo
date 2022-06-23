@@ -3,76 +3,43 @@ function ControlSentence () {
 }
 
 ControlSentence.DEFAULT_ALIASES = {
-	beats_per_minute: 'bpm',
-	milliseconds_per_whole: 'ms_per_whole',
-	judgement_line_opacity: 'judgement_line_alpha',
-	variable: 'var',
-	define: 'def',
-	function: 'fun',
-	// following are obsolete
-	space_x: 'judgement_line_x',
-	space_y: 'judgement_line_y',
-	width: 'judgement_line_width',
-	height: 'judgement_line_height',
-	red: 'judgement_line_red',
-	green: 'judgement_line_green',
-	blue: 'judgement_line_blue',
-	alpha: 'judgement_line_alpha',
-	opacity: 'judgement_line_alpha',
-	blend_mode: 'judgement_line_blend_mode',
-	fake_judge_line: 'fake_judgement_line'
+	BEATS_PER_MINUTE: 'BPM',
+	MILLISECONDS_PER_WHOLE: 'MS_PER_WHOLE',
+	JUDGEMENT_LINE_OPACITY: 'JUDGEMENT_LINE_ALPHA',
+	VARIABLE: 'VAR',
+	DEFINE: 'DEF',
+	FUNCTION: 'FUN',
+	// FOLLOWING ARE OBSOLETE
+	SPACE_X: 'JUDGEMENT_LINE_X',
+	SPACE_Y: 'JUDGEMENT_LINE_Y',
+	WIDTH: 'JUDGEMENT_LINE_WIDTH',
+	HEIGHT: 'JUDGEMENT_LINE_HEIGHT',
+	RED: 'JUDGEMENT_LINE_RED',
+	GREEN: 'JUDGEMENT_LINE_GREEN',
+	BLUE: 'JUDGEMENT_LINE_BLUE',
+	ALPHA: 'JUDGEMENT_LINE_ALPHA',
+	OPACITY: 'JUDGEMENT_LINE_ALPHA',
+	BLEND_MODE: 'JUDGEMENT_LINE_BLEND_MODE',
+	FAKE_JUDGE_LINE: 'FAKE_JUDGEMENT_LINE'
 };
 
-ControlSentence.PREDEFINED_KEYWORDS = [
-	'comment',
-	'bpm',
-	'ms_per_whole',
-	'judgement_line_x',
-	'judgement_line_y',
-	'judgement_line_width',
-	'judgement_line_height',
-	'judgement_line_red',
-	'judgement_line_green',
-	'judgement_line_blue',
-	'judgement_line_alpha',
-	'judgement_line_blend_mode',
-	'fake_judgement_line',
-	'let',
-	'def',
-	'var',
-	'fun',
-	'delete',
-	'unprecedure',
-	'alias',
-	'if',
-	'while',
-	'for',
-	//'try', TODO
-	'procedure',
-	//'schedule', TODO
-	'break',
-	'debug_log'
-];
-
 ControlSentence.KEYWORDS_REQUIRING_LAST_ENV = [
-	'bpm'
+	'BPM'
 ];
 
 ControlSentence.BLOCK_SEPARATORS = {
-	if: ['else', 'else_if'],
-	while: [],
-	for: [],
-	//try: ['rescue'],
-	procedure: [],
-	//schedule: []
+	IF: ['ELSE', 'ELSE_IF'],
+	WHILE: [],
+	FOR: [],
+	//TRY: ['RESCUE'],
+	PROCEDURE: [],
+	//SCHEDULE: []
 };
 
 ControlSentence.prototype.initialize = function (keyword, parameters, lineno, beatmap) {
 	this.parameters = parameters;
 	this.lineno = lineno;
 	this._beatmap = beatmap;
-	if (this._beatmap.aliases[keyword])
-		keyword = this._beatmap.aliases[keyword];
 	this.keyword = keyword;
 	const blockSeparators = ControlSentence.BLOCK_SEPARATORS[keyword];
 	if (blockSeparators) {
@@ -98,10 +65,12 @@ ControlSentence.prototype.addToBlock = function (controlSentence) {
 };
 
 ControlSentence.prototype.applyTo = function (row, callers) {
-	this['apply' + this.keyword.fromSnakeToCamel().capitalizeFirstLetter()](row, callers);
+	this._beatmap.controlSentenceApplications[this.keyword].call(this, row, callers);
 };
 
-ControlSentence.prototype.applyBpm = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS = {};
+
+ControlSentence.DEFAULT_APPLICATIONS.BPM = function (row, callers) {
 	let normalizationDenominator = 0;
 	const positions = [frac(0)];
 	const durations = [0];
@@ -172,7 +141,7 @@ ControlSentence.prototype.applyBpm = function (row, callers) {
 	};
 };
 
-ControlSentence.prototype.applyMsPerWhole = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.MS_PER_WHOLE = function (row, callers) {
 	const input = this.parameters[0];
 	row.millisecondsPerWhole = parseFloat(input);
 	if (!row.millisecondsPerWhole) {
@@ -183,35 +152,36 @@ ControlSentence.prototype.applyMsPerWhole = function (row, callers) {
 };
 
 for (const judge of ['perfect', 'good', 'bad']) {
-	ControlSentence.prototype['apply' + judge.capitalizeFirstLetter()] = function (row, callers) {
+	const keyword = judge.toUpperCase();
+	ControlSentence.DEFAULT_APPLICATIONS[keyword] = function (row, callers) {
 		const judgementWindowRadiusString = this.parameters[0];
 		row[judge] = parseFloat(judgementWindowRadiusString);
 		if (!row[judge]) {
-			throw new BeatmapRuntimeError(`${judge.toUpperCase()}: invalid number: ${judgementWindowRadiusString}`, callers);
+			throw new BeatmapRuntimeError(`${keyword}: invalid number: ${judgementWindowRadiusString}`, callers);
 		} else if (row[judge] < 0) {
-			throw new BeatmapRuntimeError(`${judge.toUpperCase()}: judgement window radius is negative: ${judgementWindowRadiusString}`, callers);
+			throw new BeatmapRuntimeError(`${keyword}: judgement window radius is negative: ${judgementWindowRadiusString}`, callers);
 		}
 	};
 }
 
-ControlSentence.prototype.applyFakeJudgementLine = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.FAKE_JUDGEMENT_LINE = function (row, callers) {
 	row.fakeJudgementLines ||= [];
 	row.fakeJudgementLines.push(new JudgementLine(row));
 };
 
 for (const attr of ['x', 'y', 'width', 'height', 'red', 'green', 'blue', 'alpha', 'blend_mode']) {
-	ControlSentence.prototype['applyJudgementLine' + attr.fromSnakeToCamel().capitalizeFirstLetter()] = function (row, callers) {
+	ControlSentence.DEFAULT_APPLICATIONS['JUDGEMENT_LINE_' + attr.toUpperCase()] = function (row, callers) {
 		(row.fakeJudgementLines ? row.fakeJudgementLines.last() : row.judgementLine).setAttribute(attr, this.parameters);
 	};
 }
 
 for (const attr of ['note_x', 'hit_x', 'bar_line_x', 'time']) {
-	ControlSentence.prototype['apply' + attr.fromSnakeToCamel().capitalizeFirstLetter()] = function (row, callers) {
-		row[this.keyword.fromSnakeToCamel() + 'Formula'] = ControlSentence.generateFunction(this.parameters, this._beatmap);
+	ControlSentence.DEFAULT_APPLICATIONS[attr.toUpperCase()] = function (row, callers) {
+		row[attr.fromSnakeToCamel() + 'Formula'] = ControlSentence.generateFunction(this.parameters, this._beatmap);
 	};
 }
 
-ControlSentence.prototype.applyLet = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.LET = function (row, callers) {
 	const name = this.parameters[0];
 	if (ControlSentence.checkVariableName(name))
 		this._beatmap.letExpression(name, this.parameters.slice(1).join(' '));
@@ -219,7 +189,7 @@ ControlSentence.prototype.applyLet = function (row, callers) {
 		throw new BeatmapRuntimeError(`LET: invalid variable name: ${name}`, callers);
 };
 
-ControlSentence.prototype.applyDef = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.DEF = function (row, callers) {
 	const name = this.parameters[0];
 	if (ControlSentence.checkVariableName(name))
 		this._beatmap.defExpression(name, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
@@ -227,7 +197,7 @@ ControlSentence.prototype.applyDef = function (row, callers) {
 		throw new BeatmapRuntimeError(`DEF: invalid variable name: ${name}`, callers);
 };
 
-ControlSentence.prototype.applyVar = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.VAR = function (row, callers) {
 	const name = this.parameters[0];
 	if (ControlSentence.checkVariableName(name))
 		this._beatmap.varExpression(name, this.parameters.slice(1).join(' '));
@@ -235,7 +205,7 @@ ControlSentence.prototype.applyVar = function (row, callers) {
 		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${name}`, callers);
 };
 
-ControlSentence.prototype.applyFun = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.FUN = function (row, callers) {
 	const name = this.parameters[0];
 	if (ControlSentence.checkVariableName(name))
 		this._beatmap.funExpression(name, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
@@ -243,24 +213,24 @@ ControlSentence.prototype.applyFun = function (row, callers) {
 		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${name}`, callers);
 };
 
-ControlSentence.prototype.applyAlias = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.ALIAS = function (row, callers) {
 	const originalName = this.parameters.last();
-	if (!this._beatmap.hasKeyword(originalName.toLowerCase()))
+	if (!this._beatmap.hasKeyword(originalName))
 		throw new BeatmapRuntimeError(`ALIAS: keyword not found: ${originalName}`, callers);
 	for (const newName of this.parameters.slice(0, this.parameters.length - 1)) {
 		if (!ControlSentence.checkKeyword(newName))
 			throw new BeatmapRuntimeError(`ALIAS: invalid keyword: ${newName}`, callers);
-		if (newName.toLowerCase() === originalName.toLowerCase())
+		if (newName === originalName)
 			throw new BeatmapRuntimeError(`ALIAS: alias is the same as the original: ${newName}`);
-		this._beatmap.defineKeywordAlias(newName.toLowerCase(), originalName.toLowerCase());
+		this._beatmap.defineKeywordAlias(newName, originalName);
 	}
 };
 
-ControlSentence.prototype.applyUnprecedure = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.UNPRECEDURE = function (row, callers) {
 	for (const keyword of this.parameters) {
-		if (!this._beatmap.hasKeyword(keyword.toLowerCase()))
+		if (!this._beatmap.hasKeyword(keyword))
 			throw new BeatmapRuntimeError(`UNPRECEDURE: keyword not found: ${keyword}`, callers);
-		this._beatmap.deleteKeyword(keyword.toLowerCase());
+		this._beatmap.deleteKeyword(keyword);
 	}
 };
 
@@ -269,7 +239,7 @@ ControlSentence.checkVariableName = function (name) {
 };
 
 ControlSentence.checkKeyword = function (keyword) {
-	return /[A-Z]\w*/.test(keyword);
+	return /[A-Z_]\w*/.test(keyword);
 };
 
 ControlSentence.generateFunction = function (formulaParts, beatmap) {
