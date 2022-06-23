@@ -23,10 +23,6 @@ ControlSentence.DEFAULT_ALIASES = {
 	FAKE_JUDGE_LINE: 'FAKE_JUDGEMENT_LINE'
 };
 
-ControlSentence.KEYWORDS_REQUIRING_LAST_ENV = [
-	'BPM'
-];
-
 ControlSentence.BLOCK_SEPARATORS = {
 	IF: ['ELSE', 'ELSE_IF'],
 	WHILE: [],
@@ -50,15 +46,15 @@ ControlSentence.prototype.initialize = function (keyword, parameters, lineno, be
 	} else {
 		this.hasOpenBlock = false;
 	}
-	this.requiresLastEnv = ControlSentence.KEYWORDS_REQUIRING_LAST_ENV.includes(keyword);
 };
 
 ControlSentence.prototype.addToBlock = function (controlSentence) {
 	if (this.blockSeparators.includes(controlSentence.keyword)) {
 		this.currentBlock = {main: false, beginning: controlSentence, contents: []};
 		this.blocks.push(this.currentBlock);
-	} else if (controlSentence.keyword === 'end') {
+	} else if (controlSentence.keyword === 'END') {
 		this.hasOpenBlock = false;
+		this.currentBlock = null;
 	} else {
 		this.currentBlock.contents.push(controlSentence);
 	}
@@ -235,6 +231,24 @@ ControlSentence.DEFAULT_APPLICATIONS.UNPRECEDURE = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.COMMENT = function (row, callers) {
+};
+
+ControlSentence.DEFAULT_APPLICATIONS.PROCEDURE = function (row, callers) {
+	for (const keyword of this.parameters) {
+		if (!ControlSentence.checkKeyword(keyword))
+			throw new BeatmapRuntimeError(`PROCEDURE: invalid keyword: ${keyword}`, callers);
+		const controlSentences = this.blocks[0].contents;
+		const newCallers = [{lineno: this.lineno, caller: this.keyword}, ...callers];
+		this._beatmap.controlSentenceApplications[keyword] = function (innerRow, innerCallers) {
+			for (let i = 0; i < controlSentences.length; i++) {
+				controlSentences[i].lastEnv = this.lastEnv;
+				controlSentences[i].applyTo(innerRow, newCallers);
+			}
+		}
+	}
+};
+
+ControlSentence.DEFAULT_APPLICATIONS.END = function (row, callers) {
 };
 
 ControlSentence.checkVariableName = function (name) {

@@ -202,6 +202,7 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		beatDots: 0,
 		millisecondsPerWhole: 2000
 	};
+	const controlSentenceStack = [];
 	for (let i = 0; i < this.events.length; i++) {
 		const event = this.events[i];
 		const row = this.rows.last();
@@ -212,9 +213,24 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 					throw new BeatmapRuntimeError(`keyword not found: ${event.keyword}`, callers);
 				}
 				const controlSentence = new ControlSentence(event.keyword, event.parameters, event.lineno, this);
-				if (controlSentence.requiresLastEnv)
-					controlSentence.lastEnv = lastEnv;
-				controlSentence.applyTo(row, callers);
+				controlSentence.lastEnv = lastEnv;
+				let isInBlock = false;
+				let blockOwner = controlSentenceStack.last();
+				if (blockOwner) {
+					isInBlock = true;
+					blockOwner.addToBlock(controlSentence);
+					if (!blockOwner.hasOpenBlock) {
+						controlSentenceStack.pop();
+						if (controlSentenceStack.length === 0) {
+							blockOwner.applyTo(row, callers);
+						}
+					}
+				}
+				if (controlSentence.hasOpenBlock) {
+					controlSentenceStack.push(controlSentence);
+				} else if (!isInBlock) {
+					controlSentence.applyTo(row, callers);
+				}
 				break;
 			case 'row':
 				row.finalSetUp(event.voices, reverseVoices, lastEnv);
