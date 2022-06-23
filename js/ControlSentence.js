@@ -50,7 +50,8 @@ ControlSentence.PREDEFINED_KEYWORDS = [
 	//'try', TODO
 	'procedure',
 	//'schedule', TODO
-	'break'
+	'break',
+	'debug_log'
 ];
 
 ControlSentence.KEYWORDS_REQUIRING_LAST_ENV = [
@@ -66,10 +67,11 @@ ControlSentence.BLOCK_SEPARATORS = {
 	//schedule: []
 };
 
-ControlSentence.prototype.initialize = function (keyword, parameters, beatmap) {
+ControlSentence.prototype.initialize = function (keyword, parameters, lineno, beatmap) {
 	this.parameters = parameters;
+	this.lineno = lineno;
 	this._beatmap = beatmap;
-	while (this._beatmap.aliases[keyword])
+	if (this._beatmap.aliases[keyword])
 		keyword = this._beatmap.aliases[keyword];
 	this.keyword = keyword;
 	const blockSeparators = ControlSentence.BLOCK_SEPARATORS[keyword];
@@ -241,8 +243,33 @@ ControlSentence.prototype.applyFun = function (row, callers) {
 		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${name}`, callers);
 };
 
+ControlSentence.prototype.applyAlias = function (row, callers) {
+	const originalName = this.parameters.last();
+	if (!this._beatmap.hasKeyword(originalName.toLowerCase()))
+		throw new BeatmapRuntimeError(`ALIAS: keyword not found: ${originalName}`, callers);
+	for (const newName of this.parameters.slice(0, this.parameters.length - 1)) {
+		if (!ControlSentence.checkKeyword(newName))
+			throw new BeatmapRuntimeError(`ALIAS: invalid keyword: ${newName}`, callers);
+		if (newName.toLowerCase() === originalName.toLowerCase())
+			throw new BeatmapRuntimeError(`ALIAS: alias is the same as the original: ${newName}`);
+		this._beatmap.defineKeywordAlias(newName.toLowerCase(), originalName.toLowerCase());
+	}
+};
+
+ControlSentence.prototype.applyUnprecedure = function (row, callers) {
+	for (const keyword of this.parameters) {
+		if (!this._beatmap.hasKeyword(keyword.toLowerCase()))
+			throw new BeatmapRuntimeError(`UNPRECEDURE: keyword not found: ${keyword}`, callers);
+		this._beatmap.deleteKeyword(keyword.toLowerCase());
+	}
+};
+
 ControlSentence.checkVariableName = function (name) {
-	return /[a-zA-Z_][a-zA-Z\d]*/.test(name);
+	return /[a-zA-Z_]\w*/.test(name);
+};
+
+ControlSentence.checkKeyword = function (keyword) {
+	return /[A-Z]\w*/.test(keyword);
 };
 
 ControlSentence.generateFunction = function (formulaParts, beatmap) {

@@ -214,10 +214,14 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		const row = this.rows.last();
 		switch (event.event) {
 			case 'control':
-				const controlSentence = new ControlSentence(event.keyword, event.parameters, this);
+				const callers = [{lineno: event.lineno, caller: 'main'}];
+				if (!this.hasKeyword(event.keyword)) {
+					throw new BeatmapRuntimeError(`keyword not found: ${event.keyword}`, callers);
+				}
+				const controlSentence = new ControlSentence(event.keyword, event.parameters, event.lineno, this);
 				if (controlSentence.requiresLastEnv)
 					controlSentence.lastEnv = lastEnv;
-				controlSentence.applyTo(row, [{lineno: event.lineno, caller: 'main'}]);
+				controlSentence.applyTo(row, callers);
 				break;
 			case 'row':
 				row.finalSetUp(event.voices, reverseVoices, lastEnv);
