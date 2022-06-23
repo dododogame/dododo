@@ -46,9 +46,8 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 	let voices = [];
 	for (let lineno = 0; lineno < data.length; lineno++) {
 		let line = data[lineno].trimStart();
-		const lastEvent = this.events.last();
 		if (line[0] === '#') { // comments
-		} else if (/[A-Z_].*/.test(line)) { // control sentence
+		} else if (/[A-Z_].*/y.test(line)) { // control sentence
 			if (voices.length > 0) {
 				this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
 				voices = [];

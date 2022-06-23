@@ -234,12 +234,15 @@ ControlSentence.DEFAULT_APPLICATIONS.UNPRECEDURE = function (row, callers) {
 	}
 };
 
+ControlSentence.DEFAULT_APPLICATIONS.COMMENT = function (row, callers) {
+};
+
 ControlSentence.checkVariableName = function (name) {
-	return /[a-zA-Z_]\w*/.test(name);
+	return /[a-zA-Z_]\w*/y.test(name);
 };
 
 ControlSentence.checkKeyword = function (keyword) {
-	return /[A-Z_]\w*/.test(keyword);
+	return /[A-Z_]\w*/y.test(keyword);
 };
 
 ControlSentence.generateFunction = function (formulaParts, beatmap) {
