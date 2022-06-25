@@ -242,13 +242,10 @@ ControlSentence.DEFAULT_APPLICATIONS.PROCEDURE = function (row, callers) {
 		this._beatmap.controlSentenceApplications[keyword] = function (innerRow, innerCallers) {
 			const result = ControlSentence.executeBlock(mainBlock, innerRow, newCallers);
 			if (result && result.signal === 'break') {
-				throw new BeatmapRuntimeError(`BREAK: extra BREAK`, result.callers);
+				throw new BeatmapRuntimeError(`BREAK: misplaced or too deep`, result.callers);
 			}
 		};
 	}
-};
-
-ControlSentence.DEFAULT_APPLICATIONS.END = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
@@ -259,7 +256,7 @@ ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
 	}];
 	let reachedElse = false;
 	for (const block of this.blocks) {
-		const beginning = block.beginning.keyword;
+		const beginning = block.beginning;
 		if (beginning.keyword === 'ELSE_IF') {
 			if (reachedElse) {
 				throw new BeatmapRuntimeError(`ELSE_IF: ELSE_IF branch is invalid after ELSE`, callers);
@@ -289,8 +286,8 @@ ControlSentence.DEFAULT_APPLICATIONS.BREAK = function (row, callers) {
 	if (this.parameters.length > 1) {
 		throw new BeatmapRuntimeError('BREAK: cannot have multiple parameters');
 	}
-	const layer = parseInt(this.parameters[0])
-	if (!layer) {
+	const layer = parseInt(this.parameters[0] || 0);
+	if (isNaN(layer)) {
 		throw new BeatmapRuntimeError(`BREAK: invalid integer: ${this.parameters[0]}`);
 	}
 	return {signal: 'break', 'layer': layer, 'callers': callers};

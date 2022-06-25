@@ -203,38 +203,48 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		millisecondsPerWhole: 2000
 	};
 	const controlSentenceStack = [];
+	let returned = false;
 	for (let i = 0; i < this.events.length; i++) {
 		const event = this.events[i];
 		const row = this.rows.last();
-		switch (event.event) {
-			case 'control':
-				const callers = [{lineno: event.lineno, caller: 'main'}];
-				if (!this.hasKeyword(event.keyword)) {
-					throw new BeatmapRuntimeError(`keyword not found: ${event.keyword}`, callers);
-				}
-				const controlSentence = new ControlSentence(event.keyword, event.parameters, event.lineno, this);
-				controlSentence.lastEnv = lastEnv;
-				let isInBlock = false;
-				let blockOwner = controlSentenceStack.last();
-				if (blockOwner) {
-					isInBlock = true;
-					blockOwner.addToBlock(controlSentence);
-					if (!blockOwner.hasOpenBlock) {
-						controlSentenceStack.pop();
-						if (controlSentenceStack.length === 0) {
-							blockOwner.applyTo(row, callers);
-						}
+		if (event.event === 'control' && !returned) {
+			const callers = [{lineno: event.lineno, caller: 'main'}];
+			const blockOwner = controlSentenceStack.last();
+			if (!this.hasKeyword(event.keyword) && (!blockOwner || event.keyword !== 'END' && !blockOwner.blockSeparators.includes(event.keyword))) {
+				throw new BeatmapRuntimeError(`keyword not found: ${event.keyword}`, callers);
+			}
+			const controlSentence = new ControlSentence(event.keyword, event.parameters, event.lineno, this);
+			controlSentence.lastEnv = lastEnv;
+			let isInBlock = false;
+			let result;
+			if (blockOwner) {
+				isInBlock = true;
+				blockOwner.addToBlock(controlSentence);
+				if (!blockOwner.hasOpenBlock) {
+					controlSentenceStack.pop();
+					if (controlSentenceStack.length === 0) {
+						result = blockOwner.applyTo(row, callers);
 					}
 				}
-				if (controlSentence.hasOpenBlock) {
-					controlSentenceStack.push(controlSentence);
-				} else if (!isInBlock) {
-					controlSentence.applyTo(row, callers);
-				}
-				break;
-			case 'row':
-				row.finalSetUp(event.voices, reverseVoices, lastEnv);
-				this.rows.push(new Row(this, this.rows.length));
+			}
+			if (controlSentence.hasOpenBlock) {
+				controlSentenceStack.push(controlSentence);
+			} else if (!isInBlock) {
+				result = controlSentence.applyTo(row, callers);
+			}
+			if (result && result.signal === 'break') {
+				throw new BeatmapRuntimeError(`BREAK: misplaced or too deep`, result.callers);
+			} else if (result && result.signal === 'return') {
+				returned = true;
+			}
+		} else if (event.event === 'row') {
+			const blockOwner = controlSentenceStack.last();
+			if (blockOwner) {
+				throw new BeatmapRuntimeError(`${blockOwner.keyword}: missing END`, [{lineno: blockOwner.lineno, caller: 'main'}]);
+			}
+			row.finalSetUp(event.voices, reverseVoices, lastEnv);
+			this.rows.push(new Row(this, this.rows.length));
+			returned = false;
 		}
 	}
 	this.notes.sort((n1, n2) => n1.time - n2.time);
