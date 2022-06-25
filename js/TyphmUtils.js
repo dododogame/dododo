@@ -275,29 +275,27 @@ window.numre = (...arguments) => Number(math.re(math.evaluate(...arguments)))
 
 TyphmUtils.generateFunctionFromFormula = function (formula, environments, xAcceptor, parameters) {
 	parameters ||= [];
-	const environment = {};
-	for (const e of environments)
-		Object.defineProperties(environment, Object.getOwnPropertyDescriptors(e));
 	const expression = math.parse(formula).compile();
 	return (x, ...param) => {
 		if (xAcceptor)
 			xAcceptor.currentX = x;
-		return Number(math.re(expression.evaluate({
-			...environment,
-			'x': Number(x),
-			...Object.fromKeysAndValues(parameters, param.map(a => Number(a)))
-		})));
+		const scope = {};
+		for (const e of environments)
+			Object.defineProperties(scope, Object.getOwnPropertyDescriptors(e));
+		scope.x = Number(x);
+		Object.assign(scope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
+		return expression.evaluate(scope);
 	};
 };
 
 TyphmUtils.generateFunctionFromFormulaWithoutX = function (formula, environments, parameters) {
 	parameters ||= [];
-	const environment = {};
-	for (const e of environments)
-		Object.defineProperties(environment, Object.getOwnPropertyDescriptors(e));
 	const expression = math.parse(formula).compile();
-	return (...param) => Number(math.re(expression.evaluate({
-		...environment,
-		...Object.fromKeysAndValues(parameters, param.map(a => Number(a)))
-	})));
+	return (...param) => {
+		const scope = {};
+		for (const e of environments)
+			Object.defineProperties(scope, Object.getOwnPropertyDescriptors(e));
+		Object.assign(scope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
+		return expression.evaluate(scope);
+	}
 };

@@ -269,28 +269,28 @@ Beatmap.prototype.deleteExpression = function (name) {
 // with x, function: def
 // without x, variable: var
 // with x, function: fun
-Beatmap.prototype.letExpression = function (name, expression) {
-	this.deleteExpression(name);
+Beatmap.prototype.letExpression = function (identifier, expression) {
 	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null);
-	Object.setPropertyWithGetter(this.expressions, name, formula(this.currentX));
+	this.deleteExpression(identifier);
+	Object.setPropertyWithGetter(this.expressions, identifier, formula(this.currentX));
 };
 
-Beatmap.prototype.defExpression = function (name, arguments, expression) {
-	this.deleteExpression(name);
+Beatmap.prototype.defExpression = function (identifier, arguments, expression) {
 	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null, arguments);
-	Object.setPropertyWithGetter(this.expressions, name, (...args) => formula(this.currentX, ...args));
+	this.deleteExpression(identifier);
+	Object.setPropertyWithGetter(this.expressions, identifier, (...args) => formula(this.currentX, ...args));
 };
 
-Beatmap.prototype.varExpression = function (name, expression) {
-	this.deleteExpression(name);
-	const value = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX())()
-	Object.setPropertyWithGetter(this.expressionsWithoutX, name, value);
+Beatmap.prototype.varExpression = function (identifier, expression) {
+	const value = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX())();
+	this.deleteExpression(identifier);
+	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, value);
 };
 
-Beatmap.prototype.funExpression = function (name, arguments, expression) {
-	this.deleteExpression(name);
+Beatmap.prototype.funExpression = function (identifier, arguments, expression) {
 	const formula = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX(), arguments);
-	Object.setPropertyWithGetter(this.expressionsWithoutX, name, (...args) => formula(...args));
+	this.deleteExpression(identifier);
+	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, (...args) => formula(...args));
 };
 
 Beatmap.prototype.recordHitEvent = function (rowIndex, note, y, shouldHit) {

@@ -26,7 +26,7 @@ ControlSentence.DEFAULT_ALIASES = {
 ControlSentence.BLOCK_SEPARATORS = {
 	IF: ['ELSE', 'ELSE_IF'],
 	WHILE: [],
-	FOR: [],
+	//FOR: [],
 	//TRY: ['RESCUE'],
 	PROCEDURE: [],
 	//SCHEDULE: []
@@ -61,7 +61,7 @@ ControlSentence.prototype.addToBlock = function (controlSentence) {
 };
 
 ControlSentence.prototype.applyTo = function (row, callers) {
-	this._beatmap.controlSentenceApplications[this.keyword].call(this, row, callers);
+	return this._beatmap.controlSentenceApplications[this.keyword].call(this, row, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS = {};
@@ -76,7 +76,7 @@ ControlSentence.DEFAULT_APPLICATIONS.BPM = function (row, callers) {
 	for (let i = 0; i < BPMData.length; i += 3) {
 		// beat note
 		const beatNote = BPMData[i];
-		if (!/[\da-z]\.*/.test(beatNote))
+		if (!/[\da-z]\.*/y.test(beatNote))
 			throw new BeatmapRuntimeError(`BPM: invalid beat note: ${beatNote}`, callers);
 		const length = TyphmUtils.parseDigit(beatNote[0]);
 		const dots = beatNote.length - 1;
@@ -186,39 +186,39 @@ ControlSentence.DEFAULT_APPLICATIONS.LET = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.DEF = function (row, callers) {
-	const name = this.parameters[0];
-	if (ControlSentence.checkVariableName(name))
-		this._beatmap.defExpression(name, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
+	const identifier = this.parameters[0];
+	if (ControlSentence.checkVariableName(identifier))
+		this._beatmap.defExpression(identifier, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
 	else
-		throw new BeatmapRuntimeError(`DEF: invalid variable name: ${name}`, callers);
+		throw new BeatmapRuntimeError(`DEF: invalid variable name: ${identifier}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.VAR = function (row, callers) {
-	const name = this.parameters[0];
-	if (ControlSentence.checkVariableName(name))
-		this._beatmap.varExpression(name, this.parameters.slice(1).join(' '));
+	const identifier = this.parameters[0];
+	if (ControlSentence.checkVariableName(identifier))
+		this._beatmap.varExpression(identifier, this.parameters.slice(1).join(' '));
 	else
-		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${name}`, callers);
+		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${identifier}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.FUN = function (row, callers) {
-	const name = this.parameters[0];
-	if (ControlSentence.checkVariableName(name))
-		this._beatmap.funExpression(name, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
+	const identifier = this.parameters[0];
+	if (ControlSentence.checkVariableName(identifier))
+		this._beatmap.funExpression(identifier, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
 	else
-		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${name}`, callers);
+		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${identifier}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.ALIAS = function (row, callers) {
-	const originalName = this.parameters.last();
-	if (!this._beatmap.hasKeyword(originalName))
-		throw new BeatmapRuntimeError(`ALIAS: keyword not found: ${originalName}`, callers);
-	for (const newName of this.parameters.slice(0, this.parameters.length - 1)) {
-		if (!ControlSentence.checkKeyword(newName))
-			throw new BeatmapRuntimeError(`ALIAS: invalid keyword: ${newName}`, callers);
-		if (newName === originalName)
-			throw new BeatmapRuntimeError(`ALIAS: alias is the same as the original: ${newName}`);
-		this._beatmap.defineKeywordAlias(newName, originalName);
+	const originalKeyword = this.parameters.last();
+	if (!this._beatmap.hasKeyword(originalKeyword))
+		throw new BeatmapRuntimeError(`ALIAS: keyword not found: ${originalKeyword}`, callers);
+	for (const newKeyword of this.parameters.slice(0, this.parameters.length - 1)) {
+		if (!ControlSentence.checkKeyword(newKeyword))
+			throw new BeatmapRuntimeError(`ALIAS: invalid keyword: ${newKeyword}`, callers);
+		if (newKeyword === originalKeyword)
+			throw new BeatmapRuntimeError(`ALIAS: alias is the same as the original: ${newKeyword}`);
+		this._beatmap.defineKeywordAlias(newKeyword, originalKeyword);
 	}
 };
 
@@ -234,21 +234,98 @@ ControlSentence.DEFAULT_APPLICATIONS.COMMENT = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.PROCEDURE = function (row, callers) {
+	const mainBlock = this.blocks[0];
+	const newCallers = [{lineno: this.lineno, caller: this.keyword}, ...callers];
 	for (const keyword of this.parameters) {
 		if (!ControlSentence.checkKeyword(keyword))
 			throw new BeatmapRuntimeError(`PROCEDURE: invalid keyword: ${keyword}`, callers);
-		const controlSentences = this.blocks[0].contents;
-		const newCallers = [{lineno: this.lineno, caller: this.keyword}, ...callers];
 		this._beatmap.controlSentenceApplications[keyword] = function (innerRow, innerCallers) {
-			for (let i = 0; i < controlSentences.length; i++) {
-				controlSentences[i].lastEnv = this.lastEnv;
-				controlSentences[i].applyTo(innerRow, newCallers);
+			const result = ControlSentence.executeBlock(mainBlock, innerRow, newCallers);
+			if (result && result.signal === 'break') {
+				throw new BeatmapRuntimeError(`BREAK: extra BREAK`, result.callers);
+			}
+		};
+	}
+};
+
+ControlSentence.DEFAULT_APPLICATIONS.END = function (row, callers) {
+};
+
+ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
+	// set up flowchart
+	const flowchart = [{
+		condition: TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX()),
+		block: this.blocks[0]
+	}];
+	let reachedElse = false;
+	for (const block of this.blocks) {
+		const beginning = block.beginning.keyword;
+		if (beginning.keyword === 'ELSE_IF') {
+			if (reachedElse) {
+				throw new BeatmapRuntimeError(`ELSE_IF: ELSE_IF branch is invalid after ELSE`, callers);
+			}
+			flowchart.push({
+				condition: TyphmUtils.generateFunctionFromFormulaWithoutX(beginning.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX()),
+				'block': block
+			});
+		} else if (beginning.keyword === 'ELSE') {
+			flowchart.push({
+				condition: () => true,
+				'block': block
+			})
+			reachedElse = true;
+		}
+	}
+	
+	// execute flowchart
+	for (const {condition, block} of flowchart) {
+		if (condition()) {
+			return ControlSentence.executeBlock(block, row, callers);
+		}
+	}
+};
+
+ControlSentence.DEFAULT_APPLICATIONS.BREAK = function (row, callers) {
+	if (this.parameters.length > 1) {
+		throw new BeatmapRuntimeError('BREAK: cannot have multiple parameters');
+	}
+	const layer = parseInt(this.parameters[0])
+	if (!layer) {
+		throw new BeatmapRuntimeError(`BREAK: invalid integer: ${this.parameters[0]}`);
+	}
+	return {signal: 'break', 'layer': layer, 'callers': callers};
+};
+
+ControlSentence.DEFAULT_APPLICATIONS.RETURN = function (row, callers) {
+	return {signal: 'return', 'callers': callers};
+};
+
+ControlSentence.DEFAULT_APPLICATIONS.WHILE = function (row, callers) {
+	const condition = TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX());
+	let result;
+	while (condition()) {
+		result = ControlSentence.executeBlock(this.blocks[0], row, callers);
+		if (result && result.signal === 'break') {
+			if (result.layer === 0) {
+				break;
+			} else {
+				return {signal: 'break', layer: result.layer - 1, callers: result.callers};
 			}
 		}
 	}
 };
 
-ControlSentence.DEFAULT_APPLICATIONS.END = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.DEBUG_LOG = function (row, callers) {
+	console.log(TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())());
+};
+
+ControlSentence.executeBlock = function (block, row, callers) {
+	let result;
+	for (const controlSentence of block.contents) {
+		result = controlSentence.applyTo(row, callers);
+		if (result)
+			return result;
+	}
 };
 
 ControlSentence.checkVariableName = function (name) {
@@ -260,5 +337,5 @@ ControlSentence.checkKeyword = function (keyword) {
 };
 
 ControlSentence.generateFunction = function (formulaParts, beatmap) {
-	return TyphmUtils.generateFunctionFromFormula(formulaParts.join(' '), beatmap.getEnvironments(), beatmap);
+	return x => Number(math.re(TyphmUtils.generateFunctionFromFormula(formulaParts.join(' '), beatmap.getEnvironments(), beatmap)(x)));
 };
