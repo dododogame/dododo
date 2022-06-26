@@ -126,7 +126,7 @@ Strings["en-US"] = {
 	
 	// preferences: colors
 	"colors": "Colors",
-	"notesColor": "Color of notes",
+	"notesColor": "Color of hit notes",
 	"auxiliariesColor": "Color of auxiliaries (bar lines etc)",
 	"perfectColor": "Color of perfect hits",
 	"goodColor": "Color of good hits",
@@ -312,7 +312,7 @@ Strings["zh-CN"] = {
 	
 	// preferences: colors
 	"colors": "颜色",
-	"notesColor": "符头的颜色",
+	"notesColor": "打击音符的颜色",
 	"auxiliariesColor": "辅助物件 (小节线等) 的颜色",
 	"perfectColor": "完美的颜色",
 	"goodColor": "好的颜色",
@@ -498,7 +498,7 @@ Strings["zh-TW"] = {
 	
 	// preferences: colors
 	"colors": "顏色",
-	"notesColor": "符頭的顏色",
+	"notesColor": "打擊音符的顏色",
 	"auxiliariesColor": "輔助物件 (小節線等) 的顏色",
 	"perfectColor": "完美的顏色",
 	"goodColor": "好的顏色",
