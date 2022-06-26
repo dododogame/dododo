@@ -276,10 +276,15 @@ window.numre = (...arguments) => Number(math.re(math.evaluate(...arguments)))
 TyphmUtils.generateFunctionFromFormula = function (formula, environments, xAcceptor, parameters) {
 	parameters ||= [];
 	const expression = math.parse(formula).compile();
+	const scope = {};
+	for (const e of environments) {
+		for (const identifier in e) {
+			Object.defineProperty(scope, '$' + identifier, Object.getOwnPropertyDescriptor(e, identifier));
+		}
+	}
 	return (x, ...param) => {
 		if (xAcceptor)
 			xAcceptor.currentX = x;
-		const scope = {};
 		for (const e of environments)
 			Object.defineProperties(scope, Object.getOwnPropertyDescriptors(e));
 		scope.x = Number(x);
@@ -291,8 +296,13 @@ TyphmUtils.generateFunctionFromFormula = function (formula, environments, xAccep
 TyphmUtils.generateFunctionFromFormulaWithoutX = function (formula, environments, parameters) {
 	parameters ||= [];
 	const expression = math.parse(formula).compile();
+	const scope = {};
+	for (const e of environments) {
+		for (const identifier in e) {
+			Object.defineProperty(scope, '$' + identifier, Object.getOwnPropertyDescriptor(e, identifier));
+		}
+	}
 	return (...param) => {
-		const scope = {};
 		for (const e of environments)
 			Object.defineProperties(scope, Object.getOwnPropertyDescriptors(e));
 		Object.assign(scope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));

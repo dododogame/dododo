@@ -334,5 +334,6 @@ ControlSentence.checkKeyword = function (keyword) {
 };
 
 ControlSentence.generateFunction = function (formulaParts, beatmap) {
-	return x => Number(math.re(TyphmUtils.generateFunctionFromFormula(formulaParts.join(' '), beatmap.getEnvironments(), beatmap)(x)));
+	const formula = TyphmUtils.generateFunctionFromFormula(formulaParts.join(' '), beatmap.getEnvironments(), beatmap);
+	return x => Number(math.re(formula(x)));
 };

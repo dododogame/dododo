@@ -190,7 +190,7 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		this.defineKeywordAlias(alias, original);
 	this.expressions = {};
 	this.expressionsWithoutX = {};
-	this.setUpDefaultPreferencesAliases();
+	this.setUpPreferencesExpressions();
 	this.rows = [new Row(this, 0)];
 	this.notes = [];
 	this.barLines = [];
@@ -250,7 +250,14 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 	this.notes.sort((n1, n2) => n1.time - n2.time);
 };
 
-Beatmap.prototype.setUpDefaultPreferencesAliases = function () {
+Beatmap.prototype.setUpPreferencesExpressions = function () {
+	for (const identifier in preferences) {
+		Object.defineProperty(this.expressionsWithoutX, identifier, {
+			get: () => preferences[identifier],
+			configurable: true,
+			enumerable: true
+		});
+	}
 	for (const alias in Scene_Preferences.DEFAULT_ALIASES) {
 		Object.defineProperty(this.expressionsWithoutX, alias, {
 			get: () => preferences[Scene_Preferences.DEFAULT_ALIASES[alias]],
@@ -261,11 +268,11 @@ Beatmap.prototype.setUpDefaultPreferencesAliases = function () {
 };
 
 Beatmap.prototype.getEnvironments = function () {
-	return [preferences, this.expressions, this.expressionsWithoutX];
+	return [this.expressions, this.expressionsWithoutX];
 };
 
 Beatmap.prototype.getEnvironmentsWithoutX = function () {
-	return [preferences, this.expressionsWithoutX]
+	return [this.expressionsWithoutX]
 };
 
 Beatmap.prototype.deleteExpression = function (name) {
@@ -300,7 +307,7 @@ Beatmap.prototype.varExpression = function (identifier, expression) {
 Beatmap.prototype.funExpression = function (identifier, arguments, expression) {
 	const formula = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX(), arguments);
 	this.deleteExpression(identifier);
-	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, (...args) => formula(...args));
+	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, formula);
 };
 
 Beatmap.prototype.recordHitEvent = function (rowIndex, note, y, shouldHit) {
