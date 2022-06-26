@@ -960,7 +960,7 @@ Scene_Game.prototype._createResumingCountdown = function () {
 	const now = this._lastPos;
 	const row = this._row1;
 	let millisecondsPerWhole, beatOffset;
-	if (preferences.countdownBeats) {
+	if (preferences.countdownBeats && now < row.endTime) {
 		if (now >= row.startTime) {
 			const lengthPosition = this._getLengthPositionFromTime(now);
 			const derivative = (row.timeFormula(lengthPosition + 1e-4) - row.timeFormula(lengthPosition - 1e-4)) / 2e-4;
@@ -1625,7 +1625,9 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene, mill
 		while (unclearedHitSounds.length > 0) {
 			const event = unclearedHitSounds[0];
 			if (offsetNow >= event.time - TyphmConstants.HIT_SOUND_ADVANCE*this._scene._modifiers.playRate) {
-				setTimeout(this._playHitSound.bind(this), (event.time - offsetNow)/this._scene._modifiers.playRate + actualResumingTimeout);
+				const timeout = (event.time - offsetNow)/this._scene._modifiers.playRate + actualResumingTimeout;
+				if (timeout >= actualResumingTimeout + preferences.offset * this._scene._modifiers.playRate)
+					setTimeout(this._playHitSound.bind(this), timeout);
 				unclearedHitSounds.shift();
 			} else
 				break;
