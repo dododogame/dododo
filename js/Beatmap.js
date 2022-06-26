@@ -182,6 +182,17 @@ Beatmap.prototype.hasKeyword = function (keyword) {
 	return !!this.controlSentenceApplications[keyword];
 };
 
+Beatmap.prototype.setMirror = function (mirror, mirrorLowerRow) {
+	if (mirror) {
+		for (const row of this.rows)
+			row.mirror = true;
+	}
+	if (mirrorLowerRow) {
+		for (let i = 1; i < this.rows.length; i += 2)
+			this.rows[i].mirror = !this.rows[i].mirror;
+	}
+};
+
 Beatmap.prototype.prepare = function () {
 	Row.prepare();
 	this.currentX = 0;

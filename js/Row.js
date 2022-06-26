@@ -31,6 +31,7 @@ Row.prototype.initialize = function (beatmap, index) {
 	this._bitmap = new Bitmap(Graphics.width, Row.ROWS_HEIGHT);
 	this._beatmap = beatmap;
 	this.index = index;
+	this.mirror = false;
 	this.timeFormula = x => Number(x);
 	this.judgementLine = new JudgementLine(this);
 };

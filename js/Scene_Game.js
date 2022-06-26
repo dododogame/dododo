@@ -25,6 +25,7 @@ Scene_Game.VISUALS = [
 	'fadeOut',
 	'reverseVoices',
 	'mirror',
+	'mirrorLowerRow',
 	'showKeyboard',
 	'subtractScore',
 	'numbersHUD'
@@ -51,7 +52,7 @@ Scene_Game.prototype.start = function () {
 	this._lastPos = 0.0;
 	this._starting = performance.now();
 	this._createLayers();
-	this._createTwoLines();
+	this._createTwoRows();
 	if (this._visuals.fadeIn)
 		this._createFadeInMask();
 	if (this._visuals.fadeOut)
@@ -204,7 +205,7 @@ Scene_Game.prototype._createFadeOutMask = function () {
 	this._beatmapMaskLayer.addChild(sprite);
 };
 
-Scene_Game.prototype._createTwoLines = function () {
+Scene_Game.prototype._createTwoRows = function () {
 	this._row1Sprite = new Sprite();
 	this._row1Sprite.width = Graphics.width;
 	this._row1Sprite.anchor.y = 0.5;
@@ -215,10 +216,6 @@ Scene_Game.prototype._createTwoLines = function () {
 	this._row2Sprite.anchor.y = 0.5;
 	this._center(this._row2Sprite, (Graphics.height + preferences.distanceBetweenRows)/2);
 	this._nextBeatmapLayer.addChild(this._row2Sprite);
-	if (this._visuals.mirror) {
-		this._row1Sprite.scale.x = -1;
-		this._row2Sprite.scale.x = -1;
-	}
 };
 
 Scene_Game.prototype._createJudgementLineSprite = function () {
@@ -516,12 +513,12 @@ Scene_Game.prototype._updateJudgementLine = function (now) {
 	const lengthPosition = this._getLengthPositionFromTime(now);
 	const row = this._row1;
 	if (this._visuals.judgementLinePerformances) {
-		row.judgementLine.applyToSprite(this._judgementLine, lengthPosition, this._row1Sprite.y, this._visuals.mirror);
+		row.judgementLine.applyToSprite(this._judgementLine, lengthPosition, this._row1Sprite.y, this._row1.mirror);
 		for (let i = 0; i < this._fakeJudgementLines.length; i++)
-			row.fakeJudgementLines[i].applyToSprite(this._fakeJudgementLines[i], lengthPosition, this._row1Sprite.y, this._visuals.mirror)
+			row.fakeJudgementLines[i].applyToSprite(this._fakeJudgementLines[i], lengthPosition, this._row1Sprite.y, this._row1.mirror)
 	} else {
 		this._judgementLine.x = this._getNoteXFromLengthPosition(lengthPosition);
-		if (this._visuals.mirror)
+		if (this._row1.mirror)
 			this._judgementLine.x = Graphics.width - this._judgementLine.x;
 		this._judgementLine.y = this._row1Sprite.y;
 		this._judgementLine.scale.y = row.voicesNumber * preferences.voicesHeight;
@@ -627,12 +624,12 @@ Scene_Game.prototype._updateHoldings = function (now) {
 	}
 	for (let i = 0; i < this._holdings.length; i++) {
 		const {event, judge} = this._holdings[i];
-		const xNow = this._visuals.mirror ? Graphics.width - this._judgementLine.x : this._judgementLine.x;
+		const xNow = this._row1.mirror ? Graphics.width - this._judgementLine.x : this._judgementLine.x;
 		this._beatmap.trackHoldTo(now, xNow, event, judge, this._row1);
 	}
 };
 
-Scene_Game.prototype._switchLine = function () {
+Scene_Game.prototype._switchRow = function () {
 	this._beatmapLayer.removeChild(this._row1Sprite);
 	this._nextBeatmapLayer.removeChild(this._row2Sprite);
 	let t = this._row1Sprite;
@@ -644,7 +641,12 @@ Scene_Game.prototype._switchLine = function () {
 	this._row2Sprite.bitmap = this._row2.getBitmap();
 	this._beatmapLayer.addChild(this._row1Sprite);
 	this._nextBeatmapLayer.addChild(this._row2Sprite);
-	this._setUpNewLine();
+	this._setUpNewRow();
+};
+
+Scene_Game.prototype._setUpMirror = function () {
+	this._row1Sprite.scale.x = this._row1.mirror ? -1 : 1;
+	this._row2Sprite.scale.x = this._row2.mirror ? -1 : 1;
 };
 
 Scene_Game.prototype._changeSceneIfShould = function () {
@@ -696,7 +698,7 @@ Scene_Game.prototype.update = function () {
 			this._autoPlayUpdateAndProcessMiss(now);
 			this._updateHoldings(now);
 			if (now >= this._row1.endTime)
-				this._switchLine();
+				this._switchRow();
 			this._finishIfShould(now);
 			this._updateJudgementLine(now);
 		}
@@ -726,7 +728,8 @@ Scene_Game.prototype._updateRecordingApply = function (now) {
 	}
 };
 
-Scene_Game.prototype._setUpNewLine = function () {
+Scene_Game.prototype._setUpNewRow = function () {
+	this._setUpMirror();
 	const row = this._row1;
 	const rowLengthInMilliseconds = row.endTime - row.startTime;
 	if (row.perfect)
@@ -776,6 +779,7 @@ Scene_Game.prototype._onLoad = async function () {
 			throw e;
 	}
 	this._beatmap.drawRows(this._visuals.reverseVoices);
+	this._beatmap.setMirror(this._visuals.mirror, this._visuals.mirrorLowerRow);
 	if (!this._hasMusic && this._beatmap.audioUrl) {
 		this._hasMusic = true;
 		this._musicUrl = this._beatmap.audioUrl;
@@ -887,7 +891,7 @@ Scene_Game.prototype._postLoadingAudio = function () {
 	this._row1Sprite.bitmap = this._row1.getBitmap();
 	this._row2Sprite.bitmap = this._row2.getBitmap();
 	this._loadingFinished = true;
-	this._setUpNewLine();
+	this._setUpNewRow();
 	this._resume();
 };
 
@@ -1364,7 +1368,7 @@ Scene_Game.prototype._createHitEffect = function (event, judge) {
 	hitEffect.anchor.x = 0.5;
 	hitEffect.anchor.y = 0.5;
 	hitEffect.x = event.hitX;
-	if (this._visuals.mirror)
+	if (this._beatmap.rows[event.rowIndex].mirror)
 		hitEffect.x = Graphics.width - hitEffect.x;
 	const rowSprite = this._row1.index === event.rowIndex ? this._row1Sprite : this._row2Sprite;
 	hitEffect.y = rowSprite.y - Row.ROWS_HEIGHT / 2 + event.y;
@@ -1431,7 +1435,7 @@ Scene_Game.prototype._getXFromTime = function (time) {
 
 Scene_Game.prototype._getNoteXFromTime = function (time) {
 	let result = this._getNoteXFromLengthPosition(this._getLengthPositionFromTime(time));
-	if (this._visuals.mirror)
+	if (this._row1.mirror)
 		result = Graphics.width - result;
 	return result;
 };

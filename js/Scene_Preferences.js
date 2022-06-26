@@ -175,6 +175,12 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
+				name: 'mirrorLowerRow',
+				type: 'boolean',
+				args: {
+				}
+			},
+			{
 				name: 'showKeyboard',
 				type: 'boolean',
 				args: {
@@ -578,6 +584,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	fadeOut: 0,
 	reverseVoices: false,
 	mirror: false,
+	mirrorLowerRow: false,
 	showKeyboard: !Utils.isMobileDevice(),
 	subtractScore: false,
 	numbersHUD: true,
