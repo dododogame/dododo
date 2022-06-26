@@ -308,10 +308,11 @@ Row.prototype.drawNoteHeadsAndDots = function (note, y, shouldHit) {
 	context.fillStyle = preferences.auxiliariesColor;
 	context.strokeStyle = preferences.auxiliariesColor;
 	context.lineWidth = 2;
+	const yDots = note.multiplicity % 2 === 0 ? y : y - preferences.headsRadius;
 	for (let i = 0; i < note.dots; i++) {
 		for (let j = 0; j < note.multiplicity; j++) {
 			context.beginPath();
-			context.arc(note.x +preferences.headsRadius + 5 * (i+1), y + preferences.headsRadius*(2 * j - 1), 2, 0, 2 * Math.PI);
+			context.arc(note.x +preferences.headsRadius + 5 * (i+1), yDots + preferences.headsRadius*2*j, 2, 0, 2 * Math.PI);
 			context.fill();
 		}
 	}
@@ -633,7 +634,7 @@ Row.prototype.drawRest = function (note, y) {
 	context.fillStyle = preferences.auxiliariesColor;
 	for (let i = 0; i < note.dots; i++) {
 		context.beginPath();
-		context.arc(note.x+preferences.headsRadius+5*(i+1), y, 2, 0, 2*Math.PI);
+		context.arc(note.x+preferences.headsRadius+5*(i+1), y-preferences.headsRadius, 2, 0, 2*Math.PI);
 		context.fill();
 	}
 	context.restore();
