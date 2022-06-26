@@ -510,8 +510,12 @@ Scene_Game.prototype._updateProgress = function (now) {
 };
 
 Scene_Game.prototype._updateJudgementLine = function (now) {
-	const lengthPosition = this._getLengthPositionFromTime(now);
 	const row = this._row1;
+	if (this._resumingCountdown)
+		now -= this._resumingCountdown.remaining * this._modifiers.playRate;
+	if (now < row.startTime)
+		return;
+	const lengthPosition = this._getLengthPositionFromTime(now);
 	if (this._visuals.judgementLinePerformances) {
 		row.judgementLine.applyToSprite(this._judgementLine, lengthPosition, this._row1Sprite.y, this._row1.mirror);
 		for (let i = 0; i < this._fakeJudgementLines.length; i++)
@@ -688,18 +692,20 @@ Scene_Game.prototype.update = function () {
 	if (!this._ended) {
 		if (this._visuals.showKeyboard && !this._modifiers.autoPlay)
 			this._updateKeyboard();
-		if (!this._paused && !this._resumingCountdown) {
-			if (!this._isRecording)
-				this._updateRecordingApply(now);
-			if (this._visuals.TPSIndicator)
-				this._updateTPSIndicator(now);
-			if (this._hitSoundWithMusic())
-				this._updateHitSoundWithMusic(now);
-			this._autoPlayUpdateAndProcessMiss(now);
-			this._updateHoldings(now);
-			if (now >= this._row1.endTime)
-				this._switchRow();
-			this._finishIfShould(now);
+		if (!this._paused) {
+			if (!this._resumingCountdown) {
+				if (!this._isRecording)
+					this._updateRecordingApply(now);
+				if (this._visuals.TPSIndicator)
+					this._updateTPSIndicator(now);
+				if (this._hitSoundWithMusic())
+					this._updateHitSoundWithMusic(now);
+				this._autoPlayUpdateAndProcessMiss(now);
+				this._updateHoldings(now);
+				if (now >= this._row1.endTime)
+					this._switchRow();
+				this._finishIfShould(now);
+			}
 			this._updateJudgementLine(now);
 		}
 	}
@@ -1588,6 +1594,8 @@ Scene_Game.Sprite_ResumingCountdown = function () {
 	this.initialize.apply(this, arguments);
 };
 
+Scene_Game.Sprite_ResumingCountdown.MAX_COUNT = 3;
+
 Scene_Game.Sprite_ResumingCountdown.prototype = Object.create(Sprite.prototype);
 Scene_Game.Sprite_ResumingCountdown.prototype.constructor = Scene_Game.Sprite_ResumingCountdown;
 
@@ -1600,10 +1608,9 @@ Scene_Game.Sprite_ResumingCountdown.prototype.initialize = function (scene, mill
 	this.bitmap.fontSize = preferences.fontSize*8;
 	this._scene = scene;
 	this._start = performance.now();
-	const maxCount = 3;
-	const actualResumingTimeout = maxCount*1000;
-	for (let i = 0; i <= maxCount; i++) {
-		setTimeout(() => this._countTo(i), (maxCount - i)*1000);
+	const actualResumingTimeout = this.remaining = Scene_Game.Sprite_ResumingCountdown.MAX_COUNT*1000;
+	for (let i = 0; i <= Scene_Game.Sprite_ResumingCountdown.MAX_COUNT; i++) {
+		setTimeout(() => this._countTo(i), actualResumingTimeout - i*1000);
 	}
 	if (millisecondsPerWhole) {
 		const millisecondsPerQuarter = millisecondsPerWhole / 4 / this._scene._modifiers.playRate;
@@ -1655,7 +1662,9 @@ Scene_Game.Sprite_ResumingCountdown.prototype._countTo = function (n) {
 
 Scene_Game.Sprite_ResumingCountdown.prototype.update = function () {
 	Sprite.prototype.update.call(this);
-	const scale = 1 - (performance.now() - this._start) % 1000 / 1000
+	const timeElapsed = performance.now() - this._start;
+	this.remaining = Scene_Game.Sprite_ResumingCountdown.MAX_COUNT*1000 - timeElapsed;
+	const scale = 1 - timeElapsed % 1000 / 1000
 	this.scale.x = scale;
 	this.scale.y = scale;
 };
