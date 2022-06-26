@@ -762,6 +762,9 @@ Scene_Game.prototype.stop = function () {
 };
 
 Scene_Game.prototype._onLoad = async function () {
+	this._beatmap.prepare();
+	this._beatmap.setUpExpressionsWithoutXFrom(this._visuals);
+	this._beatmap.setUpExpressionsWithoutXFrom(this._modifiers);
 	try {
 		await this._beatmap.load();
 	} catch (e) {

@@ -182,7 +182,7 @@ Beatmap.prototype.hasKeyword = function (keyword) {
 	return !!this.controlSentenceApplications[keyword];
 };
 
-Beatmap.prototype.drawRows = function (reverseVoices) {
+Beatmap.prototype.prepare = function () {
 	Row.prepare();
 	this.currentX = 0;
 	this.controlSentenceApplications = {...ControlSentence.DEFAULT_APPLICATIONS};
@@ -190,7 +190,12 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		this.defineKeywordAlias(alias, original);
 	this.expressions = {};
 	this.expressionsWithoutX = {};
-	this.setUpPreferencesExpressions();
+	this.setUpExpressionsWithoutXFrom(preferences);
+	this.setUpExpressionsWithoutXFrom(Object.fromEntries(
+		Object.entries(Scene_Preferences.DEFAULT_ALIASES).map(([alias, original]) => [alias, preferences[original]])));
+};
+
+Beatmap.prototype.drawRows = function (reverseVoices) {
 	this.rows = [new Row(this, 0)];
 	this.notes = [];
 	this.barLines = [];
@@ -250,17 +255,10 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 	this.notes.sort((n1, n2) => n1.time - n2.time);
 };
 
-Beatmap.prototype.setUpPreferencesExpressions = function () {
-	for (const identifier in preferences) {
+Beatmap.prototype.setUpExpressionsWithoutXFrom = function (object) {
+	for (const identifier in object) {
 		Object.defineProperty(this.expressionsWithoutX, identifier, {
-			get: () => preferences[identifier],
-			configurable: true,
-			enumerable: true
-		});
-	}
-	for (const alias in Scene_Preferences.DEFAULT_ALIASES) {
-		Object.defineProperty(this.expressionsWithoutX, alias, {
-			get: () => preferences[Scene_Preferences.DEFAULT_ALIASES[alias]],
+			get: () => object[identifier],
 			configurable: true,
 			enumerable: true
 		});
