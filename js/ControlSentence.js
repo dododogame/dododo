@@ -64,6 +64,12 @@ ControlSentence.prototype.applyTo = function (row, callers) {
 	return this._beatmap.controlSentenceApplications[this.keyword].call(this, row, callers);
 };
 
+ControlSentence.prototype.throwRuntimeError = function (message, callers) {
+	callers = [...callers];
+	callers[0] = {lineno: this.lineno, caller: callers[0].caller};
+	throw new BeatmapRuntimeError(message, callers);
+};
+
 ControlSentence.DEFAULT_APPLICATIONS = {};
 
 ControlSentence.DEFAULT_APPLICATIONS.BPM = function (row, callers) {
@@ -77,7 +83,7 @@ ControlSentence.DEFAULT_APPLICATIONS.BPM = function (row, callers) {
 		// beat note
 		const beatNote = BPMData[i];
 		if (!/[\da-z]\.*/y.test(beatNote))
-			throw new BeatmapRuntimeError(`BPM: invalid beat note: ${beatNote}`, callers);
+			this.throwRuntimeError(`BPM: invalid beat note: ${beatNote}`, callers);
 		const length = TyphmUtils.parseDigit(beatNote[0]);
 		const dots = beatNote.length - 1;
 		
@@ -85,9 +91,9 @@ ControlSentence.DEFAULT_APPLICATIONS.BPM = function (row, callers) {
 		const BPMString = BPMData[i + 1];
 		const bpm = Number(BPMString);
 		if (!bpm) {
-			throw new BeatmapRuntimeError(`BPM: invalid BPM: ${BPMString}`);
+			this.throwRuntimeError(`BPM: invalid BPM: ${BPMString}`, callers);
 		} else if (bpm <= 0)
-			throw new BeatmapRuntimeError(`BPM: BPM is zero or negative: ${BPMString}`, callers);
+			this.throwRuntimeError(`BPM: BPM is zero or negative: ${BPMString}`, callers);
 		
 		// position
 		const positionString = BPMData[i + 2];
@@ -96,12 +102,12 @@ ControlSentence.DEFAULT_APPLICATIONS.BPM = function (row, callers) {
 			position = frac(positionString || 0);
 		} catch (e) {
 			if (e.message === 'Invalid argument') {
-				throw new BeatmapRuntimeError(`BPM: invalid position of BPM indicator: ${positionString}`, callers);
+				this.throwRuntimeError(`BPM: invalid position of BPM indicator: ${positionString}`, callers);
 			} else
 				throw e;
 		}
 		if (position.compare(1) > 0 || position.compare(0) < 0)
-			throw new BeatmapRuntimeError(`BPM: position of BPM indicator is out of range [0,1]: ${positionString}`, callers)
+			this.throwRuntimeError(`BPM: position of BPM indicator is out of range [0,1]: ${positionString}`, callers)
 		
 		row.BPMMarkers.push({'length': length, 'dots': dots, 'bpm': bpm, 'position': position});
 		if (i === 0 && position.compare(0) <= 0) {
@@ -141,9 +147,9 @@ ControlSentence.DEFAULT_APPLICATIONS.MS_PER_WHOLE = function (row, callers) {
 	const input = this.parameters[0];
 	row.millisecondsPerWhole = parseFloat(input);
 	if (!row.millisecondsPerWhole) {
-		throw new BeatmapRuntimeError(`MS_PER_WHOLE: invalid number: ${input}`, callers);
+		this.throwRuntimeError(`MS_PER_WHOLE: invalid number: ${input}`, callers);
 	} else if (row.millisecondsPerWhole <= 0) {
-		throw new BeatmapRuntimeError(`MS_PER_WHOLE: cannot be zero or negative: ${input}`, callers);
+		this.throwRuntimeError(`MS_PER_WHOLE: cannot be zero or negative: ${input}`, callers);
 	}
 };
 
@@ -153,9 +159,9 @@ for (const judge of ['perfect', 'good', 'bad']) {
 		const judgementWindowRadiusString = this.parameters[0];
 		row[judge] = parseFloat(judgementWindowRadiusString);
 		if (!row[judge]) {
-			throw new BeatmapRuntimeError(`${keyword}: invalid number: ${judgementWindowRadiusString}`, callers);
+			this.throwRuntimeError(`${keyword}: invalid number: ${judgementWindowRadiusString}`, callers);
 		} else if (row[judge] < 0) {
-			throw new BeatmapRuntimeError(`${keyword}: judgement window radius is negative: ${judgementWindowRadiusString}`, callers);
+			this.throwRuntimeError(`${keyword}: judgement window radius is negative: ${judgementWindowRadiusString}`, callers);
 		}
 	};
 }
@@ -179,53 +185,53 @@ for (const attr of ['note_x', 'hit_x', 'bar_line_x', 'time']) {
 
 ControlSentence.DEFAULT_APPLICATIONS.LET = function (row, callers) {
 	const name = this.parameters[0];
-	if (ControlSentence.checkVariableName(name))
+	if (ControlSentence.checkIdentifier(name))
 		this._beatmap.letExpression(name, this.parameters.slice(1).join(' '));
 	else
-		throw new BeatmapRuntimeError(`LET: invalid variable name: ${name}`, callers);
+		this.throwRuntimeError(`LET: invalid identifier: ${name}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.DEF = function (row, callers) {
 	const identifier = this.parameters[0];
-	if (ControlSentence.checkVariableName(identifier))
+	if (ControlSentence.checkIdentifier(identifier))
 		this._beatmap.defExpression(identifier, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
 	else
-		throw new BeatmapRuntimeError(`DEF: invalid variable name: ${identifier}`, callers);
+		this.throwRuntimeError(`DEF: invalid identifier: ${identifier}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.VAR = function (row, callers) {
 	const identifier = this.parameters[0];
-	if (ControlSentence.checkVariableName(identifier))
+	if (ControlSentence.checkIdentifier(identifier))
 		this._beatmap.varExpression(identifier, this.parameters.slice(1).join(' '));
 	else
-		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${identifier}`, callers);
+		this.throwRuntimeError(`VAR: invalid identifier: ${identifier}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.FUN = function (row, callers) {
 	const identifier = this.parameters[0];
-	if (ControlSentence.checkVariableName(identifier))
+	if (ControlSentence.checkIdentifier(identifier))
 		this._beatmap.funExpression(identifier, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
 	else
-		throw new BeatmapRuntimeError(`VAR: invalid variable name: ${identifier}`, callers);
+		this.throwRuntimeError(`VAR: invalid identifier: ${identifier}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.ALIAS = function (row, callers) {
 	const originalKeyword = this.parameters.last();
 	if (!this._beatmap.hasKeyword(originalKeyword))
-		throw new BeatmapRuntimeError(`ALIAS: keyword not found: ${originalKeyword}`, callers);
+		this.throwRuntimeError(`ALIAS: keyword not found: ${originalKeyword}`, callers);
 	for (const newKeyword of this.parameters.slice(0, this.parameters.length - 1)) {
 		if (!ControlSentence.checkKeyword(newKeyword))
-			throw new BeatmapRuntimeError(`ALIAS: invalid keyword: ${newKeyword}`, callers);
+			this.throwRuntimeError(`ALIAS: invalid keyword: ${newKeyword}`, callers);
 		if (newKeyword === originalKeyword)
-			throw new BeatmapRuntimeError(`ALIAS: alias is the same as the original: ${newKeyword}`);
+			this.throwRuntimeError(`ALIAS: alias is the same as the original: ${newKeyword}`);
 		this._beatmap.defineKeywordAlias(newKeyword, originalKeyword);
 	}
 };
 
-ControlSentence.DEFAULT_APPLICATIONS.UNPRECEDURE = function (row, callers) {
+ControlSentence.DEFAULT_APPLICATIONS.UNPROCEDURE = function (row, callers) {
 	for (const keyword of this.parameters) {
 		if (!this._beatmap.hasKeyword(keyword))
-			throw new BeatmapRuntimeError(`UNPRECEDURE: keyword not found: ${keyword}`, callers);
+			this.throwRuntimeError(`UNPRECEDURE: keyword not found: ${keyword}`, callers);
 		this._beatmap.deleteKeyword(keyword);
 	}
 };
@@ -235,14 +241,15 @@ ControlSentence.DEFAULT_APPLICATIONS.COMMENT = function (row, callers) {
 
 ControlSentence.DEFAULT_APPLICATIONS.PROCEDURE = function (row, callers) {
 	const mainBlock = this.blocks[0];
-	const newCallers = [{lineno: this.lineno, caller: this.keyword}, ...callers];
 	for (const keyword of this.parameters) {
 		if (!ControlSentence.checkKeyword(keyword))
-			throw new BeatmapRuntimeError(`PROCEDURE: invalid keyword: ${keyword}`, callers);
+			this.throwRuntimeError(`PROCEDURE: invalid keyword: ${keyword}`, callers);
 		this._beatmap.controlSentenceApplications[keyword] = function (innerRow, innerCallers) {
-			const result = ControlSentence.executeBlock(mainBlock, innerRow, newCallers);
+			const callers = [{caller: keyword}, ...innerCallers]
+			callers[1] = {'lineno': this.lineno, caller: callers[1].caller};
+			const result = ControlSentence.executeBlock(mainBlock, innerRow, callers);
 			if (result && result.signal === 'break') {
-				throw new BeatmapRuntimeError(`BREAK: misplaced or too deep`, result.callers);
+				this.throwRuntimeError(`BREAK: misplaced or too deep`, result.callers);
 			}
 		};
 	}
@@ -259,7 +266,7 @@ ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
 		const beginning = block.beginning;
 		if (beginning.keyword === 'ELSE_IF') {
 			if (reachedElse) {
-				throw new BeatmapRuntimeError(`ELSE_IF: ELSE_IF branch is invalid after ELSE`, callers);
+				this.throwRuntimeError(`ELSE_IF: ELSE_IF branch is invalid after ELSE`, callers);
 			}
 			flowchart.push({
 				condition: TyphmUtils.generateFunctionFromFormulaWithoutX(beginning.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX()),
@@ -284,11 +291,11 @@ ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
 
 ControlSentence.DEFAULT_APPLICATIONS.BREAK = function (row, callers) {
 	if (this.parameters.length > 1) {
-		throw new BeatmapRuntimeError('BREAK: cannot have multiple parameters');
+		this.throwRuntimeError('BREAK: cannot have multiple parameters', callers);
 	}
 	const layer = parseInt(this.parameters[0] || 0);
 	if (isNaN(layer)) {
-		throw new BeatmapRuntimeError(`BREAK: invalid integer: ${this.parameters[0]}`);
+		this.throwRuntimeError(`BREAK: invalid integer: ${this.parameters[0]}`, callers);
 	}
 	return {signal: 'break', 'layer': layer, 'callers': callers};
 };
@@ -319,13 +326,16 @@ ControlSentence.DEFAULT_APPLICATIONS.DEBUG_LOG = function (row, callers) {
 ControlSentence.executeBlock = function (block, row, callers) {
 	let result;
 	for (const controlSentence of block.contents) {
+		if (!row._beatmap.hasKeyword(controlSentence.keyword)) {
+			controlSentence.throwRuntimeError(`keyword not found: ${controlSentence.keyword}`, callers);
+		}
 		result = controlSentence.applyTo(row, callers);
 		if (result)
 			return result;
 	}
 };
 
-ControlSentence.checkVariableName = function (name) {
+ControlSentence.checkIdentifier = function (name) {
 	return /[a-zA-Z_]\w*/y.test(name);
 };
 

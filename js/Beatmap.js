@@ -12,6 +12,7 @@ Beatmap.prototype.initialize = function (url) {
 Beatmap.prototype.load = async function () {
 	let [head, data] = eol.lf(await fetch(this.url).then(r => r.text())).split('---\n');
 	head = head.split('\n').map(s => s.split(': '));
+	const dataLineno = head.length + 1;
 	for (let i = 0; i < head.length; i++) {
 		head[i][0] = head[i][0].trimStart();
 		if (head[i].length > 2)
@@ -19,7 +20,6 @@ Beatmap.prototype.load = async function () {
 		else if (head[i].length === 1)
 			head[i][1] = '';
 	}
-	const dataLineno = head.length + 1;
 	head = Object.fromEntries(head);
 	data = data.split('\n');
 	this.title = head.title || '';
@@ -219,16 +219,13 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		millisecondsPerWhole: 2000
 	};
 	const controlSentenceStack = [];
+	const callers = [{caller: 'main'}];
 	let returned = false;
 	for (let i = 0; i < this.events.length; i++) {
 		const event = this.events[i];
 		const row = this.rows.last();
 		if (event.event === 'control' && !returned) {
-			const callers = [{lineno: event.lineno, caller: 'main'}];
 			const blockOwner = controlSentenceStack.last();
-			if (!this.hasKeyword(event.keyword) && (!blockOwner || event.keyword !== 'END' && !blockOwner.blockSeparators.includes(event.keyword))) {
-				throw new BeatmapRuntimeError(`keyword not found: ${event.keyword}`, callers);
-			}
 			const controlSentence = new ControlSentence(event.keyword, event.parameters, event.lineno, this);
 			controlSentence.lastEnv = lastEnv;
 			let isInBlock = false;
@@ -246,6 +243,9 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 			if (controlSentence.hasOpenBlock) {
 				controlSentenceStack.push(controlSentence);
 			} else if (!isInBlock) {
+				if (!this.hasKeyword(event.keyword)) {
+					controlSentence.throwRuntimeError(`keyword not found: ${event.keyword}`, callers);
+				}
 				result = controlSentence.applyTo(row, callers);
 			}
 			if (result && result.signal === 'break') {
@@ -256,7 +256,7 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		} else if (event.event === 'row') {
 			const blockOwner = controlSentenceStack.last();
 			if (blockOwner) {
-				throw new BeatmapRuntimeError(`${blockOwner.keyword}: missing END`, [{lineno: blockOwner.lineno, caller: 'main'}]);
+				blockOwner.throwRuntimeError(`${blockOwner.keyword}: missing END`, callers);
 			}
 			row.finalSetUp(event.voices, reverseVoices, lastEnv);
 			this.rows.push(new Row(this, this.rows.length));
