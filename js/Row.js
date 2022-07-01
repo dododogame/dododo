@@ -2,6 +2,24 @@ function Row () {
 	this.initialize.apply(this, arguments);
 }
 
+Row.RELATED_EXPRESSIONS = {
+	rowIndex: function () {
+		return this.index;
+	},
+	isUpper: function () {
+		return this.index % 2 === 0;
+	},
+	isLower: function () {
+		return this.index % 2 === 1;
+	},
+	judgementLineLabels: function () {
+		return Object.keys(this.judgementLineLabels);
+	},
+	textLabels: function () {
+		return Object.keys(this.textLabels);
+	}
+};
+
 Row.prepare = function () {
 	this._createBigNoteHalo();
 	this.ROWS_HEIGHT = Graphics.height + preferences.distanceBetweenRows;

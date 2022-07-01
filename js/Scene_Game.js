@@ -753,7 +753,7 @@ Scene_Game.prototype._updateRecordingApply = function (now) {
 
 Scene_Game.prototype._setUpNewRow = function () {
 	this._setUpMirror();
-	const row = this._row1;
+	const row = this._beatmap.currentRow = this._row1;
 	const rowLengthInMilliseconds = row.endTime - row.startTime;
 	if (row.perfect)
 		this._perfectTolerance = row.perfect * rowLengthInMilliseconds;
