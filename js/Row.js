@@ -34,6 +34,9 @@ Row.prototype.initialize = function (beatmap, index) {
 	this.mirror = false;
 	this.timeFormula = x => Number(x);
 	this.judgementLine = new JudgementLine(this);
+	this.currentJudgementLine = this.judgementLine;
+	this.fakeJudgementLines = [];
+	this.judgementLineLabels = {};
 };
 
 Row.prototype.setXFormulasIfHasnt = function () {
@@ -694,4 +697,18 @@ Row.prototype.trackHold = function (x, xNow, y, judge) {
 	context.stroke();
 	context.restore();
 	this._bitmap._setDirty();
+};
+
+Row.prototype.setCurrentJudgementLineByLabel = function (label) {
+	const index = this.judgementLineLabels[label];
+	if (index !== undefined) {
+		this.currentJudgementLine = this.fakeJudgementLines[index];
+	} else {
+		this.judgementLineLabels[label] = this.fakeJudgementLines.length;
+		this.addFakeJudgementLineWithoutLabel();
+	}
+};
+
+Row.prototype.addFakeJudgementLineWithoutLabel = function () {
+	this.fakeJudgementLines.push(this.currentJudgementLine = new JudgementLine(this))
 };

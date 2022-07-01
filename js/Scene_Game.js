@@ -221,8 +221,6 @@ Scene_Game.prototype._createTwoRows = function () {
 Scene_Game.prototype._createJudgementLineSprite = function () {
 	this._judgementLine = new Sprite(new Bitmap(1, 1));
 	this._judgementLine.bitmap.fillAll('white');
-	this._judgementLine.anchor.x = 0.5;
-	this._judgementLine.anchor.y = 0.5;
 	this._judgementLine.visible = false;
 	this._judgementLineLayer.addChild(this._judgementLine);
 	this._fakeJudgementLines = [];
@@ -241,8 +239,6 @@ Scene_Game.prototype._createFakeJudgementLines = function () {
 		for (let i = 0; i < row.fakeJudgementLines.length; i++) {
 			const sprite = new Sprite(new Bitmap(1, 1));
 			sprite.bitmap.fillAll('white');
-			sprite.anchor.x = 0.5;
-			sprite.anchor.y = 0.5;
 			this._judgementLineLayer.addChild(sprite);
 			this._fakeJudgementLines.push(sprite);
 		}
@@ -520,12 +516,15 @@ Scene_Game.prototype._updateJudgementLine = function (now) {
 		row.judgementLine.applyToSprite(this._judgementLine, lengthPosition, this._row1Sprite.y, this._row1.mirror);
 		for (let i = 0; i < this._fakeJudgementLines.length; i++)
 			row.fakeJudgementLines[i].applyToSprite(this._fakeJudgementLines[i], lengthPosition, this._row1Sprite.y, this._row1.mirror)
+		this._judgementLineLayer.children.sort((a, b) => a.zIndex - b.zIndex);
 	} else {
 		this._judgementLine.x = this._getNoteXFromLengthPosition(lengthPosition);
 		if (this._row1.mirror)
 			this._judgementLine.x = Graphics.width - this._judgementLine.x;
 		this._judgementLine.y = this._row1Sprite.y;
 		this._judgementLine.scale.y = row.voicesNumber * preferences.voicesHeight;
+		this._judgementLine.anchor.x = 0.5;
+		this._judgementLine.anchor.y = 0.5;
 	}
 	if (this._visuals.fadeIn) {
 		this._fadeInMask.y = this._row1Sprite.y;

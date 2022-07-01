@@ -6,6 +6,10 @@ JudgementLine.prototype.initialize = function (row) {
 	this._row = row;
 	this.xFormula = x => Number(x);
 	this.yFormula = x => 0;
+	this.zFormula = x => 0;
+	this.anchorXFormula = x => 0.5;
+	this.anchorYFormula = y => 0.5;
+	this.rotationFormula = x => 0;
 	this.redFormula = x => 1;
 	this.greenFormula = x => 1;
 	this.blueFormula = x => 1;
@@ -20,8 +24,12 @@ JudgementLine.prototype.applyToSprite = function (sprite, lengthPosition, rowY, 
 	if (mirror)
 		sprite.x = Graphics.width - sprite.x;
 	sprite.y = rowY - this.yFormula(lengthPosition);
+	sprite.zIndex = this.zFormula(lengthPosition);
 	sprite.scale.x = this.widthFormula(lengthPosition);
 	sprite.scale.y = this.heightFormula(lengthPosition);
+	sprite.anchor.x = this.anchorXFormula(lengthPosition);
+	sprite.anchor.y = this.anchorYFormula(lengthPosition);
+	sprite.rotation = this.rotationFormula(lengthPosition);
 	sprite.bitmap.clear();
 	sprite.bitmap.fillAll(TyphmUtils.fromRGBAToHex(
 		this.redFormula(lengthPosition), this.greenFormula(lengthPosition),
@@ -33,6 +41,10 @@ JudgementLine.prototype.setAttribute = function (attribute, parameters) {
 	switch (attribute) {
 		case 'x':
 		case 'y':
+		case 'z':
+		case 'anchor_x':
+		case 'anchor_y':
+		case 'rotation':
 		case 'width':
 		case 'height':
 		case 'red':
