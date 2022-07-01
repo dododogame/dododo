@@ -85,6 +85,9 @@ Scene_Game.prototype.start = function () {
 	if (this._visuals.numbersHUD)
 		this._createNumbersHUD();
 	
+	this._fakeJudgementLines = [];
+	this._texts = [];
+	
 	this._beatmap = new Beatmap(this._beatmapUrl);
 	this._hasMusic = !!this._musicUrl;
 	this._ended = false;
@@ -223,7 +226,6 @@ Scene_Game.prototype._createJudgementLineSprite = function () {
 	this._judgementLine.bitmap.fillAll('white');
 	this._judgementLine.visible = false;
 	this._judgementLineLayer.addChild(this._judgementLine);
-	this._fakeJudgementLines = [];
 };
 
 Scene_Game.prototype._destroyFakeJudgementLines = function () {
@@ -233,17 +235,31 @@ Scene_Game.prototype._destroyFakeJudgementLines = function () {
 	this._fakeJudgementLines = [];
 };
 
+Scene_Game.prototype._destroyTexts = function () {
+	for (let i = 0; i < this._texts.length; i++) {
+		this._judgementLineLayer.removeChild(this._texts[i]);
+	}
+	this._texts = [];
+};
+
 Scene_Game.prototype._createFakeJudgementLines = function () {
 	const row = this._row1;
-	if (row.fakeJudgementLines) {
-		for (let i = 0; i < row.fakeJudgementLines.length; i++) {
-			const sprite = new Sprite(new Bitmap(1, 1));
-			sprite.bitmap.fillAll('white');
-			this._judgementLineLayer.addChild(sprite);
-			this._fakeJudgementLines.push(sprite);
-		}
+	for (let i = 0; i < row.fakeJudgementLines.length; i++) {
+		const sprite = new Sprite(new Bitmap(1, 1));
+		sprite.bitmap.fillAll('white');
+		this._judgementLineLayer.addChild(sprite);
+		this._fakeJudgementLines.push(sprite);
 	}
-}
+};
+
+Scene_Game.prototype._createTexts = function () {
+	const row = this._row1;
+	for (let i = 0; i < row.texts.length; i++) {
+		const sprite = new Sprite();
+		this._judgementLineLayer.addChild(sprite);
+		this._texts.push(sprite);
+	}
+};
 
 Scene_Game.prototype._createPauseButton = function () {
 	this._pauseButton = new Button(new Bitmap(30, 32), () => { this._pause(); });
@@ -253,7 +269,7 @@ Scene_Game.prototype._createPauseButton = function () {
 	this._pauseButton.bitmap.fillRect(18, 4, 6, 24, 'white');
 	this._pauseButton.visible = false;
 	this._HUDLayer.addChild(this._pauseButton);
-}
+};
 
 Scene_Game.prototype._createBackButton = function () {
 	this._back = new Button(new Bitmap(192, preferences.textHeight),
@@ -515,7 +531,9 @@ Scene_Game.prototype._updateJudgementLine = function (now) {
 	if (this._visuals.judgementLinePerformances) {
 		row.judgementLine.applyToSprite(this._judgementLine, lengthPosition, this._row1Sprite.y, this._row1.mirror);
 		for (let i = 0; i < this._fakeJudgementLines.length; i++)
-			row.fakeJudgementLines[i].applyToSprite(this._fakeJudgementLines[i], lengthPosition, this._row1Sprite.y, this._row1.mirror)
+			row.fakeJudgementLines[i].applyToSprite(this._fakeJudgementLines[i], lengthPosition, this._row1Sprite.y, this._row1.mirror);
+		for (let i = 0; i < this._texts.length; i++)
+			row.texts[i].applyToSprite(this._texts[i], lengthPosition, this._row1Sprite.y, this._row1.mirror);
 		this._judgementLineLayer.children.sort((a, b) => a.zIndex - b.zIndex);
 	} else {
 		this._judgementLine.x = this._getNoteXFromLengthPosition(lengthPosition);
@@ -752,7 +770,9 @@ Scene_Game.prototype._setUpNewRow = function () {
 	this._drawInaccuracyBar(this._perfectTolerance, this._goodTolerance, this._badTolerance);
 	if (this._visuals.judgementLinePerformances) {
 		this._destroyFakeJudgementLines();
+		this._destroyTexts();
 		this._createFakeJudgementLines();
+		this._createTexts();
 	}
 };
 
@@ -770,6 +790,7 @@ Scene_Game.prototype.stop = function () {
 };
 
 Scene_Game.prototype._onLoad = async function () {
+	InGameText.prepare();
 	this._beatmap.prepare();
 	this._beatmap.setUpExpressionsWithoutXFrom(this._visuals);
 	this._beatmap.setUpExpressionsWithoutXFrom(this._modifiers);

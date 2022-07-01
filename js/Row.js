@@ -36,6 +36,9 @@ Row.prototype.initialize = function (beatmap, index) {
 	this.judgementLine = new JudgementLine(this);
 	this.currentJudgementLine = this.judgementLine;
 	this.fakeJudgementLines = [];
+	this.texts = [];
+	this.textLabels = {};
+	this.currentText = null;
 	this.judgementLineLabels = {};
 };
 
@@ -711,4 +714,18 @@ Row.prototype.setCurrentJudgementLineByLabel = function (label) {
 
 Row.prototype.addFakeJudgementLineWithoutLabel = function () {
 	this.fakeJudgementLines.push(this.currentJudgementLine = new JudgementLine(this))
+};
+
+Row.prototype.setCurrentTextByLabel = function (label) {
+	const index = this.textLabels[label];
+	if (index !== undefined) {
+		this.currentText = this.texts[index];
+	} else {
+		this.textLabels[label] = this.texts.length;
+		this.addTextWithoutLabel();
+	}
+};
+
+Row.prototype.addTextWithoutLabel = function () {
+	this.texts.push(this.currentText = new InGameText(this))
 };

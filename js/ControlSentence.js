@@ -173,9 +173,24 @@ ControlSentence.DEFAULT_APPLICATIONS.GENUINE_JUDGEMENT_LINE = function (row, cal
 	row.currentJudgementLine = row.judgementLine;
 };
 
+ControlSentence.DEFAULT_APPLICATIONS.TEXT = function (row, callers) {
+	if (this.parameters.length > 0) {
+		const label = TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())();
+		row.setCurrentTextByLabel(label);
+	} else {
+		row.addTextWithoutLabel();
+	}
+};
+
 for (const attr of ['x', 'y', 'z', 'anchor_x', 'anchor_y', 'rotation', 'width', 'height', 'red', 'green', 'blue', 'alpha', 'blend_mode']) {
 	ControlSentence.DEFAULT_APPLICATIONS['JUDGEMENT_LINE_' + attr.toUpperCase()] = function (row, callers) {
 		row.currentJudgementLine.setAttribute(attr, this.parameters);
+	};
+}
+
+for (const attr of ['x', 'y', 'z', 'anchor_x', 'anchor_y', 'rotation', 'scale_x', 'scale_y', 'red', 'green', 'blue', 'alpha', 'text', 'blend_mode']) {
+	ControlSentence.DEFAULT_APPLICATIONS['TEXT_' + attr.toUpperCase()] = function (row, callers) {
+		row.currentText.setAttribute(attr, this.parameters);
 	};
 }
 
