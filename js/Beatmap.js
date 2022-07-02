@@ -318,7 +318,7 @@ Beatmap.prototype.deleteExpression = function (name) {
 Beatmap.prototype.letExpression = function (identifier, expression) {
 	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null);
 	this.deleteExpression(identifier);
-	Object.setPropertyWithGetter(this.expressions, identifier, formula(this.currentX));
+	Object.defineProperty(this.expressions, identifier, {get: () => formula(this.currentX), configurable: true, enumerable: true});
 };
 
 Beatmap.prototype.defExpression = function (identifier, arguments, expression) {
