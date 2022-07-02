@@ -44,9 +44,17 @@ Beatmap.prototype.load = async function () {
 Beatmap.prototype.parse = function (data, dataLineno) {
 	this.events = [];
 	let voices = [];
+	let isCommented = false;
 	for (let lineno = 0; lineno < data.length; lineno++) {
 		let line = data[lineno].trimStart();
+		if (isCommented) {
+			if (line === '=end')
+				isCommented = false;
+			continue;
+		}
 		if (line[0] === '#') { // comments
+		} else if (line === '=begin') {
+			isCommented = true;
 		} else if (/[A-Z_].*/y.test(line)) { // control sentence
 			if (voices.length > 0) {
 				this.events.push({"event": "row", "voices": voices, "lineno": lineno + dataLineno});
