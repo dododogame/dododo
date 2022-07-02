@@ -26,7 +26,7 @@ ControlSentence.DEFAULT_ALIASES = {
 ControlSentence.BLOCK_SEPARATORS = {
 	IF: ['ELSE', 'ELSE_IF'],
 	WHILE: [],
-	//FOR: [],
+	FOR: [],
 	//TRY: ['RESCUE'],
 	PROCEDURE: [],
 	//SCHEDULE: []
@@ -332,6 +332,39 @@ ControlSentence.DEFAULT_APPLICATIONS.WHILE = function (row, callers) {
 			} else {
 				return {signal: 'break', layer: result.layer - 1, callers: result.callers};
 			}
+		}
+	}
+};
+
+ControlSentence.DEFAULT_APPLICATIONS.FOR = function (row, callers) {
+	const [identifierValue, identifierIndex] = this.parameters[0].split(',');
+	if (!ControlSentence.checkIdentifier(identifierValue))
+		this.throwRuntimeError(`FOR: invalid identifier: ${identifierValue}`, callers);
+	if (identifierIndex && !ControlSentence.checkIdentifier(identifierValue))
+		this.throwRuntimeError(`FOR: invalid identifier: ${identifierIndex}`, callers);
+	const iteratedString = this.parameters.slice(1).join(' ');
+	const iterated = TyphmUtils.generateFunctionFromFormulaWithoutX(iteratedString, this._beatmap.getEnvironmentsWithoutX())();
+	if (typeof iterated.forEach !== 'function')
+		this.throwRuntimeError(`FOR: cannot iterate over a non-iterable object: ${iteratedString}`, callers);
+	let result;
+	try {
+		iterated.forEach((item, index, _) => {
+			this._beatmap.deleteExpression(identifierValue);
+			Object.setPropertyWithGetter(this._beatmap.expressionsWithoutX, identifierValue, item);
+			if (identifierIndex) {
+				this._beatmap.deleteExpression(identifierIndex);
+				Object.setPropertyWithGetter(this._beatmap.expressionsWithoutX, identifierIndex, index);
+			}
+			result = ControlSentence.executeBlock(this.blocks[0], row, callers);
+			if (result && result.signal === 'break') {
+				const error = new Error();
+				Object.assign(error, result);
+				throw error;
+			}
+		});
+	} catch (e) {
+		if (e.signal === 'break' && e.layer !== 0) {
+			return {signal: 'break', layer: e.layer - 1, callers: e.callers};
 		}
 	}
 };
