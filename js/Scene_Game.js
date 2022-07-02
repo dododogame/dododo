@@ -1476,6 +1476,7 @@ Scene_Game.prototype._finish = function () {
 		return;
 	this._ended = true;
 	this._destroyFakeJudgementLines();
+	this._destroyTexts();
 	this._drawSummary();
 	if (this._combo === this._beatmap.notes.length)
 		this._fullCombo.visible = true;
