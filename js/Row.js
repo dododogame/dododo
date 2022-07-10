@@ -709,12 +709,7 @@ Row.prototype.trackHold = function (x, xNow, y, judge) {
 	context.moveTo(x, y);
 	context.lineTo(xNow, y);
 	context.lineWidth = preferences.holdWidth;
-	let color;
-	if (judge === Scene_Game.PERFECT)
-		color = preferences.perfectColor;
-	else if (judge === Scene_Game.GOOD)
-		color = preferences.goodColor;
-	context.strokeStyle = color;
+	context.strokeStyle = Level.getColorFromJudge(judge);
 	context.stroke();
 	context.restore();
 	this._bitmap._setDirty();

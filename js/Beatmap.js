@@ -391,5 +391,5 @@ Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, row) {
 };
 
 Beatmap.prototype.clearNote = function (event, judge) {
-	this.rows[event.rowIndex].drawNoteHead(event.x, event.y, event.solid, false, Scene_Game.getColorFromJudge(judge));
+	this.rows[event.rowIndex].drawNoteHead(event.x, event.y, event.solid, false, Level.getColorFromJudge(judge));
 };

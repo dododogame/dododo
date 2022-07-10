@@ -5,6 +5,30 @@ function Level () {
 Level.RELATED_EXPRESSIONS = {
 	perfectNumber: function () {
 		return this._perfectNumber;
+	},
+	goodNumber: function () {
+		return this._goodNumber;
+	},
+	badNumber: function () {
+		return this._badNumber;
+	},
+	missNumber: function () {
+		return this._missNumber;
+	},
+	excessNumber: function () {
+		return this._excessNumber;
+	},
+	perfectBig: function () {
+		return this._perfectBig;
+	},
+	goodBig: function () {
+		return this._goodBig;
+	},
+	badBig: function () {
+		return this._badBig;
+	},
+	missBig: function () {
+		return this._missBig;
 	}
 };
 Level.MODIFIERS = [
@@ -46,8 +70,7 @@ Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording) {
 	
 	this._setUpRecording();
 	this._beatmap = new Beatmap(this._beatmapUrl);
-	this._hasMusic = !!this._musicUrl;
-	this._ended = false;
+	this.hasMusic = !!this._musicUrl;
 	this._initializeJudgeCounters();
 	this.combo = 0;
 	this.maxCombo = 0;
@@ -55,35 +78,47 @@ Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording) {
 	this._hitsLastSecond = [];
 };
 
+Level.prototype.newScene = function () {
+	return new Scene_Game(this._musicUrl, this._beatmapUrl, this._scene.isRecording ? undefined : this.newRecording)
+};
+
+Level.prototype.newReplayScene = function () {
+	return new Scene_Game(this._musicUrl, this._beatmapUrl, this.newRecording);
+};
+
+Level.prototype.progress = function (now) {
+	return (now - this._beatmap.start) / this._length;
+};
+
 Level.prototype._setUpRecording = function () {
 	if (this._recording) {
-		this._isRecording = false;
-		this._newRecording = {
+		this._scene.isRecording = false;
+		this.newRecording = {
 			modifiers: {...this._recording.modifiers},
 			hit: [...this._recording.hit],
 			loosen: [...this._recording.loosen]
 		};
 		if (this._recording.visuals)
-			this._newRecording.visuals = {...this._recording.visuals};
-		this.modifiers = this._newRecording.modifiers;
+			this.newRecording.visuals = {...this._recording.visuals};
+		this.modifiers = this.newRecording.modifiers;
 		if (preferences.recordVisual && this._recording.visuals) {
-			this.visuals = this._newRecording.visuals;
+			this.visuals = this.newRecording.visuals;
 		} else {
 			this.visuals = {};
-			for (const visual of Scene_Game.VISUALS)
+			for (const visual of Level.VISUALS)
 				this.visuals[visual] = preferences[visual];
 		}
 	} else {
-		this._isRecording = true
+		this._scene.isRecording = true
 		this.modifiers = {};
-		for (const modifier of Scene_Game.MODIFIERS)
+		for (const modifier of Level.MODIFIERS)
 			this.modifiers[modifier] = preferences[modifier];
 		this.visuals = {};
-		for (const visual of Scene_Game.VISUALS)
+		for (const visual of Level.VISUALS)
 			this.visuals[visual] = preferences[visual];
-		this._newRecording = {modifiers: this.modifiers, hit: [], loosen: []};
+		this.newRecording = {modifiers: this.modifiers, hit: [], loosen: []};
 		if (preferences.recordVisual)
-			this._newRecording.visuals = this.visuals;
+			this.newRecording.visuals = this.visuals;
 	}
 };
 
@@ -105,39 +140,61 @@ Level.prototype._initializeJudgeCounters = function () {
 	this._missBig = 0;
 };
 
-Level.prototype.load = async function () {
+Level.prototype.initialNow = function () {
+	return this._beatmap.start;
+};
+
+Level.prototype.title = function () {
+	return this._beatmap.title;
+};
+
+Level.prototype.row1Bitmap = function () {
+	return this._row1.getBitmap();
+};
+
+Level.prototype.row2Bitmap = function () {
+	return this._row2.getBitmap();
+};
+
+Level.prototype.loadBeatmap = async function () {
 	InGameText.prepare();
 	this._beatmap.prepare();
 	this._beatmap.setUpExpressionsWithoutXFrom(this.visuals);
 	this._beatmap.setUpExpressionsWithoutXFrom(this.modifiers);
-	try {
-		await this._beatmap.load();
-	} catch (e) {
-		if (e instanceof TypeError || e instanceof BeatmapError) {
-			this._error = e;
-			this._shouldError = true;
-			return;
-		} else
-			throw e;
-	}
+	await this._beatmap.load();
 	this._beatmap.drawRows(this.visuals.reverseVoices);
 	this._beatmap.setMirror(this.visuals.mirror, this.visuals.mirrorLowerRow);
-	if (!this._hasMusic && this._beatmap.audioUrl) {
-		this._hasMusic = true;
+	if (!this.hasMusic && this._beatmap.audioUrl) {
+		this.hasMusic = true;
 		this._musicUrl = this._beatmap.audioUrl;
 	}
-	this._offsetWizard = this._beatmap.title === 'offset_wizard' && this._hasMusic;
-	this._inaccuraciesArray = [];
+	this._offsetWizard = this._beatmap.title === 'offset_wizard' && this.hasMusic;
+	this.inaccuraciesArray = [];
 	this._lastPos = this._beatmap.start;
-	this._makeTitle();
 	this._preprocessHitEvents();
 	this.calculateScore();
-	if (this._hasMusic) {
-		this._audioPlayer = new WebAudio(this._musicUrl);
-		this._audioPlayer.addLoadListener(() => {
-			this._audioPlayer.volume = this._beatmap.volume * preferences.masterVolume * preferences.musicVolume;
+	this.clearCombo();
+};
+
+Level.prototype.getFakeJudgementLines = function () {
+	return this._row1.fakeJudgementLines;
+};
+
+Level.prototype.getTexts = function () {
+	return this._row1.texts;
+};
+
+Level.prototype.allEventsFinished = function () {
+	return this._unclearedEvents.length === 0 && this._holdings.length === 0;
+};
+
+Level.prototype.loadAudio = function () {
+	if (this.hasMusic) {
+		const audioPlayer = this._scene.audioPlayer = new WebAudio(this._musicUrl);
+		audioPlayer.addLoadListener(() => {
+			audioPlayer.volume = this._beatmap.volume * preferences.masterVolume * preferences.musicVolume;
 			this._length = this._beatmap.length !== 'unknown ' ?
-				this._beatmap.length : this._audioPlayer._totalTime*1000;
+				this._beatmap.length : audioPlayer._totalTime*1000;
 			this._postLoadingAudio();
 		});
 	} else {
@@ -148,14 +205,7 @@ Level.prototype.load = async function () {
 
 Level.prototype._postLoadingAudio = function () {
 	[this._row1, this._row2] = this._beatmap.rows;
-	this._loadingFinished = true;
-	this._setUpNewRow();
-};
-
-Level.prototype.update = function (now) {
-	this._updateHoldings(now);
-	if (now >= this._row1.endTime)
-		this.switchRow();
+	this._scene.postLoadingAudio();
 };
 
 Level.prototype.updateHoldings = function (now) {
@@ -172,16 +222,40 @@ Level.prototype.updateHoldings = function (now) {
 			break;
 		}
 	}
+	for (let i = 0; i < this._holdings.length; i++) {
+		const {event, judge} = this._holdings[i];
+		const xNow = this._scene._getXNow(this._row1.mirror);
+		this._beatmap.trackHoldTo(now, xNow, event, judge, this._row1);
+	}
+};
+
+Level.prototype.getInstantaneousMillisecondsPerWholeAndBeatOffset = function (now) {
+	const row = this._row1;
+	let millisecondsPerWhole, beatOffset;
+	if (preferences.countdownBeats && now < row.endTime) {
+		if (now >= row.startTime) {
+			const lengthPosition = this._getLengthPositionFromTime(now);
+			const derivative = (row.timeFormula(lengthPosition + 1e-4) - row.timeFormula(lengthPosition - 1e-4)) / 2e-4;
+			millisecondsPerWhole = derivative * row.totalTime / row.totalLength.valueOf();
+			beatOffset = (lengthPosition * row.totalLength.valueOf() % 0.25) * millisecondsPerWhole;
+		} else {
+			const derivative = (row.timeFormula(1e-4) - row.timeFormula(0)) / 1e-4;
+			millisecondsPerWhole = derivative * row.totalTime / row.totalLength.valueOf();
+			const millisecondsPerQuarter = millisecondsPerWhole / 4;
+			beatOffset = millisecondsPerQuarter - (row.startTime - now) % millisecondsPerQuarter;
+		}
+	}
+	return [millisecondsPerWhole, beatOffset];
 };
 
 Level.prototype._processAndRecordLoosen = function (time, key) {
 	this._processLoosen(time);
-	this._newRecording.loosen.push({'time': time, 'key': key});
+	this.newRecording.loosen.push({'time': time, 'key': key});
 };
 
 Level.prototype._processAndRecordHit = function (time, key) {
 	this._processHit(time);
-	this._newRecording.hit.push({'time': time, 'key': key});
+	this.newRecording.hit.push({'time': time, 'key': key});
 };
 
 Level.prototype._hitSoundEnabled = function () {
@@ -189,13 +263,67 @@ Level.prototype._hitSoundEnabled = function () {
 };
 
 Level.prototype._hitSoundWithMusic = function () {
-	return this._hitSoundEnabled() && (this._modifiers.autoPlay || preferences.hitSoundWithMusic);
+	return this._hitSoundEnabled() && (this.modifiers.autoPlay || preferences.hitSoundWithMusic);
+};
+
+Level.prototype.autoPlayUpdateAndProcessMiss = function (now) {
+	while (this._unclearedEvents.length > 0) {
+		const event = this._unclearedEvents[0];
+		if (now >= event.time) {
+			if (this.modifiers.autoPlay && now <= event.time + this.perfectTolerance * this.modifiers.judgementWindow) {
+				this._perfectHit();
+				if (this.visuals.TPSIndicator)
+					this._hitsLastSecond.push(now);
+			} else if (now >= event.time + this.missBoundary() * this.modifiers.judgementWindow) {
+				this._missHit();
+			} else
+				break;
+		} else
+			break;
+	}
+};
+
+Level.getColorFromJudge = function (judge) {
+	if (judge === Level.PERFECT)
+		return preferences.perfectColor;
+	else if (judge === Level.GOOD)
+		return preferences.goodColor;
+	else if (judge === Level.BAD)
+		return preferences.badColor;
+	else if (judge === Level.MISS)
+		return preferences.missColor;
+	else if (judge === Level.EXCEESS)
+		return preferences.excessColor;
+};
+
+Level.prototype.getCurrentTPS = function (now) {
+	while ((now - this._hitsLastSecond[0]) / this.modifiers.playRate > 1000)
+		this._hitsLastSecond.shift();
+	return this._hitsLastSecond.length;
 };
 
 Level.prototype._playHitSound = function () {
 	const player = new WebAudio('/assets/audios/hit_sounds/' + preferences.hitSound);
 	player.volume = preferences.hitSoundVolume * preferences.masterVolume;
 	player.addLoadListener(player.play.bind(player));
+};
+
+Level.prototype.updateHitSoundWithMusic = function (now) {
+	const offsetNow = now - preferences.offset * this.modifiers.playRate;
+	while (this._unclearedHitSounds.length > 0) {
+		const event = this._unclearedHitSounds[0];
+		if (offsetNow >= event.time - TyphmConstants.HIT_SOUND_ADVANCE*this.modifiers.playRate) {
+			if (offsetNow <= event.time + this.perfectTolerance) {
+				setTimeout(() => this._playHitSound(), (event.time - offsetNow)/this.modifiers.playRate);
+			}
+			this._unclearedHitSounds.shift();
+		} else
+			break;
+	}
+};
+
+Level.prototype.shouldFinish = function (now) {
+	return now >= this._beatmap.start + this._length;
 };
 
 Level.prototype._perfectHit = function () {
@@ -271,12 +399,12 @@ Level.prototype._badClear = function (event) {
 	this.numbersUpdated = true;
 };
 
-Level.prototype.updateRecordingApply = function (now) {
+Level.prototype.updateRecordingApply = function (now, pressings) {
 	while (this._recording.hit.length > 0) {
 		const {time, key} = this._recording.hit[0];
 		if (now >= time) {
 			this._processHit(time);
-			this._scene._pressings[key] = true;
+			pressings[key] = true;
 			this._recording.hit.shift();
 		} else
 			break;
@@ -285,7 +413,7 @@ Level.prototype.updateRecordingApply = function (now) {
 		const {time, key} = this._recording.loosen[0];
 		if (now >= time) {
 			this._processLoosen(time);
-			delete this._scene._pressings[key];
+			delete pressings[key];
 			this._recording.loosen.shift();
 		} else
 			break;
@@ -295,29 +423,27 @@ Level.prototype.updateRecordingApply = function (now) {
 Level.prototype._processHit = function (now) {
 	if (this.visuals.TPSIndicator)
 		this._hitsLastSecond.push(now);
-	if (!this._ended) {
-		while (this._unclearedEvents.length > 0) {
-			const event = this._unclearedEvents[0];
-			if (now >= event.time - this._missBoundary() * this.modifiers.judgementWindow) {
-				const inaccuracy = now - event.time;
-				const judge = this.getJudgeFromInaccuracy(inaccuracy);
-				if (judge === Level.PERFECT)
-					this._perfectHit();
-				else if (judge === Level.GOOD)
-					this._goodHit();
-				else if (judge === Level.BAD && !this.modifiers.noBad)
-					this._badHit();
-				else {
-					this._missHit();
-					continue;
-				}
-				this._inaccuraciesArray.push(inaccuracy / this.modifiers.playRate);
-				this._scene._createInaccuracyIndicator(inaccuracy);
-			} else if (!this.modifiers.noExcess) {
-				this._excessHit(now);
+	while (this._unclearedEvents.length > 0) {
+		const event = this._unclearedEvents[0];
+		if (now >= event.time - this.missBoundary() * this.modifiers.judgementWindow) {
+			const inaccuracy = now - event.time;
+			const judge = this.getJudgeFromInaccuracy(inaccuracy);
+			if (judge === Level.PERFECT)
+				this._perfectHit();
+			else if (judge === Level.GOOD)
+				this._goodHit();
+			else if (judge === Level.BAD && !this.modifiers.noBad)
+				this._badHit();
+			else {
+				this._missHit();
+				continue;
 			}
-			break;
+			this.inaccuraciesArray.push(inaccuracy / this.modifiers.playRate);
+			this._scene._createInaccuracyIndicator(inaccuracy);
+		} else if (!this.modifiers.noExcess) {
+			this._excessHit(now);
 		}
+		break;
 	}
 };
 
@@ -359,7 +485,7 @@ Level.prototype._missClear = function (event) {
 	this.numbersUpdated = true;
 };
 
-Level.prototype._missBoundary = function () {
+Level.prototype.missBoundary = function () {
 	return this.modifiers.noBad ? this.goodTolerance : this.badTolerance;
 };
 
@@ -382,7 +508,13 @@ Level.prototype.calculateScore = function () {
 			) / this._totalMeasures
 		));
 	}
+	if (this.shouldDrawAccuracyRate())
+		this.accuracyRate = (this._perfectNumber + this._goodNumber/4 - this._excessNumber)/(this._perfectNumber + this._goodNumber + this._badNumber + this._missNumber);
 	this.scoreUpdated = true;
+};
+
+Level.prototype.shouldDrawAccuracyRate = function () {
+	return this._unclearedEvents && this._unclearedEvents.length !== this._beatmap.notes.length;
 };
 
 Level.prototype.incrementCombo = function () {
@@ -395,6 +527,10 @@ Level.prototype.incrementCombo = function () {
 Level.prototype.clearCombo = function () {
 	this.combo = 0;
 	this.comboUpdated = true;
+};
+
+Level.prototype.shouldPopUpCombo = function () {
+	return this.visuals.comboPopupInterval && this.combo > 0 && this.combo % this.visuals.comboPopupInterval === 0;
 };
 
 Level.prototype.isAP = function () {
@@ -436,6 +572,17 @@ Level.prototype.getJudgeFromInaccuracy = function (inaccuracy) {
 	return Level.MISS;
 };
 
+Level.prototype.getHitEffectX = function (event) {
+	let result = event.hitX;
+	if (this._beatmap.rows[event.rowIndex].mirror)
+		result = Graphics.width - result;
+	return result;
+};
+
+Level.prototype.isInRow1Position = function (event) {
+	return event.rowIndex % 2 === this._row1.index % 2;
+};
+
 Level.prototype._getLengthPositionFromTime = function (time) {
 	const row = this._row1;
 	if (!row || !row.timeFormula)
@@ -454,6 +601,25 @@ Level.prototype._getLengthPositionFromTime = function (time) {
 		}
 	}
 	return lengthPosition;
+};
+
+Level.prototype._getXFromLengthPosition = function (lengthPosition) {
+	return preferences.margin + this._row1.judgementLine.xFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
+};
+
+Level.prototype._getNoteXFromLengthPosition = function (lengthPosition) {
+	return preferences.margin + this._row1.noteXFormula(lengthPosition) * (Graphics.width - 2*preferences.margin);
+};
+
+Level.prototype._getXFromTime = function (time) {
+	return this._getXFromLengthPosition(this._getLengthPositionFromTime(time));
+};
+
+Level.prototype._getNoteXFromTime = function (time) {
+	let result = this._getNoteXFromLengthPosition(this._getLengthPositionFromTime(time));
+	if (this._row1.mirror)
+		result = Graphics.width - result;
+	return result;
 };
 
 Level.prototype._clearMeasure = function () {
@@ -484,32 +650,65 @@ Level.prototype.missNumberString = function () {
 	return `${this._missNumber} (${this._missMeasures})`;
 };
 
+Level.prototype.excessNumberString = function () {
+	return `${this._excessNumber}`;
+};
+
 Level.prototype.getMark = function () {
-	if (this._accuracyRate >= 1) {
+	if (this.accuracyRate >= 1) {
 		return Strings.markP;
-	} else if (this._accuracyRate >= 0.95) {
+	} else if (this.accuracyRate >= 0.95) {
 		return Strings.markS;
-	} else if (this._accuracyRate >= 0.9) {
+	} else if (this.accuracyRate >= 0.9) {
 		return Strings.markA;
-	} else if (this._accuracyRate >= 0.8) {
+	} else if (this.accuracyRate >= 0.8) {
 		return Strings.markB;
-	} else if (this._accuracyRate >= 0.7) {
+	} else if (this.accuracyRate >= 0.7) {
 		return Strings.markC;
-	} else if (this._accuracyRate >= 0.6) {
+	} else if (this.accuracyRate >= 0.6) {
 		return Strings.markD;
-	} else if (this._accuracyRate >= 0.5) {
+	} else if (this.accuracyRate >= 0.5) {
 		return Strings.markE;
 	} else {
 		return Strings.markF;
 	}
 };
 
-Level.prototype.switchRow = function () {
-	[this._row1, this._row2] = [this._row2, this._beatmap.rows[t.index + 2]];
-	this._setUpNewRow();
+Level.prototype.getScoreColor = function () {
+	if (this.visuals.FCAPIndicator) {
+		if (this.isAP()) {
+			return preferences.perfectColor;
+		} else if (this.isFC()) {
+			return preferences.goodColor;
+		} else {
+			return preferences.textColor;
+		}
+	} else {
+		return preferences.textColor;
+	}
 };
 
-Level.prototype._setUpNewRow = function () {
+Level.prototype.shouldSwitchRow = function (now) {
+	return now >= this._row1.endTime;
+};
+
+Level.prototype.switchRow = function () {
+	[this._row1, this._row2] = [this._row2, this._beatmap.rows[this._row1.index + 2]];
+};
+
+Level.prototype.setUpMirror = function (row1Sprite, row2Sprite) {
+	row1Sprite.scale.x = this._row1.mirror ? -1 : 1;
+	row2Sprite.scale.x = this._row2.mirror ? -1 : 1;
+};
+
+Level.prototype.stopAudioPlayerIfHas = function () {
+	if (this.audioPlayer) {
+		this.audioPlayer.stop();
+		this.audioPlayer.clear();
+	}
+};
+
+Level.prototype.setUpNewRow = function () {
 	const row = this._row1;
 	const rowLengthInMilliseconds = row.endTime - row.startTime;
 	if (row.perfect)
