@@ -358,7 +358,7 @@ Strings["zh-CN"] = {
 	
 	// hit sounds
 	"agogoBells": '阿哥哥铃',
-	"bassDrum": '低音鼓',
+	"bassDrum": '大鼓',
 	"bellTree": '树铃',
 	"cabasa": "铁沙铃",
 	"castanets": "响板",
@@ -545,7 +545,7 @@ Strings["zh-TW"] = {
 	
 	// hit sounds
 	"agogoBells": '阿哥哥鈴',
-	"bassDrum": '低音鼓',
+	"bassDrum": '大鼓',
 	"bellTree": '樹鈴',
 	"cabasa": "鐵沙鈴",
 	"castanets": "響板",
