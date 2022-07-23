@@ -29,6 +29,18 @@ Level.RELATED_EXPRESSIONS = {
 	},
 	missBig: function () {
 		return this._missBig;
+	},
+	perfectMeasures: function () {
+		return this._perfectMeasures;
+	},
+	goodMeasures: function () {
+		return this._goodMeasures;
+	},
+	badMeasures: function () {
+		return this._badMeasures;
+	},
+	missMeasures: function () {
+		return this._missMeasures;
 	}
 };
 Level.MODIFIERS = [
@@ -395,7 +407,7 @@ Level.prototype._badClear = function (event) {
 		this._badBig++;
 	this.calculateScore();
 	this.clearCombo();
-	this._beatmap.clearNote(event, Scene_Game.BAD);
+	this._beatmap.clearNote(event, Level.BAD);
 	this.numbersUpdated = true;
 };
 
@@ -448,6 +460,7 @@ Level.prototype._processHit = function (now) {
 };
 
 Level.prototype._excessHit = function (now) {
+	this._scene._createWrongNote(now);
 	this.clearCombo();
 	this._excessNumber++;
 	this._scene._onDestinedExcess();

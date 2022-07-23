@@ -2,7 +2,7 @@ function Row () {
 	this.initialize.apply(this, arguments);
 }
 
-Row.RELATED_EXPRESSIONS = {
+Row.RELATED_EXPRESSIONS_WITHOUT_X = {
 	rowIndex: function () {
 		return this.index;
 	},
@@ -17,6 +17,27 @@ Row.RELATED_EXPRESSIONS = {
 	},
 	textLabels: function () {
 		return Object.keys(this.textLabels);
+	},
+	rowTotalLength: function () {
+		return this.totalLength;
+	},
+	rowStart: function () {
+		return this.startTime;
+	},
+	voicesNumber: function () {
+		return this.voicesNumber;
+	}
+};
+
+Row.RELATED_EXPRESSIONS = {
+	millisecondsPerWhole: function () {
+		return this.millisecondsPerWhole;
+	},
+	rowEnd: function () {
+		return this.endTime;
+	},
+	rowTotalTime: function () {
+		return this.totalTime;
 	}
 };
 
@@ -142,14 +163,17 @@ Row.prototype.setMillisecondsPerWholeIfHasnt = function (lastEnv) {
 	return this.millisecondsPerWhole;
 };
 
-Row.prototype.finalSetUp = function (voices, reverseVoices, lastEnv) {
+Row.prototype.initialSetUp = function (voices, lastEnv) {
 	this.startTime = lastEnv.rowEndTime;
 	this.voices = voices;
 	this.voicesNumber = voices.length;
+	this.setTotalLength();
+};
+
+Row.prototype.finalSetUp = function (reverseVoices, lastEnv) {
 	lastEnv.millisecondsPerWhole = this.setMillisecondsPerWholeIfHasnt(lastEnv);
 	this.setXFormulasIfHasnt();
 	this.drawBPMIfHas();
-	this.setTotalLength();
 	lastEnv.rowNotes = this.drawVoicesAndGetLastNotes(reverseVoices, lastEnv.rowNotes);
 	lastEnv.rowEndTime = this.setEndTime();
 };

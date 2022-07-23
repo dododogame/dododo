@@ -8,6 +8,7 @@ TyphmConstants.DEFAULT_GOOD = 0.04;
 TyphmConstants.DEFAULT_BAD = 0.06;
 TyphmConstants.DEFAULT_BPM = 120.0;
 TyphmConstants.DEFAULT_BEAT_NOTE = 2;
+TyphmConstants.DEFAULT_MILLISECONDS_PER_WHOLE = 2000;
 TyphmConstants.HIT_SOUND_ADVANCE = 100;
 TyphmConstants.HITTABLE_KEYS = ['Spacebar', 'Enter', 'Tab', 'CapsLock', 'NumLock', 'Shift', 'Backspace',
 	'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'End', 'Home', 'PageDown', 'PageUp', 'Insert', 'Delete', 'Clear',

@@ -69,11 +69,11 @@ Scene_Game.prototype.start = function () {
 Scene_Game.prototype._createFlashBitmapsIfNeeded = function () {
 	this._flashBitmaps = [];
 	if (this._level.visuals.flashWarningGood)
-		this._createFlashBitmap(Scene_Game.GOOD);
+		this._createFlashBitmap(Level.GOOD);
 	if (this._level.visuals.flashWarningMiss) {
-		this._createFlashBitmap(Scene_Game.BAD);
-		this._createFlashBitmap(Scene_Game.MISS);
-		this._createFlashBitmap(Scene_Game.EXCEESS);
+		this._createFlashBitmap(Level.BAD);
+		this._createFlashBitmap(Level.MISS);
+		this._createFlashBitmap(Level.EXCEESS);
 	}
 };
 
@@ -963,8 +963,7 @@ Scene_Game.prototype._createWrongNote = function (time) {
 	wrongNote.bitmap.drawCircle(16, 16, preferences.headsRadius, preferences.excessColor);
 	wrongNote.anchor.x = 0.5;
 	wrongNote.anchor.y = 0.5;
-	wrongNote.x = this._getNoteXFromTime(time);
-	
+	wrongNote.x = this._level._getNoteXFromTime(time);
 	wrongNote.y = this._row1Sprite.y;
 	this._beatmapLayer.addChild(wrongNote);
 	wrongNote.update = () => {

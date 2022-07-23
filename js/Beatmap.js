@@ -2,6 +2,30 @@ function Beatmap () {
 	this.initialize.apply(this, arguments);
 }
 
+Beatmap.RELATED_EXPRESSIONS_WITHOUT_X = {
+	title: function () {
+		return this.title;
+	},
+	musicAuthor: function () {
+		return this.musicAuthor;
+	},
+	artist: function () {
+		return this.musicAuthor;
+	},
+	beatmapAuthor: function () {
+		return this.beatmapAuthor;
+	},
+	beatmapper: function () {
+		return this.beatmapAuthor;
+	},
+	difficulty: function () {
+		return this.difficulty;
+	},
+	start: function () {
+		return this.start;
+	}
+};
+
 Beatmap.TRUE_LENGTH_CALC = fracmath.parse('(1/2)^length*(2-(1/2)^dots)').compile();
 Beatmap.TRUE_LENGTH_CALC = Beatmap.TRUE_LENGTH_CALC.evaluate.bind(Beatmap.TRUE_LENGTH_CALC);
 
@@ -34,7 +58,7 @@ Beatmap.prototype.load = async function () {
 	this.beatmapAuthor = this.beatmapAuthor.trim();
 	this.difficulty = this.difficulty.trim();
 	this.start = head.start ? parseFloat(head.start) : 0.0;
-	this.end = head.end ? parseFloat(head.end) : this.audioUrl ? await TyphmUtils.getAudioDuration() || null : null;
+	this.end = head.end ? parseFloat(head.end) : this.audioUrl ? await TyphmUtils.getAudioDuration(this.audioUrl) || null : null;
 	this.length = this.end && this.end - this.start;
 	this.volume = head.volume ? parseFloat(head.volume) : 1.0;
 	this.offset = head.offset ? parseFloat(head.offset) : 0.0;
@@ -201,7 +225,7 @@ Beatmap.prototype.setMirror = function (mirror, mirrorLowerRow) {
 	}
 };
 
-Beatmap.prototype.prepare = function () {
+Beatmap.prototype.prepare = function (level) {
 	Row.prepare();
 	this.currentX = 0;
 	this.currentRow = null;
@@ -213,7 +237,9 @@ Beatmap.prototype.prepare = function () {
 	this.setUpExpressionsWithoutXFrom(preferences);
 	this.setUpExpressionsWithoutXFrom(Object.fromEntries(
 		Object.entries(Scene_Preferences.DEFAULT_ALIASES).map(([alias, original]) => [alias, preferences[original]])));
+	this.setUpBeatmapRelatedExpressions();
 	this.setUpRowRelatedExpressions();
+	this.setUpLevelRelatedExpressions();
 };
 
 Beatmap.prototype.drawRows = function (reverseVoices) {
@@ -224,53 +250,47 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 		rowNotes: [],
 		rowEndTime: this.offset,
 		BPM: undefined,
-		beatLength: 2,
+		beatLength: TyphmConstants.DEFAULT_BEAT_NOTE,
 		beatDots: 0,
-		millisecondsPerWhole: 2000
+		millisecondsPerWhole: TyphmConstants.DEFAULT_MILLISECONDS_PER_WHOLE
 	};
 	const controlSentenceStack = [];
 	const callers = [{caller: 'main'}];
-	let returned = false;
+	const block = {contents: []};
 	for (let i = 0; i < this.events.length; i++) {
 		const event = this.events[i];
 		const row = this.currentRow = this.rows.last();
-		if (event.event === 'control' && !returned) {
+		if (event.event === 'control') {
 			const blockOwner = controlSentenceStack.last();
 			const controlSentence = new ControlSentence(event.keyword, event.parameters, event.lineno, this);
 			controlSentence.lastEnv = lastEnv;
 			let isInBlock = false;
-			let result;
 			if (blockOwner) {
 				isInBlock = true;
 				blockOwner.addToBlock(controlSentence);
 				if (!blockOwner.hasOpenBlock) {
 					controlSentenceStack.pop();
 					if (controlSentenceStack.length === 0) {
-						result = blockOwner.applyTo(row, callers);
+						block.contents.push(blockOwner);
 					}
 				}
 			}
 			if (controlSentence.hasOpenBlock) {
 				controlSentenceStack.push(controlSentence);
 			} else if (!isInBlock) {
-				if (!this.hasKeyword(event.keyword)) {
-					controlSentence.throwRuntimeError(`keyword not found: ${event.keyword}`, callers);
-				}
-				result = controlSentence.applyTo(row, callers);
-			}
-			if (result && result.signal === 'break') {
-				throw new BeatmapRuntimeError(`BREAK: misplaced or too deep`, result.callers);
-			} else if (result && result.signal === 'return') {
-				returned = true;
+				block.contents.push(controlSentence);
 			}
 		} else if (event.event === 'row') {
 			const blockOwner = controlSentenceStack.last();
-			if (blockOwner) {
+			if (blockOwner)
 				blockOwner.throwRuntimeError(`${blockOwner.keyword}: missing END`, callers);
-			}
-			row.finalSetUp(event.voices, reverseVoices, lastEnv);
+			row.initialSetUp(event.voices, lastEnv);
+			const result = ControlSentence.executeBlock(block, row, callers);
+			if (result && result.signal === 'break')
+				throw new BeatmapRuntimeError(`BREAK: misplaced or too deep`, result.callers);
+			block.contents = [];
+			row.finalSetUp(reverseVoices, lastEnv);
 			this.rows.push(new Row(this, this.rows.length));
-			returned = false;
 		}
 	}
 	this.notes.sort((n1, n2) => n1.time - n2.time);
@@ -287,13 +307,28 @@ Beatmap.prototype.setUpExpressionsWithoutXFrom = function (object) {
 };
 
 Beatmap.prototype.setUpRowRelatedExpressions = function () {
-	for (const identifier in Row.RELATED_EXPRESSIONS) {
+	for (const identifier in Row.RELATED_EXPRESSIONS_WITHOUT_X) {
 		Object.defineProperty(this.expressionsWithoutX, identifier, {
+			get: () => Row.RELATED_EXPRESSIONS_WITHOUT_X[identifier].call(this.currentRow),
+			configurable: true,
+			enumerable: true
+		})
+	}
+	for (const identifier in Row.RELATED_EXPRESSIONS) {
+		Object.defineProperty(this.expressions, identifier, {
 			get: () => Row.RELATED_EXPRESSIONS[identifier].call(this.currentRow),
 			configurable: true,
 			enumerable: true
 		})
 	}
+};
+
+Beatmap.prototype.setUpBeatmapRelatedExpressions = function () {
+	// TODO
+};
+
+Beatmap.prototype.setUpLevelRelatedExpressions = function () {
+	// TODO
 };
 
 Beatmap.prototype.getEnvironments = function () {
