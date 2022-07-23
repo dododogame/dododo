@@ -41,6 +41,12 @@ Level.RELATED_EXPRESSIONS = {
 	},
 	missMeasures: function () {
 		return this._missMeasures;
+	},
+	score: function () {
+		return this.score;
+	},
+	accuracyRate: function () {
+		return this.accuracyRate;
 	}
 };
 Level.MODIFIERS = [
