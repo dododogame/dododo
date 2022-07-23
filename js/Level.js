@@ -47,6 +47,12 @@ Level.RELATED_EXPRESSIONS = {
 	},
 	accuracyRate: function () {
 		return this.accuracyRate;
+	},
+	combo: function () {
+		return this.combo
+	},
+	maxCombo: function () {
+		return this.maxCombo
 	}
 };
 Level.MODIFIERS = [
