@@ -160,6 +160,13 @@ for (const judge of ['perfect', 'good', 'bad']) {
 	};
 }
 
+for (const judge of ['perfect', 'good', 'bad']) {
+	const keyword = `${judge.toUpperCase()}_HP`;
+	ControlSentence.DEFAULT_APPLICATIONS[keyword] = function (row, callers) {
+		row[`${judge}Hp`] = Number(math.re(TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())()));
+	};
+}
+
 ControlSentence.DEFAULT_APPLICATIONS.FAKE_JUDGEMENT_LINE = function (row, callers) {
 	if (this.parameters.length > 0) {
 		const label = TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())();

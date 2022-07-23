@@ -53,11 +53,15 @@ Level.RELATED_EXPRESSIONS = {
 	},
 	maxCombo: function () {
 		return this.maxCombo
+	},
+	hp: function () {
+		return this.hp
 	}
 };
 Level.MODIFIERS = [
 	'playRate',
 	'autoPlay',
+	'noFail',
 	'noBad',
 	'noExcess',
 	'judgementWindow',
@@ -84,7 +88,7 @@ Level.PERFECT = 3;
 Level.GOOD = 2;
 Level.BAD = 1;
 Level.MISS = 0;
-Level.EXCEESS = -1;
+Level.EXCESS = -1;
 
 Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording) {
 	this._scene = scene;
@@ -98,6 +102,7 @@ Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording) {
 	this._initializeJudgeCounters();
 	this.combo = 0;
 	this.maxCombo = 0;
+	this.hp = 1;
 	this._holdings = [];
 	this._hitsLastSecond = [];
 };
@@ -328,7 +333,7 @@ Level.getColorFromJudge = function (judge) {
 		return preferences.badColor;
 	else if (judge === Level.MISS)
 		return preferences.missColor;
-	else if (judge === Level.EXCEESS)
+	else if (judge === Level.EXCESS)
 		return preferences.excessColor;
 };
 
@@ -362,6 +367,32 @@ Level.prototype.shouldFinish = function (now) {
 	return now >= this._beatmap.start + this._length;
 };
 
+Level.prototype.incrementHp = function (judge) {
+	switch (judge) {
+		case Level.PERFECT:
+			this.hp += this.perfectHp;
+			break;
+		case Level.GOOD:
+			this.hp += this.goodHp;
+			break;
+		case Level.BAD:
+			this.hp += this.badHp;
+			break;
+		case Level.MISS:
+			this.hp += this.missHp;
+			break;
+		case Level.EXCESS:
+			this.hp += this.excessHp;
+			break;
+	}
+	if (this.hp > 1)
+		this.hp = 1;
+	if (this.hp < 0) {
+		this.hp = 0;
+		this.failed = true;
+	}
+};
+
 Level.prototype._perfectHit = function () {
 	const event = this._unclearedEvents.shift();
 	this._refreshMeasureStateAfterHitting(event, Level.PERFECT);
@@ -377,6 +408,7 @@ Level.prototype._perfectHit = function () {
 };
 
 Level.prototype._perfectClear = function (event) {
+	this.incrementHp(Level.PERFECT);
 	this._beatmap.clearNote(event, Level.PERFECT);
 	this._perfectNumber++;
 	if (event.big)
@@ -738,13 +770,6 @@ Level.prototype.setUpMirror = function (row1Sprite, row2Sprite) {
 	row2Sprite.scale.x = this._row2.mirror ? -1 : 1;
 };
 
-Level.prototype.stopAudioPlayerIfHas = function () {
-	if (this.audioPlayer) {
-		this.audioPlayer.stop();
-		this.audioPlayer.clear();
-	}
-};
-
 Level.prototype.setUpNewRow = function () {
 	const row = this._row1;
 	const rowLengthInMilliseconds = row.endTime - row.startTime;
@@ -760,4 +785,24 @@ Level.prototype.setUpNewRow = function () {
 		this.badTolerance = row.bad * rowLengthInMilliseconds;
 	else
 		this.badTolerance ||= TyphmConstants.DEFAULT_BAD * rowLengthInMilliseconds;
+	if (row.perfectHp !== undefined)
+		this.perfectHp = row.perfectHp;
+	else if (this.perfectHp === undefined)
+		this.perfectHp = TyphmConstants.DEFAULT_PERFECT_HP;
+	if (row.goodHp !== undefined)
+		this.goodHp = row.goodHp;
+	else if (this.goodHp === undefined)
+		this.goodHp = TyphmConstants.DEFAULT_GOOD_HP;
+	if (row.badHp !== undefined)
+		this.badHp = row.badHp;
+	else if (this.badHp === undefined)
+		this.badHp = TyphmConstants.DEFAULT_BAD_HP;
+	if (row.missHp !== undefined)
+		this.missHp = row.missHp;
+	else if (this.missHp === undefined)
+		this.missHp = TyphmConstants.DEFAULT_MISS_HP;
+	if (row.excessHp !== undefined)
+		this.excessHp = row.excessHp;
+	else if (this.excessHp === undefined)
+		this.excessHp = TyphmConstants.DEFAULT_EXCESS_HP;
 };

@@ -73,7 +73,7 @@ Scene_Game.prototype._createFlashBitmapsIfNeeded = function () {
 	if (this._level.visuals.flashWarningMiss) {
 		this._createFlashBitmap(Level.BAD);
 		this._createFlashBitmap(Level.MISS);
-		this._createFlashBitmap(Level.EXCEESS);
+		this._createFlashBitmap(Level.EXCESS);
 	}
 };
 
@@ -841,6 +841,7 @@ Scene_Game.prototype._hitSoundWithMusic = function () {
 };
 
 Scene_Game.prototype._onDestinedGood = function () {
+	this._level.incrementHp(Level.GOOD);
 	if (this._level.visuals.flashWarningGood)
 		this._flashWarn(Scene_Game.GOOD)
 	if (this.isRecording && preferences.autoRestartGood)
@@ -848,6 +849,7 @@ Scene_Game.prototype._onDestinedGood = function () {
 };
 
 Scene_Game.prototype._onDestinedBad = function () {
+	this._level.incrementHp(Level.BAD);
 	if (this._level.visuals.flashWarningMiss)
 		this._flashWarn(Level.BAD)
 	if (this.isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
@@ -855,13 +857,15 @@ Scene_Game.prototype._onDestinedBad = function () {
 };
 
 Scene_Game.prototype._onDestinedExcess = function () {
+	this._level.incrementHp(Level.EXCESS);
 	if (this.isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 		this._shouldRestart = true;
 	if (this._level.visuals.flashWarningMiss)
-		this._flashWarn(Level.EXCEESS)
+		this._flashWarn(Level.EXCESS)
 };
 
 Scene_Game.prototype._onDestinedMiss = function () {
+	this._level.incrementHp(Level.MISS);
 	if (this.isRecording && (preferences.autoRestartGood || preferences.autoRestartMiss))
 		this._shouldRestart = true;
 	if (this._level.visuals.flashWarningMiss)
