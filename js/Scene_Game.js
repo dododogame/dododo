@@ -998,9 +998,9 @@ Scene_Game.prototype._finish = function () {
 		this._inaccuracyDataSprite.visible = false;
 	if (this._level.visuals.numbersHUD)
 		this._numbersHUD.visible = false;
-	if (this._offsetWizard && this._inaccuraciesArray.length > 0)
-		preferences.offset -= math.mean(this._inaccuraciesArray);
-	if (this._inaccuraciesArray.length > 0)
+	if (this._level.shouldAdjustOffset())
+		this._level.adjustOffset();
+	if (this._level.shouldDisplayInaccuraciesDistribution())
 		this._inaccuraciesDistribution.visible = true;
 	this._setButtonsVisible(true);
 	this._viewRecordingButton.visible = true;

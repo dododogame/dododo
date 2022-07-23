@@ -200,6 +200,18 @@ Level.prototype.loadBeatmap = async function () {
 	this.clearCombo();
 };
 
+Level.prototype.shouldAdjustOffset = function () {
+	return this._offsetWizard && this.inaccuraciesArray.length > 0;
+};
+
+Level.prototype.adjustOffset = function () {
+	preferences.offset -= math.mean(this.inaccuraciesArray);
+};
+
+Level.prototype.shouldDisplayInaccuraciesDistribution = function () {
+	return this.inaccuraciesArray.length > 0;
+};
+
 Level.prototype.getFakeJudgementLines = function () {
 	return this._row1.fakeJudgementLines;
 };
