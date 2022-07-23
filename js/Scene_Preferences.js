@@ -20,6 +20,11 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				args: {}
 			},
 			{
+				name: 'noFail',
+				type: 'boolean',
+				args: {}
+			},
+			{
 				name: 'noBad',
 				type: 'boolean',
 				args: {}
@@ -64,6 +69,11 @@ Scene_Preferences.PREFERENCES_PAGES = [
 			},
 			{
 				name: 'countdown',
+				type: 'boolean',
+				args: {}
+			},
+			{
+				name: 'autoRestartFail',
 				type: 'boolean',
 				args: {}
 			},
@@ -561,6 +571,7 @@ Scene_Preferences.DEFAULT_ALIASES = {
 Scene_Preferences.DEFAULT_PREFERENCES = {
 	playRate: 1.0,
 	autoPlay: false,
+	noFail: false,
 	noBad: false,
 	noExcess: false,
 	judgementWindow: 1.0,
