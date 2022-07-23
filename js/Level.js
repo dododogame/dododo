@@ -170,7 +170,7 @@ Level.prototype.row2Bitmap = function () {
 
 Level.prototype.loadBeatmap = async function () {
 	InGameText.prepare();
-	this._beatmap.prepare();
+	this._beatmap.prepare(this);
 	this._beatmap.setUpExpressionsWithoutXFrom(this.visuals);
 	this._beatmap.setUpExpressionsWithoutXFrom(this.modifiers);
 	await this._beatmap.load();

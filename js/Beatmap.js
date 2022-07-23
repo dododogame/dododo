@@ -239,7 +239,7 @@ Beatmap.prototype.prepare = function (level) {
 		Object.entries(Scene_Preferences.DEFAULT_ALIASES).map(([alias, original]) => [alias, preferences[original]])));
 	this.setUpBeatmapRelatedExpressions();
 	this.setUpRowRelatedExpressions();
-	this.setUpLevelRelatedExpressions();
+	this.setUpLevelRelatedExpressions(level);
 };
 
 Beatmap.prototype.drawRows = function (reverseVoices) {
@@ -324,11 +324,23 @@ Beatmap.prototype.setUpRowRelatedExpressions = function () {
 };
 
 Beatmap.prototype.setUpBeatmapRelatedExpressions = function () {
-	// TODO
+	for (const identifier in Beatmap.RELATED_EXPRESSIONS_WITHOUT_X) {
+		Object.defineProperty(this.expressionsWithoutX, identifier, {
+			get: () => Beatmap.RELATED_EXPRESSIONS_WITHOUT_X[identifier].call(this),
+			configurable: true,
+			enumerable: true
+		})
+	}
 };
 
-Beatmap.prototype.setUpLevelRelatedExpressions = function () {
-	// TODO
+Beatmap.prototype.setUpLevelRelatedExpressions = function (level) {
+	for (const identifier in Level.RELATED_EXPRESSIONS) {
+		Object.defineProperty(this.expressions, identifier, {
+			get: () => Level.RELATED_EXPRESSIONS[identifier].call(level),
+			configurable: true,
+			enumerable: true
+		})
+	}
 };
 
 Beatmap.prototype.getEnvironments = function () {
