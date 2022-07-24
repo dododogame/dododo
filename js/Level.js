@@ -724,7 +724,9 @@ Level.prototype.excessNumberString = function () {
 };
 
 Level.prototype.getMark = function () {
-	if (this.accuracyRate >= 1) {
+	if (this.failed) {
+		return Strings.markG;
+	} else if (this.accuracyRate >= 1) {
 		return Strings.markP;
 	} else if (this.accuracyRate >= 0.95) {
 		return Strings.markS;

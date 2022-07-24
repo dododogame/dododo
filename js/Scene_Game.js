@@ -50,6 +50,7 @@ Scene_Game.prototype.start = function () {
 		this._createTPSIndicatorSprite();
 	if (this._level.visuals.numbersHUD)
 		this._createNumbersHUD();
+	this._createHpBar();
 	
 	this._fakeJudgementLines = [];
 	this._texts = [];
@@ -166,6 +167,14 @@ Scene_Game.prototype._createTexts = function () {
 		this._judgementLineLayer.addChild(sprite);
 		this._texts.push(sprite);
 	}
+};
+
+Scene_Game.prototype._createHpBar = function () {
+	this._hpBar = new Sprite(new Bitmap(Graphics.width, 1));
+	this._hpBar.y = Graphics.height - this._hpBar.height;
+	this._hpBar.bitmap.fillAll(preferences.hpColor);
+	this._hpBar.visible = false;
+	this._HUDLayer.addChild(this._hpBar);
 };
 
 Scene_Game.prototype._createPauseButton = function () {
@@ -498,6 +507,12 @@ Scene_Game.prototype._finishIfShould = function (now) {
 		this._musicEnded = true;
 		this._finish();
 	}
+	if (!this._ended && this._level.failed) {
+		if (preferences.autoRestartFail)
+			this._shouldRestart = true;
+		else if (!this._level.modifiers.noFail)
+			this._finish();
+	}
 	if (!this._ended && this._level.allEventsFinished()) {
 		this._finish();
 		if (this.audioPlayer) {
@@ -539,10 +554,15 @@ Scene_Game.prototype.update = function () {
 			this._updateScoreAndCombo();
 			if (this._level.visuals.numbersHUD)
 				this._updateNumbersHUD();
+			this._updateHpBar();
 		}
 	}
 	this._changeSceneIfShould();
 	Scene_Base.prototype.update.call(this);
+};
+
+Scene_Game.prototype._updateHpBar = function () {
+	this._hpBar.x = Graphics.width * (this._level.hp - 1);
 };
 
 Scene_Game.prototype._updateNumbersHUD = function () {
@@ -667,6 +687,7 @@ Scene_Game.prototype._makeHUDsVisible = function () {
 		this._numbersHUD.visible = true;
 		this._numbersHUD.refresh();
 	}
+	this._hpBar.visible = true;
 };
 
 Scene_Game.prototype.postLoadingAudio = function () {
@@ -758,7 +779,7 @@ Scene_Game.prototype._onKeydown = function (event) {
 	if (!this._loadingFinished)
 		return;
 	const key = event.key === ' ' ? 'Spacebar' : event.key;
-	if (key === 'Escape' || key === 'F8' && preferences.F7Pause) {
+	if (key === 'Escape' || key === 'F8' && preferences.F8Pause) {
 		this._pause();
 	} else if (!event.ctrlKey && !event.altKey && !event.metaKey && TyphmConstants.HITTABLE_KEYS.includes(key)) {
 		if (this._pressings[key])

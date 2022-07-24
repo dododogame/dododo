@@ -352,6 +352,12 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				}
 			},
 			{
+				name: 'hpColor',
+				type: 'color',
+				args: {
+				}
+			},
+			{
 				name: 'textColor',
 				type: 'color',
 				args: {
@@ -619,6 +625,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	badColor: '#008000',
 	missColor: '#ff0000',
 	excessColor: '#ff0000',
+	hpColor: '#ffffff',
 	textColor: '#ffffff',
 	backgroundColor: '#000000',
 	graphicsWidth: 1024,
