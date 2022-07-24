@@ -108,11 +108,11 @@ Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording) {
 };
 
 Level.prototype.newScene = function () {
-	return new Scene_Game(this._musicUrl, this._beatmapUrl, this._scene.isRecording ? undefined : this.newRecording)
+	return new Scene_Game(this._musicUrl, this._beatmapUrl, this._scene.isRecording ? undefined : this.newRecording, this._scene.retryCount + 1)
 };
 
 Level.prototype.newReplayScene = function () {
-	return new Scene_Game(this._musicUrl, this._beatmapUrl, this.newRecording);
+	return new Scene_Game(this._musicUrl, this._beatmapUrl, this.newRecording, this._scene.retryCount);
 };
 
 Level.prototype.progress = function (now) {

@@ -130,7 +130,7 @@ Scene_BrowseFiles.prototype.update = function () {
 			const scoreUrl = URL.createObjectURL(beatmapFile);
 			const audioFile = musicInput.files[0];
 			const musicUrl = audioFile ? URL.createObjectURL(audioFile) : '';
-			window.scene = new Scene_Game(musicUrl, scoreUrl, this._recording && JSON.parse(this._recording));
+			window.scene = new Scene_Game(musicUrl, scoreUrl, this._recording && JSON.parse(this._recording), 0);
 		} else {
 			this._beatmapAlert.visible = true;
 			this._shouldOk = false;

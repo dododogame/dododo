@@ -5,9 +5,10 @@ function Scene_Game() {
 Scene_Game.prototype = Object.create(Scene_Base.prototype);
 Scene_Game.prototype.constructor = Scene_Game;
 
-Scene_Game.prototype.initialize = function (musicUrl, beatmapUrl, recording) {
+Scene_Game.prototype.initialize = function (musicUrl, beatmapUrl, recording, retryCount) {
 	Scene_Base.prototype.initialize.call(this);
 	this._level = new Level(this, musicUrl, beatmapUrl, recording);
+	this.retryCount = retryCount;
 };
 
 Scene_Game.prototype.start = function () {

@@ -815,7 +815,7 @@ Scene_Preferences.prototype.update = function () {
 		this._applySettings();
 		const scoreUrl = 'offset_wizard.ddd';
 		const musicUrl = '/assets/audios/offset_wizard.ogg';
-		window.scene = new Scene_Game(musicUrl, scoreUrl);
+		window.scene = new Scene_Game(musicUrl, scoreUrl, undefined, 0);
 	}
 	Scene_Base.prototype.update.call(this);
 };
