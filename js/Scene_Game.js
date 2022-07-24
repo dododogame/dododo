@@ -765,7 +765,7 @@ Scene_Game.prototype.actualResume = function () {
 	this._resumingCountdown = null;
 	if (!this._ended)
 		this._judgementLine.visible = true;
-	if (this._hasMusic) {
+	if (this._level.hasMusic) {
 		if (!this.audioPlayer.isPlaying()) {
 			this.audioPlayer.pitch = this._level.modifiers.playRate;
 			this.audioPlayer.play(false,
