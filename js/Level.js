@@ -108,7 +108,9 @@ Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording) {
 };
 
 Level.prototype.newScene = function () {
-	return new Scene_Game(this._musicUrl, this._beatmapUrl, this._scene.isRecording ? undefined : this.newRecording, this._scene.retryCount + 1)
+	const recording = this._scene.isRecording ? undefined : this.newRecording;
+	const retryCount = this._scene.isRecording ? this._scene.retryCount + 1 : this._scene.retryCount;
+	return new Scene_Game(this._musicUrl, this._beatmapUrl, recording, retryCount);
 };
 
 Level.prototype.newReplayScene = function () {

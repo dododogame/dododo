@@ -52,6 +52,7 @@ Scene_Game.prototype.start = function () {
 	if (this._level.visuals.numbersHUD)
 		this._createNumbersHUD();
 	this._createHpBar();
+	this._createRetryCounter();
 	
 	this._fakeJudgementLines = [];
 	this._texts = [];
@@ -96,6 +97,15 @@ Scene_Game.prototype._createLayers = function () {
 	this.addChild(this._overHUDLayer = new Sprite());
 	this.addChild(this._summaryLayer = new Sprite());
 	this.addChild(this._screenEffectLayer = new Sprite());
+};
+
+Scene_Game.prototype._createRetryCounter = function () {
+	this._retryCounter = new Sprite(new Bitmap(Graphics.width / 2, preferences.textHeight));
+	this._retryCounter.bitmap.drawText(sprintf(Strings.retryCounter, this.retryCount), 0, 0, this._retryCounter.width, preferences.textHeight, 'right');
+	this._retryCounter.x = Graphics.width - this._retryCounter.width;
+	this._retryCounter.anchor.y = 0.5;
+	this._retryCounter.y = Graphics.height / 2;
+	this._HUDLayer.addChild(this._retryCounter);
 };
 
 Scene_Game.prototype._createFadeInMask = function () {
@@ -689,6 +699,12 @@ Scene_Game.prototype._makeHUDsVisible = function () {
 		this._numbersHUD.refresh();
 	}
 	this._hpBar.visible = true;
+	const start = performance.now();
+	this._retryCounter.update = () => {
+		this._retryCounter.opacity = 255 * (1 - (performance.now() - start) / 1000);
+		if (this._retryCounter.opacity <= 0)
+			this._HUDLayer.removeChild(this._retryCounter);
+	};
 };
 
 Scene_Game.prototype.postLoadingAudio = function () {
@@ -742,11 +758,11 @@ Scene_Game.prototype._resume = function () {
 		if (this.isRecording) {
 			for (const key in this._lastPressings) {
 				if (!this._pressings[key])
-					this._processAndRecordLoosen(this._lastPos, key);
+					this._level._processAndRecordLoosen(this._lastPos, key);
 			}
 			for (const key in this._pressings) {
 				if (!this._lastPressings[key])
-					this._processAndRecordHit(this._lastPos, key);
+					this._level._processAndRecordHit(this._lastPos, key);
 			}
 			this._lastPressings = null;
 		}
