@@ -507,10 +507,10 @@ Scene_Game.prototype._finishIfShould = function (now) {
 		this._musicEnded = true;
 		this._finish();
 	}
-	if (!this._ended && this._level.failed) {
+	if (!this._ended && this._level.failed && !this._level.modifiers.noFail) {
 		if (preferences.autoRestartFail)
 			this._shouldRestart = true;
-		else if (!this._level.modifiers.noFail)
+		else
 			this._finish();
 	}
 	if (!this._ended && this._level.allEventsFinished()) {
