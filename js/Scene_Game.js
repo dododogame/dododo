@@ -458,7 +458,7 @@ Scene_Game.prototype._updateJudgementLine = function (now) {
 			row.texts[i].applyToSprite(this._texts[i], lengthPosition, this._row1Sprite.y, row.mirror);
 		this._judgementLineLayer.children.sort((a, b) => a.zIndex - b.zIndex);
 	} else {
-		this._judgementLine.x = this._getNoteXFromLengthPosition(lengthPosition);
+		this._judgementLine.x = this._level._getNoteXFromLengthPosition(lengthPosition);
 		if (row.mirror)
 			this._judgementLine.x = Graphics.width - this._judgementLine.x;
 		this._judgementLine.y = this._row1Sprite.y;
@@ -493,7 +493,8 @@ Scene_Game.prototype._switchRow = function () {
 	this._level.switchRow();
 	this._row2Sprite.bitmap = this._level.row2Bitmap();
 	this._beatmapLayer.addChild(this._row1Sprite);
-	this._nextBeatmapLayer.addChild(this._row2Sprite);
+	if (this._row2Sprite.bitmap)
+		this._nextBeatmapLayer.addChild(this._row2Sprite);
 	this._setUpNewRow();
 };
 

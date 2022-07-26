@@ -184,7 +184,7 @@ Level.prototype.row1Bitmap = function () {
 };
 
 Level.prototype.row2Bitmap = function () {
-	return this._row2.getBitmap();
+	return this._row2 && this._row2.getBitmap();
 };
 
 Level.prototype.loadBeatmap = async function () {
@@ -785,6 +785,7 @@ Level.prototype.setUpMirror = function (row1Sprite, row2Sprite) {
 
 Level.prototype.setUpNewRow = function () {
 	const row = this._row1;
+	this._beatmap.currentRow = row;
 	const rowLengthInMilliseconds = row.endTime - row.startTime;
 	if (row.perfect)
 		this.perfectTolerance = row.perfect * rowLengthInMilliseconds;
