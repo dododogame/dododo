@@ -291,6 +291,15 @@ Level.prototype.getInstantaneousMillisecondsPerWholeAndBeatOffset = function (no
 	return [millisecondsPerWhole, beatOffset];
 };
 
+Level.prototype.modifiersListString = function () {
+	const modifiersTexts = [];
+	for (const modifier in this.modifiers) {
+		if (this.modifiers[modifier] !== Scene_Preferences.DEFAULT_PREFERENCES[modifier])
+			modifiersTexts.push(sprintf(Strings['inGame_' + modifier], this.modifiers[modifier]));
+	}
+	return modifiersTexts.join(', ');
+};
+
 Level.prototype._processAndRecordLoosen = function (time, key) {
 	this._processLoosen(time);
 	this.newRecording.loosen.push({'time': time, 'key': key});

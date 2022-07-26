@@ -332,12 +332,7 @@ Scene_Game.prototype._createModifiersListSprite = function () {
 	this._modifiersListSprite = new Sprite(new Bitmap(Graphics.width, preferences.textHeight));
 	this._modifiersListSprite.anchor.y = 0.5;
 	this._modifiersListSprite.y = Graphics.height / 2;
-	const modifiersTexts = [];
-	for (const modifier in this._modifiers) {
-		if (this._modifiers[modifier] !== Scene_Preferences.DEFAULT_PREFERENCES[modifier])
-			modifiersTexts.push(sprintf(Strings['inGame_' + modifier], this._modifiers[modifier]));
-	}
-	this._modifiersListSprite.bitmap.drawText(modifiersTexts.join(', '), 0, 0,
+	this._modifiersListSprite.bitmap.drawText(this._level.modifiersListString(), 0, 0,
 		this._modifiersListSprite.width, preferences.textHeight, 'left');
 	this._modifiersListSprite.visible = false;
 	this._summaryLayer.addChild(this._modifiersListSprite);
