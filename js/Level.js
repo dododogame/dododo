@@ -780,7 +780,8 @@ Level.prototype.switchRow = function () {
 
 Level.prototype.setUpMirror = function (row1Sprite, row2Sprite) {
 	row1Sprite.scale.x = this._row1.mirror ? -1 : 1;
-	row2Sprite.scale.x = this._row2.mirror ? -1 : 1;
+	if (this._row2)
+		row2Sprite.scale.x = this._row2.mirror ? -1 : 1;
 };
 
 Level.prototype.setUpNewRow = function () {
