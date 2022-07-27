@@ -105,7 +105,8 @@ Scene_Game.prototype._createRetryCounter = function () {
 	this._retryCounter.x = Graphics.width - this._retryCounter.width;
 	this._retryCounter.anchor.y = 0.5;
 	this._retryCounter.y = Graphics.height / 2;
-	this._HUDLayer.addChild(this._retryCounter);
+	if (this.retryCount > 0)
+		this._HUDLayer.addChild(this._retryCounter);
 };
 
 Scene_Game.prototype._createFadeInMask = function () {
