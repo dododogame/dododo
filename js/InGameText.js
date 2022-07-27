@@ -64,7 +64,7 @@ InGameText.prototype.setAttribute = function (attribute, parameters) {
 			this[attribute.fromSnakeToCamel() + 'Formula'] = ControlSentence.generateFunction(parameters, this._row._beatmap);
 			break;
 		case 'text':
-			this.textFormula = TyphmUtils.generateFunctionFromFormula(parameters.join(' '), this._row._beatmap.getEnvironments(), this._row._beatmap);
+			this.textFormula = this._row._beatmap.generateFunctionFromFormula(parameters.join(' '));
 			break;
 		case 'blend_mode':
 			this.blendMode = parameters[0].toUpperCase();

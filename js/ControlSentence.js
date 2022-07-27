@@ -144,7 +144,7 @@ ControlSentence.DEFAULT_APPLICATIONS.BPM = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.MS_PER_WHOLE = function (row, callers) {
-	row.millisecondsPerWhole = Number(math.re(TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())()));
+	row.millisecondsPerWhole = Number(math.re(this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))()));
 	if (row.millisecondsPerWhole <= 0) {
 		this.throwRuntimeError(`MS_PER_WHOLE: cannot be zero or negative: ${row.millisecondsPerWhole}`, callers);
 	}
@@ -153,7 +153,7 @@ ControlSentence.DEFAULT_APPLICATIONS.MS_PER_WHOLE = function (row, callers) {
 for (const judge of ['perfect', 'good', 'bad']) {
 	const keyword = judge.toUpperCase();
 	ControlSentence.DEFAULT_APPLICATIONS[keyword] = function (row, callers) {
-		row[judge] = Number(math.re(TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())()));
+		row[judge] = Number(math.re(this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))()));
 		if (row[judge] < 0) {
 			this.throwRuntimeError(`${keyword}: judgement window radius is negative: ${row[judge]}`, callers);
 		}
@@ -163,13 +163,13 @@ for (const judge of ['perfect', 'good', 'bad']) {
 for (const judge of ['perfect', 'good', 'bad']) {
 	const keyword = `${judge.toUpperCase()}_HP`;
 	ControlSentence.DEFAULT_APPLICATIONS[keyword] = function (row, callers) {
-		row[`${judge}Hp`] = Number(math.re(TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())()));
+		row[`${judge}Hp`] = Number(math.re(this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))()));
 	};
 }
 
 ControlSentence.DEFAULT_APPLICATIONS.FAKE_JUDGEMENT_LINE = function (row, callers) {
 	if (this.parameters.length > 0) {
-		const label = TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())();
+		const label = this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))();
 		row.setCurrentJudgementLineByLabel(label);
 	} else {
 		row.addFakeJudgementLineWithoutLabel();
@@ -182,7 +182,7 @@ ControlSentence.DEFAULT_APPLICATIONS.GENUINE_JUDGEMENT_LINE = function (row, cal
 
 ControlSentence.DEFAULT_APPLICATIONS.TEXT = function (row, callers) {
 	if (this.parameters.length > 0) {
-		const label = TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())();
+		const label = this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))();
 		row.setCurrentTextByLabel(label);
 	} else {
 		row.addTextWithoutLabel();
@@ -282,7 +282,7 @@ ControlSentence.DEFAULT_APPLICATIONS.PROCEDURE = function (row, callers) {
 ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
 	// set up flowchart
 	const flowchart = [{
-		condition: TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX()),
+		condition: this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' ')),
 		block: this.blocks[0]
 	}];
 	let reachedElse = false;
@@ -293,7 +293,7 @@ ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
 				this.throwRuntimeError(`ELSE_IF: ELSE_IF branch is invalid after ELSE`, callers);
 			}
 			flowchart.push({
-				condition: TyphmUtils.generateFunctionFromFormulaWithoutX(beginning.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX()),
+				condition: this._beatmap.generateFunctionFromFormulaWithoutX(beginning.parameters.join(' ')),
 				'block': block
 			});
 		} else if (beginning.keyword === 'ELSE') {
@@ -329,7 +329,7 @@ ControlSentence.DEFAULT_APPLICATIONS.RETURN = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.WHILE = function (row, callers) {
-	const condition = TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX());
+	const condition = this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '));
 	let result;
 	while (condition()) {
 		result = ControlSentence.executeBlock(this.blocks[0], row, callers);
@@ -350,18 +350,15 @@ ControlSentence.DEFAULT_APPLICATIONS.FOR = function (row, callers) {
 	if (identifierIndex && !ControlSentence.checkIdentifier(identifierValue))
 		this.throwRuntimeError(`FOR: invalid identifier: ${identifierIndex}`, callers);
 	const iteratedString = this.parameters.slice(1).join(' ');
-	const iterated = TyphmUtils.generateFunctionFromFormulaWithoutX(iteratedString, this._beatmap.getEnvironmentsWithoutX())();
+	const iterated = this._beatmap.generateFunctionFromFormulaWithoutX(iteratedString)();
 	if (typeof iterated.forEach !== 'function')
 		this.throwRuntimeError(`FOR: cannot iterate over a non-iterable object: ${iteratedString}`, callers);
 	let result;
 	try {
 		iterated.forEach((item, index, _) => {
-			this._beatmap.deleteExpression(identifierValue);
-			Object.setPropertyWithGetter(this._beatmap.expressionsWithoutX, identifierValue, item);
-			if (identifierIndex) {
-				this._beatmap.deleteExpression(identifierIndex);
-				Object.setPropertyWithGetter(this._beatmap.expressionsWithoutX, identifierIndex, index);
-			}
+			this._beatmap.varValue(identifierValue, item);
+			if (identifierIndex)
+				this._beatmap.varValue(identifierIndex, index);
 			result = ControlSentence.executeBlock(this.blocks[0], row, callers);
 			if (result && result.signal === 'break') {
 				const error = new Error();
@@ -370,14 +367,17 @@ ControlSentence.DEFAULT_APPLICATIONS.FOR = function (row, callers) {
 			}
 		});
 	} catch (e) {
-		if (e.signal === 'break' && e.layer !== 0) {
-			return {signal: 'break', layer: e.layer - 1, callers: e.callers};
+		if (e.signal === 'break') {
+			if (e.layer !== 0)
+				return {signal: 'break', layer: e.layer - 1, callers: e.callers};
+		} else {
+			throw e;
 		}
 	}
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.DEBUG_LOG = function (row, callers) {
-	console.log(TyphmUtils.generateFunctionFromFormulaWithoutX(this.parameters.join(' '), this._beatmap.getEnvironmentsWithoutX())());
+	console.log(this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))());
 };
 
 ControlSentence.executeBlock = function (block, row, callers) {
@@ -401,6 +401,6 @@ ControlSentence.checkKeyword = function (keyword) {
 };
 
 ControlSentence.generateFunction = function (formulaParts, beatmap) {
-	const formula = TyphmUtils.generateFunctionFromFormula(formulaParts.join(' '), beatmap.getEnvironments(), beatmap);
+	const formula = beatmap.generateFunctionFromFormula(formulaParts.join(' '));
 	return x => Number(math.re(formula(x)));
 };

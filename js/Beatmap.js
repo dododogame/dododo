@@ -232,6 +232,8 @@ Beatmap.prototype.prepare = function (level) {
 	this.controlSentenceApplications = {...ControlSentence.DEFAULT_APPLICATIONS};
 	for (const [alias, original] of Object.entries(ControlSentence.DEFAULT_ALIASES))
 		this.defineKeywordAlias(alias, original);
+	this.registeredScopes = [];
+	this.registeredScopesWithoutX = [];
 	this.expressions = {};
 	this.expressionsWithoutX = {};
 	this.setUpExpressionsWithoutXFrom(preferences);
@@ -352,10 +354,14 @@ Beatmap.prototype.getEnvironmentsWithoutX = function () {
 };
 
 Beatmap.prototype.deleteExpression = function (name) {
-	if (this.expressions.hasOwnProperty(name))
-		delete this.expressions[name];
-	if (this.expressionsWithoutX.hasOwnProperty(name))
-		delete this.expressionsWithoutX[name];
+	if (this.expressions.hasOwnProperty(name)) {
+		for (const target of [this.expressions, ...this.registeredScopes])
+			delete target[name];
+	}
+	if (this.expressionsWithoutX.hasOwnProperty(name)) {
+		for (const target of [this.expressionsWithoutX, ...this.registeredScopes, ...this.registeredScopesWithoutX])
+			delete target[name];
+	}
 };
 
 // with x, variable: let
@@ -363,27 +369,34 @@ Beatmap.prototype.deleteExpression = function (name) {
 // without x, variable: var
 // with x, function: fun
 Beatmap.prototype.letExpression = function (identifier, expression) {
-	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null);
+	const formula = this.generateFunctionFromFormula(expression, [], true);
 	this.deleteExpression(identifier);
-	Object.defineProperty(this.expressions, identifier, {get: () => formula(this.currentX), configurable: true, enumerable: true});
+	for (const target of [this.expressions, ...this.registeredScopes])
+		Object.defineProperty(target, identifier, {get: () => formula(this.currentX), configurable: true, enumerable: true});
 };
 
 Beatmap.prototype.defExpression = function (identifier, arguments, expression) {
-	const formula = TyphmUtils.generateFunctionFromFormula(expression, this.getEnvironments(), null, arguments);
+	const formula = this.generateFunctionFromFormula(expression, arguments, true);
 	this.deleteExpression(identifier);
-	Object.setPropertyWithGetter(this.expressions, identifier, (...args) => formula(this.currentX, ...args));
+	for (const target of [this.expressions, ...this.registeredScopes])
+		Object.setPropertyWithGetter(target, identifier, (...args) => formula(this.currentX, ...args));
 };
 
 Beatmap.prototype.varExpression = function (identifier, expression) {
-	const value = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX())();
-	this.deleteExpression(identifier);
-	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, value);
+	this.varValue(identifier, this.generateFunctionFromFormulaWithoutX(expression)());
 };
 
 Beatmap.prototype.funExpression = function (identifier, arguments, expression) {
-	const formula = TyphmUtils.generateFunctionFromFormulaWithoutX(expression, this.getEnvironmentsWithoutX(), arguments);
+	const formula = this.generateFunctionFromFormulaWithoutX(expression, arguments);
 	this.deleteExpression(identifier);
-	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, formula);
+	for (const target of [this.expressions, this.expressionsWithoutX, ...this.registeredScopes, ...this.registeredScopesWithoutX])
+		Object.setPropertyWithGetter(target, identifier, formula);
+};
+
+Beatmap.prototype.varValue = function (identifier, value) {
+	this.deleteExpression(identifier);
+	for (const target of [this.expressions, this.expressionsWithoutX, ...this.registeredScopes, ...this.registeredScopesWithoutX])
+		Object.setPropertyWithGetter(target, identifier, value);
 };
 
 Beatmap.prototype.recordHitEvent = function (rowIndex, note, y, shouldHit) {
@@ -439,4 +452,51 @@ Beatmap.prototype.trackHoldTo = function (now, xNow, hitEvent, judge, row) {
 
 Beatmap.prototype.clearNote = function (event, judge) {
 	this.rows[event.rowIndex].drawNoteHead(event.x, event.y, event.solid, false, Level.getColorFromJudge(judge));
+};
+
+Beatmap.prototype.getNewScope = function () {
+	const scope = {};
+	this.registeredScopes.push(scope);
+	for (const identifier in this.expressions) {
+		Object.defineProperty(scope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressions, identifier));
+	}
+	for (const identifier in this.expressionsWithoutX) {
+		Object.defineProperty(scope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressionsWithoutX, identifier));
+	}
+	Object.defineProperties(scope, Object.getOwnPropertyDescriptors(this.expressions));
+	Object.defineProperties(scope, Object.getOwnPropertyDescriptors(this.expressionsWithoutX));
+	return scope;
+};
+
+Beatmap.prototype.getNewScopeWithoutX = function () {
+	const scope = {};
+	this.registeredScopesWithoutX.push(scope);
+	for (const identifier in this.expressionsWithoutX) {
+		Object.defineProperty(scope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressionsWithoutX, identifier));
+	}
+	Object.defineProperties(scope, Object.getOwnPropertyDescriptors(this.expressionsWithoutX));
+	return scope;
+};
+
+Beatmap.prototype.generateFunctionFromFormula = function (formula, parameters, dontUpdateX) {
+	parameters ||= [];
+	const expression = math.parse(formula).compile();
+	const scope = this.getNewScope();
+	return (x, ...param) => {
+		if (!dontUpdateX)
+			this.currentX = x;
+		scope.x = Number(x);
+		Object.assign(scope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
+		return expression.evaluate(scope);
+	};
+};
+
+Beatmap.prototype.generateFunctionFromFormulaWithoutX = function (formula, parameters) {
+	parameters ||= [];
+	const expression = math.parse(formula).compile();
+	const scope = this.getNewScopeWithoutX();
+	return (...param) => {
+		Object.assign(scope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
+		return expression.evaluate(scope);
+	}
 };
