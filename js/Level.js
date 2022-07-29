@@ -789,17 +789,20 @@ Level.prototype.setUpNewRow = function () {
 	this._beatmap.currentRow = row;
 	const rowLengthInMilliseconds = row.endTime - row.startTime;
 	if (row.perfect)
-		this.perfectTolerance = row.perfect * rowLengthInMilliseconds;
+		this.perfectWindowRatio = row.perfect;
 	else
-		this.perfectTolerance ||= TyphmConstants.DEFAULT_PERFECT * rowLengthInMilliseconds;
+		this.perfectWindowRatio ||= TyphmConstants.DEFAULT_PERFECT;
 	if (row.good)
-		this.goodTolerance = row.good * rowLengthInMilliseconds;
+		this.goodWindowRatio = row.good;
 	else
-		this.goodTolerance ||= TyphmConstants.DEFAULT_GOOD * rowLengthInMilliseconds;
+		this.goodWindowRatio ||= TyphmConstants.DEFAULT_GOOD;
 	if (row.bad)
-		this.badTolerance = row.bad * rowLengthInMilliseconds;
+		this.badWindowRatio = row.bad;
 	else
-		this.badTolerance ||= TyphmConstants.DEFAULT_BAD * rowLengthInMilliseconds;
+		this.badWindowRatio ||= TyphmConstants.DEFAULT_BAD;
+	this.perfectTolerance = this.perfectWindowRatio * rowLengthInMilliseconds;
+	this.goodTolerance = this.goodWindowRatio * rowLengthInMilliseconds;
+	this.badTolerance = this.badWindowRatio * rowLengthInMilliseconds;
 	if (row.perfectHp !== undefined)
 		this.perfectHp = row.perfectHp;
 	else if (this.perfectHp === undefined)
