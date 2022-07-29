@@ -232,8 +232,6 @@ Beatmap.prototype.prepare = function (level) {
 	this.controlSentenceApplications = {...ControlSentence.DEFAULT_APPLICATIONS};
 	for (const [alias, original] of Object.entries(ControlSentence.DEFAULT_ALIASES))
 		this.defineKeywordAlias(alias, original);
-	this.registeredScopes = [];
-	this.registeredScopesWithoutX = [];
 	this.expressions = {};
 	this.expressionsWithoutX = {};
 	this.setUpExpressionsWithoutXFrom(preferences);
@@ -354,14 +352,10 @@ Beatmap.prototype.getEnvironmentsWithoutX = function () {
 };
 
 Beatmap.prototype.deleteExpression = function (name) {
-	if (this.expressions.hasOwnProperty(name)) {
-		for (const target of [this.expressions, ...this.registeredScopes])
-			delete target[name];
-	}
-	if (this.expressionsWithoutX.hasOwnProperty(name)) {
-		for (const target of [this.expressionsWithoutX, ...this.registeredScopes, ...this.registeredScopesWithoutX])
-			delete target[name];
-	}
+	if (name in this.expressions)
+		delete this.expressions[name];
+	if (name in this.expressionsWithoutX)
+		delete this.expressionsWithoutX[name];
 };
 
 // with x, variable: let
@@ -371,15 +365,13 @@ Beatmap.prototype.deleteExpression = function (name) {
 Beatmap.prototype.letExpression = function (identifier, expression) {
 	const formula = this.generateFunctionFromFormula(expression, [], true);
 	this.deleteExpression(identifier);
-	for (const target of [this.expressions, ...this.registeredScopes])
-		Object.defineProperty(target, identifier, {get: () => formula(this.currentX), configurable: true, enumerable: true});
+	Object.defineProperty(this.expressions, identifier, {get: () => formula(this.currentX), configurable: true, enumerable: true});
 };
 
 Beatmap.prototype.defExpression = function (identifier, arguments, expression) {
 	const formula = this.generateFunctionFromFormula(expression, arguments, true);
 	this.deleteExpression(identifier);
-	for (const target of [this.expressions, ...this.registeredScopes])
-		Object.setPropertyWithGetter(target, identifier, (...args) => formula(this.currentX, ...args));
+	Object.setPropertyWithGetter(this.expressions, identifier, (...args) => formula(this.currentX, ...args));
 };
 
 Beatmap.prototype.varExpression = function (identifier, expression) {
@@ -389,14 +381,12 @@ Beatmap.prototype.varExpression = function (identifier, expression) {
 Beatmap.prototype.funExpression = function (identifier, arguments, expression) {
 	const formula = this.generateFunctionFromFormulaWithoutX(expression, arguments);
 	this.deleteExpression(identifier);
-	for (const target of [this.expressions, this.expressionsWithoutX, ...this.registeredScopes, ...this.registeredScopesWithoutX])
-		Object.setPropertyWithGetter(target, identifier, formula);
+	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, formula);
 };
 
 Beatmap.prototype.varValue = function (identifier, value) {
 	this.deleteExpression(identifier);
-	for (const target of [this.expressions, this.expressionsWithoutX, ...this.registeredScopes, ...this.registeredScopesWithoutX])
-		Object.setPropertyWithGetter(target, identifier, value);
+	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, value);
 };
 
 Beatmap.prototype.recordHitEvent = function (rowIndex, note, y, shouldHit) {
@@ -454,39 +444,48 @@ Beatmap.prototype.clearNote = function (event, judge) {
 	this.rows[event.rowIndex].drawNoteHead(event.x, event.y, event.solid, false, Level.getColorFromJudge(judge));
 };
 
-Beatmap.prototype.getNewScope = function () {
-	const scope = {};
-	this.registeredScopes.push(scope);
-	for (const identifier in this.expressions) {
-		Object.defineProperty(scope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressions, identifier));
-	}
-	for (const identifier in this.expressionsWithoutX) {
-		Object.defineProperty(scope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressionsWithoutX, identifier));
-	}
-	Object.defineProperties(scope, Object.getOwnPropertyDescriptors(this.expressions));
-	Object.defineProperties(scope, Object.getOwnPropertyDescriptors(this.expressionsWithoutX));
-	return scope;
-};
-
-Beatmap.prototype.getNewScopeWithoutX = function () {
-	const scope = {};
-	this.registeredScopesWithoutX.push(scope);
-	for (const identifier in this.expressionsWithoutX) {
-		Object.defineProperty(scope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressionsWithoutX, identifier));
-	}
-	Object.defineProperties(scope, Object.getOwnPropertyDescriptors(this.expressionsWithoutX));
-	return scope;
-};
-
 Beatmap.prototype.generateFunctionFromFormula = function (formula, parameters, dontUpdateX) {
 	parameters ||= [];
 	const expression = math.parse(formula).compile();
-	const scope = this.getNewScope();
+	const specificScope = {};
+	for (const identifier in this.expressions) {
+		Object.defineProperty(specificScope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressions, identifier));
+	}
+	for (const identifier in this.expressionsWithoutX) {
+		Object.defineProperty(specificScope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressionsWithoutX, identifier));
+	}
+	const beatmap = this;
+	const scope = new Proxy(specificScope, {
+		get: function (target, p, receiver) {
+			if (p in target) {
+				return target[p];
+			} else if (p in beatmap.expressions) {
+				return beatmap.expressions[p];
+			} else if (p in beatmap.expressionsWithoutX) {
+				return beatmap.expressionsWithoutX[p];
+			}
+		},
+		ownKeys: function (target) {
+			return [...Object.getOwnPropertyNames(target), ...Object.getOwnPropertyNames(beatmap.expressions), ...Object.getOwnPropertyNames(beatmap.expressionsWithoutX)];
+		},
+		getOwnPropertyDescriptor: function (target, p) {
+			if (p in target) {
+				return Object.getOwnPropertyDescriptor(target, p);
+			} else if (p in beatmap.expressions) {
+				return Object.getOwnPropertyDescriptor(beatmap.expressions, p);
+			} else if (p in beatmap.expressionsWithoutX) {
+				return Object.getOwnPropertyDescriptor(beatmap.expressionsWithoutX, p);
+			}
+		},
+		has: function (target, p) {
+			return p in target || p in beatmap.expressions || p in beatmap.expressionsWithoutX;
+		}
+	});
 	return (x, ...param) => {
 		if (!dontUpdateX)
 			this.currentX = x;
-		scope.x = Number(x);
-		Object.assign(scope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
+		specificScope.x = Number(x);
+		Object.assign(specificScope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
 		return expression.evaluate(scope);
 	};
 };
@@ -494,9 +493,35 @@ Beatmap.prototype.generateFunctionFromFormula = function (formula, parameters, d
 Beatmap.prototype.generateFunctionFromFormulaWithoutX = function (formula, parameters) {
 	parameters ||= [];
 	const expression = math.parse(formula).compile();
-	const scope = this.getNewScopeWithoutX();
+	const specificScope = {};
+	for (const identifier in this.expressionsWithoutX) {
+		Object.defineProperty(specificScope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressionsWithoutX, identifier));
+	}
+	const beatmap = this;
+	const scope = new Proxy(specificScope, {
+		get: function (target, p, receiver) {
+			if (p in target) {
+				return target[p];
+			} else if (p in beatmap.expressionsWithoutX) {
+				return beatmap.expressionsWithoutX[p];
+			}
+		},
+		ownKeys: function (target) {
+			return [...Object.getOwnPropertyNames(target), ...Object.getOwnPropertyNames(beatmap.expressionsWithoutX)];
+		},
+		getOwnPropertyDescriptor: function (target, p) {
+			if (p in target) {
+				return Object.getOwnPropertyDescriptor(target, p);
+			} else if (p in beatmap.expressionsWithoutX) {
+				return Object.getOwnPropertyDescriptor(beatmap.expressionsWithoutX, p);
+			}
+		},
+		has: function (target, p) {
+			return p in target || p in beatmap.expressionsWithoutX;
+		}
+	});
 	return (...param) => {
-		Object.assign(scope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
+		Object.assign(specificScope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
 		return expression.evaluate(scope);
 	}
 };
