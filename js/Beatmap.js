@@ -293,6 +293,7 @@ Beatmap.prototype.drawRows = function (reverseVoices) {
 			this.rows.push(new Row(this, this.rows.length));
 		}
 	}
+	this.rows.pop();
 	this.notes.sort((n1, n2) => n1.time - n2.time);
 };
 

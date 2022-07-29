@@ -446,6 +446,8 @@ Scene_Game.prototype._updateProgress = function (now) {
 
 Scene_Game.prototype._updateJudgementLine = function (now) {
 	const row = this._level._row1;
+	if (row === undefined)
+		return;
 	if (this._resumingCountdown)
 		now -= this._resumingCountdown.remaining * this._level.modifiers.playRate;
 	if (now < row.startTime)
@@ -496,7 +498,8 @@ Scene_Game.prototype._switchRow = function () {
 	this._beatmapLayer.addChild(this._row1Sprite);
 	if (this._row2Sprite.bitmap)
 		this._nextBeatmapLayer.addChild(this._row2Sprite);
-	this._setUpNewRow();
+	if (this._level.hasRowsLeft())
+		this._setUpNewRow();
 };
 
 Scene_Game.prototype._changeSceneIfShould = function () {
@@ -708,7 +711,12 @@ Scene_Game.prototype.postLoadingAudio = function () {
 	this._makeHUDsVisible();
 	this._row1Sprite.bitmap = this._level.row1Bitmap();
 	this._row2Sprite.bitmap = this._level.row2Bitmap();
+	if (this._level._row1.index % 2 === 1) {
+		this._row1Sprite.y = Graphics.height - this._row1Sprite.y;
+		this._row2Sprite.y = Graphics.height - this._row2Sprite.y;
+	}
 	this._loadingFinished = true;
+	this._level.cutUnclearedEvents();
 	this._setUpNewRow();
 	this._resume();
 };
