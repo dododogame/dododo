@@ -343,14 +343,6 @@ Beatmap.prototype.setUpLevelRelatedExpressions = function (level) {
 	}
 };
 
-Beatmap.prototype.getEnvironments = function () {
-	return [this.expressions, this.expressionsWithoutX];
-};
-
-Beatmap.prototype.getEnvironmentsWithoutX = function () {
-	return [this.expressionsWithoutX]
-};
-
 Beatmap.prototype.deleteExpression = function (name) {
 	if (name in this.expressions)
 		delete this.expressions[name];
@@ -446,14 +438,18 @@ Beatmap.prototype.clearNote = function (event, judge) {
 
 Beatmap.prototype.generateFunctionFromFormula = function (formula, parameters, dontUpdateX) {
 	parameters ||= [];
-	const expression = math.parse(formula).compile();
 	const specificScope = {};
-	for (const identifier in this.expressions) {
-		Object.defineProperty(specificScope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressions, identifier));
-	}
-	for (const identifier in this.expressionsWithoutX) {
-		Object.defineProperty(specificScope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressionsWithoutX, identifier));
-	}
+	const rootNode = math.parse(formula).transform((node, path, parent) => {
+		if (node.isSymbolNode && node.name.startsWith('$')) {
+			const identifier = node.name.slice(1);
+			if (identifier in this.expressions)
+				Object.defineProperty(specificScope, node.name, Object.getOwnPropertyDescriptor(this.expressions, identifier));
+			else if (identifier in this.expressionsWithoutX)
+				return new math.ConstantNode(this.expressionsWithoutX[identifier]);
+		}
+		return node;
+	});
+	const expression = rootNode.compile();
 	const beatmap = this;
 	const scope = new Proxy(specificScope, {
 		get: function (target, p, receiver) {
@@ -492,11 +488,16 @@ Beatmap.prototype.generateFunctionFromFormula = function (formula, parameters, d
 
 Beatmap.prototype.generateFunctionFromFormulaWithoutX = function (formula, parameters) {
 	parameters ||= [];
-	const expression = math.parse(formula).compile();
 	const specificScope = {};
-	for (const identifier in this.expressionsWithoutX) {
-		Object.defineProperty(specificScope, '$' + identifier, Object.getOwnPropertyDescriptor(this.expressionsWithoutX, identifier));
-	}
+	const rootNode = math.parse(formula).transform((node, path, parent) => {
+		if (node.isSymbolNode && node.name.startsWith('$')) {
+			const identifier = node.name.slice(1);
+			if (identifier in this.expressionsWithoutX)
+				return new math.ConstantNode(this.expressionsWithoutX[identifier]);
+		}
+		return node;
+	});
+	const expression = rootNode.compile();
 	const beatmap = this;
 	const scope = new Proxy(specificScope, {
 		get: function (target, p, receiver) {
