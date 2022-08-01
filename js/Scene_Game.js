@@ -623,7 +623,7 @@ Scene_Game.prototype._onLoad = async function () {
 	try {
 		await this._level.loadBeatmap();
 	} catch (e) {
-		if (e instanceof TypeError || e instanceof BeatmapError) {
+		if (e instanceof TypeError || e instanceof BeatmapError || e instanceof BeatmapRuntimeError) {
 			this._error = e;
 			this._shouldError = true;
 			return;

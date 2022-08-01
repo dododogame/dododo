@@ -26,12 +26,18 @@ Scene_Error.prototype.start = function () {
 		this._appendMessage(Strings.infoForBeatmapper);
 		this._text = `${this._error.lineno}:${this._error.column}: ${this._error.message}`;
 		this._appendMessage(this._text);
-		this._copy = new Button(new Bitmap(256, preferences.textHeight), () => this._shouldCopy = true);
-		this._copy.anchor.x = 0.5;
-		this._copy.x = Graphics.width / 2;
-		this._copy.y = Graphics.height - preferences.textHeight*2;
-		this._copy.bitmap.drawText(`${Strings.copy} (c)`, 0, 0, this._copy.width, preferences.textHeight, 'center');
-		this.addChild(this._copy);
+		this._createCopyButton();
+	} else if (this._error instanceof BeatmapRuntimeError) {
+		this._appendMessage(Strings.infoForBeatmapper);
+		this._text = this._error.message;
+		this._appendMessage(this._text);
+		for (let i = 0; i < this._error.backtrace.length; i++) {
+			const caller = this._error.backtrace[i];
+			const text = `  at line ${caller.lineno} in ${caller.caller}`;
+			this._text += text + '\n';
+			this._appendMessage(text);
+		}
+		this._createCopyButton();
 	} else
 		this._appendMessage(Strings.failedToLoad);
 	this.addChild(this._message);
@@ -41,6 +47,15 @@ Scene_Error.prototype.start = function () {
 	
 	this._keydownEventListener = this._onKeydown.bind(this);
 	document.addEventListener('keydown', this._keydownEventListener);
+};
+
+Scene_Error.prototype._createCopyButton = function () {
+	this._copy = new Button(new Bitmap(256, preferences.textHeight), () => this._shouldCopy = true);
+	this._copy.anchor.x = 0.5;
+	this._copy.x = Graphics.width / 2;
+	this._copy.y = Graphics.height - preferences.textHeight * 2;
+	this._copy.bitmap.drawText(`${Strings.copy} (c)`, 0, 0, this._copy.width, preferences.textHeight, 'center');
+	this.addChild(this._copy);
 };
 
 Scene_Error.prototype.update = function () {
