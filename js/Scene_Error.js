@@ -38,6 +38,25 @@ Scene_Error.prototype.start = function () {
 			this._appendMessage(text);
 		}
 		this._createCopyButton();
+	} else if (this._error instanceof BeatmapExpressionError) {
+		this._appendMessage(Strings.infoForBeatmapper);
+		this._text = `${this._error.expressionHolder}: error occurs while evaluating`;
+		if (this._error.currentX !== undefined) {
+			this._text += ` at x = ${this._error.currentX}`;
+		}
+		this._text += ':';
+		this._appendMessage(this._text);
+		this._text += "\n";
+		this._text += this._error.formula;
+		this._appendMessage(this._error.formula);
+		this._text += "\n";
+		for (let i = 0; i < this._error.backtrace.length; i++) {
+			const caller = this._error.backtrace[i];
+			const text = `  at line ${caller.lineno} in ${caller.caller}`;
+			this._text += text + '\n';
+			this._appendMessage(text);
+		}
+		this._createCopyButton();
 	} else
 		this._appendMessage(Strings.failedToLoad);
 	this.addChild(this._message);

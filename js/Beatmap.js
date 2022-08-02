@@ -355,24 +355,24 @@ Beatmap.prototype.deleteExpression = function (name) {
 // with x, function: def
 // without x, variable: var
 // with x, function: fun
-Beatmap.prototype.letExpression = function (identifier, expression) {
-	const formula = this.generateFunctionFromFormula(expression, [], true);
+Beatmap.prototype.letExpression = function (identifier, expression, expressionHolder, lineno, callers) {
+	const formula = this.generateFunctionFromFormula(expressionHolder, lineno, callers, expression, [], true);
 	this.deleteExpression(identifier);
 	Object.defineProperty(this.expressions, identifier, {get: () => formula(this.currentX), configurable: true, enumerable: true});
 };
 
-Beatmap.prototype.defExpression = function (identifier, arguments, expression) {
-	const formula = this.generateFunctionFromFormula(expression, arguments, true);
+Beatmap.prototype.defExpression = function (identifier, arguments, expression, expressionHolder, lineno, callers) {
+	const formula = this.generateFunctionFromFormula(expressionHolder, lineno, callers, expression, arguments, true);
 	this.deleteExpression(identifier);
 	Object.setPropertyWithGetter(this.expressions, identifier, (...args) => formula(this.currentX, ...args));
 };
 
-Beatmap.prototype.varExpression = function (identifier, expression) {
-	this.varValue(identifier, this.generateFunctionFromFormulaWithoutX(expression)());
+Beatmap.prototype.varExpression = function (identifier, expression, expressionHolder, lineno, callers) {
+	this.varValue(identifier, this.generateFunctionFromFormulaWithoutX(expressionHolder, lineno, callers, expression)());
 };
 
-Beatmap.prototype.funExpression = function (identifier, arguments, expression) {
-	const formula = this.generateFunctionFromFormulaWithoutX(expression, arguments);
+Beatmap.prototype.funExpression = function (identifier, arguments, expression, expressionHolder, lineno, callers) {
+	const formula = this.generateFunctionFromFormulaWithoutX(expressionHolder, lineno, callers, expression, arguments);
 	this.deleteExpression(identifier);
 	Object.setPropertyWithGetter(this.expressionsWithoutX, identifier, formula);
 };
@@ -437,10 +437,16 @@ Beatmap.prototype.clearNote = function (event, judge) {
 	this.rows[event.rowIndex].drawNoteHead(event.x, event.y, event.solid, false, Level.getColorFromJudge(judge));
 };
 
-Beatmap.prototype.generateFunctionFromFormula = function (formula, parameters, dontUpdateX) {
+Beatmap.prototype.generateFunctionFromFormula = function (expressionHolder, lineno, callers, formula, parameters, dontUpdateX) {
 	parameters ||= [];
 	const specificScope = {};
-	const rootNode = math.parse(formula).transform((node, path, parent) => {
+	let parsedNode;
+	try {
+		parsedNode = math.parse(formula);
+	} catch (e) {
+		Beatmap.throwExpressionError(expressionHolder, formula, e, callers, lineno);
+	}
+	const rootNode = parsedNode.transform((node, path, parent) => {
 		if (node.isSymbolNode && node.name.startsWith('$')) {
 			const identifier = node.name.slice(1);
 			if (identifier in this.expressions)
@@ -483,14 +489,24 @@ Beatmap.prototype.generateFunctionFromFormula = function (formula, parameters, d
 			this.currentX = x;
 		specificScope.x = Number(x);
 		Object.assign(specificScope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
-		return expression.evaluate(scope);
+		try {
+			return expression.evaluate(scope);
+		} catch (e) {
+			Beatmap.throwExpressionError(expressionHolder, formula, e, callers, lineno, x);
+		}
 	};
 };
 
-Beatmap.prototype.generateFunctionFromFormulaWithoutX = function (formula, parameters) {
+Beatmap.prototype.generateFunctionFromFormulaWithoutX = function (expressionHolder, lineno, callers, formula, parameters) {
 	parameters ||= [];
 	const specificScope = {};
-	const rootNode = math.parse(formula).transform((node, path, parent) => {
+	let parsedNode;
+	try {
+		parsedNode = math.parse(formula);
+	} catch (e) {
+		Beatmap.throwExpressionError(expressionHolder, formula, e, callers, lineno);
+	}
+	const rootNode = parsedNode.transform((node, path, parent) => {
 		if (node.isSymbolNode && node.name.startsWith('$')) {
 			const identifier = node.name.slice(1);
 			if (identifier in this.expressionsWithoutX)
@@ -524,6 +540,16 @@ Beatmap.prototype.generateFunctionFromFormulaWithoutX = function (formula, param
 	});
 	return (...param) => {
 		Object.assign(specificScope, Object.fromKeysAndValues(parameters, param.map(a => Number(a))));
-		return expression.evaluate(scope);
+		try {
+			return expression.evaluate(scope);
+		} catch (e) {
+			Beatmap.throwExpressionError(expressionHolder, formula, e, callers, lineno);
+		}
 	}
+};
+
+Beatmap.throwExpressionError = function (expressionHolder, formula, error, callers, lineno, currentX) {
+	callers = [...callers]
+	callers[0] = {lineno: lineno, caller: callers[0].caller};
+	throw new BeatmapExpressionError(expressionHolder, formula, error, callers, currentX);
 };

@@ -144,7 +144,7 @@ ControlSentence.DEFAULT_APPLICATIONS.BPM = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.MS_PER_WHOLE = function (row, callers) {
-	row.millisecondsPerWhole = Number(math.re(this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))()));
+	row.millisecondsPerWhole = Number(math.re(ControlSentence.calculateValueWithoutX(this.keyword, this.lineno, callers, this.parameters, this._beatmap)));
 	if (row.millisecondsPerWhole <= 0) {
 		this.throwRuntimeError(`MS_PER_WHOLE: cannot be zero or negative: ${row.millisecondsPerWhole}`, callers);
 	}
@@ -153,7 +153,7 @@ ControlSentence.DEFAULT_APPLICATIONS.MS_PER_WHOLE = function (row, callers) {
 for (const judge of ['perfect', 'good', 'bad']) {
 	const keyword = judge.toUpperCase();
 	ControlSentence.DEFAULT_APPLICATIONS[keyword] = function (row, callers) {
-		row[judge] = Number(math.re(this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))()));
+		row[judge] = Number(math.re(ControlSentence.calculateValueWithoutX(this.keyword, this.lineno, callers, this.parameters, this._beatmap)));
 		if (row[judge] < 0) {
 			this.throwRuntimeError(`${keyword}: judgement window radius is negative: ${row[judge]}`, callers);
 		}
@@ -163,13 +163,13 @@ for (const judge of ['perfect', 'good', 'bad']) {
 for (const judge of ['perfect', 'good', 'bad']) {
 	const keyword = `${judge.toUpperCase()}_HP`;
 	ControlSentence.DEFAULT_APPLICATIONS[keyword] = function (row, callers) {
-		row[`${judge}Hp`] = Number(math.re(this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))()));
+		row[`${judge}Hp`] = Number(math.re(ControlSentence.calculateValueWithoutX(this.keyword, this.lineno, callers, this.parameters, this._beatmap)));
 	};
 }
 
 ControlSentence.DEFAULT_APPLICATIONS.FAKE_JUDGEMENT_LINE = function (row, callers) {
 	if (this.parameters.length > 0) {
-		const label = this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))();
+		const label = ControlSentence.calculateValueWithoutX(this.keyword, this.lineno, callers, this.parameters, this._beatmap);
 		row.setCurrentJudgementLineByLabel(label);
 	} else {
 		row.addFakeJudgementLineWithoutLabel();
@@ -182,7 +182,7 @@ ControlSentence.DEFAULT_APPLICATIONS.GENUINE_JUDGEMENT_LINE = function (row, cal
 
 ControlSentence.DEFAULT_APPLICATIONS.TEXT = function (row, callers) {
 	if (this.parameters.length > 0) {
-		const label = this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))();
+		const label = ControlSentence.calculateValueWithoutX(this.keyword, this.lineno, callers, this.parameters, this._beatmap);
 		row.setCurrentTextByLabel(label);
 	} else {
 		row.addTextWithoutLabel();
@@ -191,52 +191,64 @@ ControlSentence.DEFAULT_APPLICATIONS.TEXT = function (row, callers) {
 
 for (const attr of ['x', 'y', 'z', 'anchor_x', 'anchor_y', 'rotation', 'width', 'height', 'red', 'green', 'blue', 'alpha', 'blend_mode']) {
 	ControlSentence.DEFAULT_APPLICATIONS['JUDGEMENT_LINE_' + attr.toUpperCase()] = function (row, callers) {
-		row.currentJudgementLine.setAttribute(attr, this.parameters);
+		row.currentJudgementLine.setAttribute(this.keyword, this.lineno, callers, attr, this.parameters);
 	};
 }
 
 for (const attr of ['x', 'y', 'z', 'anchor_x', 'anchor_y', 'rotation', 'scale_x', 'scale_y', 'red', 'green', 'blue', 'alpha', 'text', 'blend_mode']) {
 	ControlSentence.DEFAULT_APPLICATIONS['TEXT_' + attr.toUpperCase()] = function (row, callers) {
-		row.currentText.setAttribute(attr, this.parameters);
+		row.currentText.setAttribute(this.keyword, this.lineno, callers, attr, this.parameters);
 	};
 }
 
 for (const attr of ['note_x', 'hit_x', 'bar_line_x', 'time']) {
 	ControlSentence.DEFAULT_APPLICATIONS[attr.toUpperCase()] = function (row, callers) {
-		row[attr.fromSnakeToCamel() + 'Formula'] = ControlSentence.generateFunction(this.parameters, this._beatmap);
+		row[attr.fromSnakeToCamel() + 'Formula'] = ControlSentence.generateFunction(this.keyword, this.lineno, callers, this.parameters, this._beatmap);
 	};
 }
 
 ControlSentence.DEFAULT_APPLICATIONS.LET = function (row, callers) {
 	const name = this.parameters[0];
 	if (ControlSentence.checkIdentifier(name))
-		this._beatmap.letExpression(name, this.parameters.slice(1).join(' '));
+		this._beatmap.letExpression(name, this.parameters.slice(1).join(' '), this.keyword, this.lineno, callers);
 	else
 		this.throwRuntimeError(`LET: invalid identifier: ${name}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.DEF = function (row, callers) {
 	const identifier = this.parameters[0];
-	if (ControlSentence.checkIdentifier(identifier))
-		this._beatmap.defExpression(identifier, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
-	else
+	const parametersList = this.parameters[1].split(',');
+	if (!ControlSentence.checkIdentifier(identifier))
 		this.throwRuntimeError(`DEF: invalid identifier: ${identifier}`, callers);
+	else {
+		for (const parameterName of parametersList) {
+			if (!ControlSentence.checkIdentifier(parameterName))
+				this.throwRuntimeError(`DEF: invalid identifier: ${parameterName}`, callers);
+		}
+	}
+	this._beatmap.defExpression(identifier, parametersList, this.parameters.slice(2).join(' '), this.keyword, this.lineno, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.VAR = function (row, callers) {
 	const identifier = this.parameters[0];
 	if (ControlSentence.checkIdentifier(identifier))
-		this._beatmap.varExpression(identifier, this.parameters.slice(1).join(' '));
+		this._beatmap.varExpression(identifier, this.parameters.slice(1).join(' '), this.keyword, this.lineno, callers);
 	else
 		this.throwRuntimeError(`VAR: invalid identifier: ${identifier}`, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.FUN = function (row, callers) {
 	const identifier = this.parameters[0];
-	if (ControlSentence.checkIdentifier(identifier))
-		this._beatmap.funExpression(identifier, this.parameters[1].split(','), this.parameters.slice(2).join(' '));
-	else
+	const parametersList = this.parameters[1].split(',');
+	if (!ControlSentence.checkIdentifier(identifier))
 		this.throwRuntimeError(`VAR: invalid identifier: ${identifier}`, callers);
+	else {
+		for (const parameterName of parametersList) {
+			if (!ControlSentence.checkIdentifier(parameterName))
+				this.throwRuntimeError(`VAR: invalid identifier: ${parameterName}`, callers);
+		}
+	}
+	this._beatmap.funExpression(identifier, parametersList, this.parameters.slice(2).join(' '), this.keyword, this.lineno, callers);
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.ALIAS = function (row, callers) {
@@ -282,7 +294,7 @@ ControlSentence.DEFAULT_APPLICATIONS.PROCEDURE = function (row, callers) {
 ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
 	// set up flowchart
 	const flowchart = [{
-		condition: this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' ')),
+		condition: ControlSentence.valueWithoutX(row.keyword, this.lineno, callers, this.parameters, this._beatmap),
 		block: this.blocks[0]
 	}];
 	let reachedElse = false;
@@ -293,7 +305,7 @@ ControlSentence.DEFAULT_APPLICATIONS.IF = function (row, callers) {
 				this.throwRuntimeError(`ELSE_IF: ELSE_IF branch is invalid after ELSE`, callers);
 			}
 			flowchart.push({
-				condition: this._beatmap.generateFunctionFromFormulaWithoutX(beginning.parameters.join(' ')),
+				condition: ControlSentence.valueWithoutX(row.keyword, this.lineno, callers, beginning.parameters, this._beatmap),
 				'block': block
 			});
 		} else if (beginning.keyword === 'ELSE') {
@@ -329,7 +341,7 @@ ControlSentence.DEFAULT_APPLICATIONS.RETURN = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.WHILE = function (row, callers) {
-	const condition = this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '));
+	const condition = ControlSentence.valueWithoutX(this.keyword, this.lineno, callers, this.parameters, this._beatmap);
 	let result;
 	while (condition()) {
 		result = ControlSentence.executeBlock(this.blocks[0], row, callers);
@@ -349,10 +361,10 @@ ControlSentence.DEFAULT_APPLICATIONS.FOR = function (row, callers) {
 		this.throwRuntimeError(`FOR: invalid identifier: ${identifierValue}`, callers);
 	if (identifierIndex && !ControlSentence.checkIdentifier(identifierValue))
 		this.throwRuntimeError(`FOR: invalid identifier: ${identifierIndex}`, callers);
-	const iteratedString = this.parameters.slice(1).join(' ');
-	const iterated = this._beatmap.generateFunctionFromFormulaWithoutX(iteratedString)();
+	const iteratedStringParts = this.parameters.slice(1);
+	const iterated = ControlSentence.calculateValueWithoutX(this.keyword, this.lineno, callers, iteratedStringParts, this._beatmap);
 	if (typeof iterated.forEach !== 'function')
-		this.throwRuntimeError(`FOR: cannot iterate over a non-iterable object: ${iteratedString}`, callers);
+		this.throwRuntimeError(`FOR: cannot iterate over a non-iterable object: ${iteratedStringParts.join(' ')}`, callers);
 	let result;
 	try {
 		iterated.forEach((item, index, _) => {
@@ -377,7 +389,7 @@ ControlSentence.DEFAULT_APPLICATIONS.FOR = function (row, callers) {
 };
 
 ControlSentence.DEFAULT_APPLICATIONS.DEBUG_LOG = function (row, callers) {
-	console.log(this._beatmap.generateFunctionFromFormulaWithoutX(this.parameters.join(' '))());
+	console.log(ControlSentence.calculateValueWithoutX(this.keyword, this.lineno, callers, this.parameters, this._beatmap));
 };
 
 ControlSentence.executeBlock = function (block, row, callers) {
@@ -400,7 +412,15 @@ ControlSentence.checkKeyword = function (keyword) {
 	return /[A-Z_]\w*/y.test(keyword);
 };
 
-ControlSentence.generateFunction = function (formulaParts, beatmap) {
-	const formula = beatmap.generateFunctionFromFormula(formulaParts.join(' '));
+ControlSentence.generateFunction = function (keyword, lineno, callers, formulaParts, beatmap) {
+	const formula = beatmap.generateFunctionFromFormula(keyword, lineno, callers, formulaParts.join(' '));
 	return x => Number(math.re(formula(x)));
+};
+
+ControlSentence.valueWithoutX = function (keyword, lineno, callers, formulaParts, beatmap) {
+	return beatmap.generateFunctionFromFormulaWithoutX(keyword, lineno, callers, formulaParts.join(' '));
+};
+
+ControlSentence.calculateValueWithoutX = function (keyword, lineno, callers, formulaParts, beatmap) {
+	return ControlSentence.valueWithoutX(...arguments)();
 };

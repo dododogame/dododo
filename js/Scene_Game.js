@@ -454,11 +454,20 @@ Scene_Game.prototype._updateJudgementLine = function (now) {
 		return;
 	const lengthPosition = this._level._getLengthPositionFromTime(now);
 	if (this._level.visuals.judgementLinePerformances) {
-		row.judgementLine.applyToSprite(this._judgementLine, lengthPosition, this._row1Sprite.y, row.mirror);
-		for (let i = 0; i < this._fakeJudgementLines.length; i++)
-			row.fakeJudgementLines[i].applyToSprite(this._fakeJudgementLines[i], lengthPosition, this._row1Sprite.y, row.mirror);
-		for (let i = 0; i < this._texts.length; i++)
-			row.texts[i].applyToSprite(this._texts[i], lengthPosition, this._row1Sprite.y, row.mirror);
+		try {
+			row.judgementLine.applyToSprite(this._judgementLine, lengthPosition, this._row1Sprite.y, row.mirror);
+			for (let i = 0; i < this._fakeJudgementLines.length; i++)
+				row.fakeJudgementLines[i].applyToSprite(this._fakeJudgementLines[i], lengthPosition, this._row1Sprite.y, row.mirror);
+			for (let i = 0; i < this._texts.length; i++)
+				row.texts[i].applyToSprite(this._texts[i], lengthPosition, this._row1Sprite.y, row.mirror);
+		} catch (e) {
+			if (e instanceof BeatmapExpressionError) {
+				this._shouldError = true;
+				this._error = e;
+			} else {
+				console.error(e);
+			}
+		}
 		this._judgementLineLayer.children.sort((a, b) => a.zIndex - b.zIndex);
 	} else {
 		this._judgementLine.x = this._level._getNoteXFromLengthPosition(lengthPosition);
@@ -623,7 +632,7 @@ Scene_Game.prototype._onLoad = async function () {
 	try {
 		await this._level.loadBeatmap();
 	} catch (e) {
-		if (e instanceof TypeError || e instanceof BeatmapError || e instanceof BeatmapRuntimeError) {
+		if (e instanceof TypeError || e instanceof BeatmapError || e instanceof BeatmapRuntimeError || e instanceof BeatmapExpressionError) {
 			this._error = e;
 			this._shouldError = true;
 			return;

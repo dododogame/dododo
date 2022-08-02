@@ -40,7 +40,7 @@ JudgementLine.prototype.applyToSprite = function (sprite, lengthPosition, rowY, 
 	}
 };
 
-JudgementLine.prototype.setAttribute = function (attribute, parameters) {
+JudgementLine.prototype.setAttribute = function (keyword, lineno, callers, attribute, parameters) {
 	switch (attribute) {
 		case 'x':
 		case 'y':
@@ -54,7 +54,7 @@ JudgementLine.prototype.setAttribute = function (attribute, parameters) {
 		case 'green':
 		case 'blue':
 		case 'alpha':
-			this[attribute.fromSnakeToCamel() + 'Formula'] = ControlSentence.generateFunction(parameters, this._row._beatmap);
+			this[attribute.fromSnakeToCamel() + 'Formula'] = ControlSentence.generateFunction(keyword, lineno, callers, parameters, this._row._beatmap);
 			break;
 		case 'blend_mode':
 			this.blendMode = parameters[0].toUpperCase();
