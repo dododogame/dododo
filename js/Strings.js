@@ -596,10 +596,10 @@ Strings["ja-JP"] = {
 	"loading": "ロード中...",
 	
 	// title page
-	"browseFiles": "ブラウズファイル",
+	"browseFiles": "ファイル",
 	"browseStore": "ストアー",
-	"browseHistory": "閲覧履歴",
-	"preferences": "设置",
+	"browseHistory": "履歴",
+	"preferences": "設定",
 	
 	// browse files
 	"uploadAudio": "音声ファイルをアップロードする",
