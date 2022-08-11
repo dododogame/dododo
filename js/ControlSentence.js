@@ -160,7 +160,7 @@ for (const judge of ['perfect', 'good', 'bad']) {
 	};
 }
 
-for (const judge of ['perfect', 'good', 'bad']) {
+for (const judge of ['perfect', 'good', 'bad', 'miss', 'excess']) {
 	const keyword = `${judge.toUpperCase()}_HP`;
 	ControlSentence.DEFAULT_APPLICATIONS[keyword] = function (row, callers) {
 		row[`${judge}Hp`] = Number(math.re(ControlSentence.calculateValueWithoutX(this.keyword, this.lineno, callers, this.parameters, this._beatmap)));
