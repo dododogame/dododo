@@ -119,11 +119,12 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 				const noteEvent = {"event": "note", "lineno": lineno + dataLineno, "column": position + 1};
 				
 				// note length
-				if (TyphmUtils.isDigit(line[position])) {
-					noteEvent.length = TyphmUtils.parseDigit(line[position]);
-					position++;
+				let [isNumber, theNumber, newPosition] = this.parseNumberInBeatmap(line, position, lineno + dataLineno);
+				if (isNumber) {
+					noteEvent.length = theNumber;
+					position = newPosition;
 				} else
-					throw new BeatmapError(lineno + dataLineno, position + 1, "expected [0-9a-z], found " + line[position]);
+					throw new BeatmapError(lineno + dataLineno, position + 1, "expected [0-9a-z\\[], found " + line[position]);
 				
 				// dots
 				let dots = 0;
@@ -134,9 +135,10 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 				noteEvent.dots = dots;
 				
 				// multiplicity
-				if (TyphmUtils.isDigit(line[position])) {
-					noteEvent.multiplicity = TyphmUtils.parseDigit(line[position]);
-					position++;
+				[isNumber, theNumber, newPosition] = this.parseNumberInBeatmap(line, position, lineno + dataLineno);
+				if (isNumber) {
+					noteEvent.multiplicity = theNumber;
+					position = newPosition;
 				} else
 					noteEvent.multiplicity = 1;
 				
@@ -172,13 +174,15 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 					}
 					const group = voices.pop();
 					const groupEvent = {"event": "group", "notes": group, "lineno": lineno + dataLineno, "column": position + 1};
-					if (TyphmUtils.isDigit(line[position])) {
-						groupEvent.ratio1 = TyphmUtils.parseDigit(line[position]);
-						position++;
-						if (TyphmUtils.isDigit(line[position])) {
-							groupEvent.ratio2 = TyphmUtils.parseDigit(line[position]);
+					[isNumber, theNumber, newPosition] = this.parseNumberInBeatmap(line, position, lineno + dataLineno);
+					if (isNumber) {
+						groupEvent.ratio1 = theNumber;
+						position = newPosition;
+						[isNumber, theNumber, newPosition] = this.parseNumberInBeatmap(line, position, lineno + dataLineno);
+						if (isNumber) {
+							position = newPosition;
+							groupEvent.ratio2 = theNumber;
 							groupEvent.ratio = frac(groupEvent.ratio2, groupEvent.ratio1);
-							position++;
 						} else { // default value of ratio2 is 2 ** floor(log2(ratio1))
 							groupEvent.ratio2 = null;
 							let i = 0;
@@ -200,6 +204,36 @@ Beatmap.prototype.parse = function (data, dataLineno) {
 	}
 	if (voices.length > 0)
 		this.events.push({"event": "row", "voices": voices, "lineno": data.length + 1 + dataLineno});
+};
+
+// returns: [isNumber, theNumber, newPosition]
+Beatmap.prototype.parseNumberInBeatmap = function (line, position, lineno) {
+	let charCode = line.charCodeAt(position);
+	let theNumber = 0;
+	if (charCode >= 48 && charCode < 58) { // 0--9
+		theNumber = charCode - 48;
+		position++;
+		return [true, theNumber, position];
+	} else if (charCode >= 97 && charCode < 123) { // a--z
+		theNumber = charCode - 97 + 10;
+		position++;
+		return [true, theNumber, position];
+	} else if (charCode === 91) { // [
+		position++;
+		while (true) {
+			charCode = line.charCodeAt(position);
+			position++;
+			if (charCode === 93) { // ]
+				return [true, theNumber, position];
+			} else if (charCode >= 48 && charCode < 58) { // 0--9
+				theNumber = theNumber * 10 + (charCode - 48);
+			} else {
+				throw new BeatmapError(lineno, position, "expected [0-9\\]], found " + String.fromCharCode(charCode));
+			}
+		}
+	} else {
+		return [false, theNumber, position];
+	}
 };
 
 Beatmap.prototype.defineKeywordAlias = function (alias, original) {
