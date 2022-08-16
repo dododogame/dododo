@@ -1,6 +1,6 @@
 @font-face {
 	font-family: GameFont;
-	src: url("https://cdn.jsdelivr.net/gh/UlyssesZh/rmmv_materials@master/fonts/mplus-1m-regular.ttf");
+	src: url("https://fastly.jsdelivr.net/gh/UlyssesZh/rmmv_materials@master/fonts/mplus-1m-regular.ttf");
 }
 
 .IIV::-webkit-media-controls-play-button,

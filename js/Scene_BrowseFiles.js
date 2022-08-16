@@ -130,7 +130,10 @@ Scene_BrowseFiles.prototype.update = function () {
 			const scoreUrl = URL.createObjectURL(beatmapFile);
 			const audioFile = musicInput.files[0];
 			const musicUrl = audioFile ? URL.createObjectURL(audioFile) : '';
-			window.scene = new Scene_Game(musicUrl, scoreUrl, this._recording && JSON.parse(this._recording), 0);
+			const recording = this._recording && JSON.parse(this._recording);
+			const sceneClass = preferences.pseWarning && this._pseWarning && (recording && preferences.recordVisual ?
+				recording.visuals.judgementLinePerformances : preferences.judgementLinePerformances) ? Scene_Warning : Scene_Game;
+			window.scene = new sceneClass(musicUrl, scoreUrl, recording, 0);
 		} else {
 			this._beatmapAlert.visible = true;
 			this._shouldOk = false;
@@ -184,6 +187,7 @@ Scene_BrowseFiles.prototype._refreshPreview = async function () {
 				this._preview.bitmap.drawText(`${Strings.beatmapAuthor}: ${beatmap.beatmapAuthor}`, 0, 80, Graphics.width, 40);
 				this._preview.bitmap.drawText(`${Strings.difficulty}: ${beatmap.difficulty}`, 0, 120, Graphics.width, 40);
 				this._preview.bitmap.drawText(`${Strings.length}: ${length}ms`, 0, 160, Graphics.width, 40);
+				this._pseWarning = beatmap.pseWarning;
 			});
 		} catch (e) {
 			if (e instanceof TypeError) {

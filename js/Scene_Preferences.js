@@ -107,6 +107,11 @@ Scene_Preferences.PREFERENCES_PAGES = [
 				type: 'boolean',
 				args: {
 				}
+			},
+			{
+				name: 'pseWarning',
+				type: 'boolean',
+				args: {}
 			}
 		]
 	},
@@ -590,6 +595,7 @@ Scene_Preferences.DEFAULT_PREFERENCES = {
 	backtickRestart: true,
 	autoPause: true,
 	recordVisual: true,
+	pseWarning: true,
 	FCAPIndicator: true,
 	TPSIndicator: true,
 	judgementLinePerformances: true,

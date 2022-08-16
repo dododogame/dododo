@@ -38,10 +38,23 @@ Strings["en-US"] = {
 	
 	// browse history
 	
-	// in-game
+	// pre-game error
 	"failedToLoad": "Failed to load files",
 	"infoForBeatmapper": "Provide the following info for the beatmapper:",
 	"copy": "Copy",
+	
+	// PSE warning
+	"pseWarningTitle": "Seizure warning",
+	"pseWarningContents": "This beatmap contains flickers, flashes, blinks, or moving geometric shapes, " +
+		"which may potentially trigger seizures for people with photosensitive epilepsy. " +
+		"It is recommended to turn off ornamental judgement line performances before playing this beatmap. " +
+		"Immediately stop playing and consult a doctor if you experience any symptoms, such as " +
+		"lightheadedness, altered vision, eye or face twitching, jerking or shaking of arms or legs, " +
+		"disorientation, confusion, or momentary loss of awareness.",
+	"turnOffPerformances": "Turn off judgement line performances and play",
+	"playAnyway": "Play anyway",
+	
+	// in-game
 	"quitGame": "Back",
 	"restartGame": "Restart",
 	"retryCounter": "%d retry(ies)",
@@ -95,6 +108,7 @@ Strings["en-US"] = {
 	"backtickRestart": "Press backtick to restart",
 	"autoPause": "Automatically pause when losing focus",
 	"recordVisual": "Record visual preferences to replay file",
+	"pseWarning": "Show seizure warning",
 	
 	// preferences: visual
 	"visual": "Visual",
@@ -231,10 +245,21 @@ Strings["zh-CN"] = {
 	
 	// browse history
 	
-	// in-game
+	// pre-game error
 	"failedToLoad": "加载文件失败",
 	"infoForBeatmapper": "向谱师提供下列信息:",
 	"copy": "复制",
+	
+	// PSE warning
+	"pseWarningTitle": "癫痫发作警告",
+	"pseWarningContents": "该谱面包含画面闪烁或移动的几何形状, 这可能会引发光敏性癫痫患者的癫痫发作. " +
+		"建议在观看或游玩此谱面之前关闭装饰性判定线表演. " +
+		"如果您出现任何症状, 例如头晕, 视力下降, 面部抽搐, 四肢抽搐, 迷失方向, 慌乱, 或暂时失去意识, " +
+		"请立即停止游戏并咨询医生.",
+	"turnOffPerformances": "关闭装饰性判定线表演并游玩",
+	"playAnyway": "直接游玩",
+	
+	// in-game
 	"quitGame": "返回",
 	"restartGame": "重开",
 	"retryCounter": "%d 次重开",
@@ -288,6 +313,7 @@ Strings["zh-CN"] = {
 	"backtickRestart": "按反引号重开",
 	"autoPause": "失焦时自动暂停",
 	"recordVisual": "在回放中记录视觉设置",
+	"pseWarning": "显示癫痫发作警告",
 	
 	// preferences: visual
 	"visual": "视觉",
@@ -424,10 +450,21 @@ Strings["zh-TW"] = {
 	
 	// browse history
 	
-	// in-game
+	// pre-game error
 	"failedToLoad": "載入文件失敗",
 	"infoForBeatmapper": "向譜師提供下列信息:",
 	"copy": "複製",
+	
+	// PSE warning
+	"pseWarningTitle": "癲癇發作警告",
+	"pseWarningContents": "該譜麵包含畫面閃爍或移動的幾何形狀, 這可能會引發光敏性癲癇患者的癲癇發作. " +
+		"建議在觀看或遊玩此譜面之前關閉裝飾性判定線表演. " +
+		"如果您出現任何症狀, 例如頭暈, 視力下降, 面部抽搐, 四肢抽搐, 迷失方向, 慌亂, 或暫時失去意識, " +
+		"請立即停止遊戲並諮詢醫生.",
+	"turnOffPerformances": "關閉裝飾性判定線表演並遊玩",
+	"playAnyway": "直接遊玩",
+	
+	// in-game
 	"quitGame": "返回",
 	"restartGame": "重開",
 	"retryCounter": "%d 次重開",
@@ -481,6 +518,7 @@ Strings["zh-TW"] = {
 	"backtickRestart": "按反引號重開",
 	"autoPause": "失焦時自動暫停",
 	"recordVisual": "在回放中記錄視覺設定",
+	"pseWarning": "顯示癲癇發作警告",
 	
 	// preferences: visual
 	"visual": "視覺",
@@ -678,7 +716,7 @@ Strings["ja-JP"] = {
 	"flashWarningGood": "Good ヒットで画面をフラッシュして警告する",
 	"flashWarningMiss": "コンボブレイク時に画面をフラッシュして警告する",
 	"showInaccuracyData": "不正確なデータを表示する",
-	"comboPopupInterval": "コンボポップアップの間隔（無効にするには0を設定してください）",
+	"comboPopupInterval": "コンボポップアップの間隔 (無効にするには0を設定してください)",
 	"fadeIn": "フェードイン (解像度に対する比率 無効にするには0を設定してください)",
 	"fadeOut": "フェードアウト (解像度に対する比率 無効にするには0を設定してください)",
 	"reverseVoices": "声部反転",

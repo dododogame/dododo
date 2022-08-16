@@ -90,13 +90,15 @@ Level.BAD = 1;
 Level.MISS = 0;
 Level.EXCESS = -1;
 
-Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording) {
+Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording, forceOffPerformances) {
 	this._scene = scene;
 	this._musicUrl = musicUrl;
 	this._beatmapUrl = beatmapUrl;
 	this._recording = recording;
 	
 	this._setUpRecording();
+	if (this._forceOffPerformances = forceOffPerformances)
+		this.visuals.judgementLinePerformances = false;
 	this._beatmap = new Beatmap(this._beatmapUrl);
 	this.hasMusic = !!this._musicUrl;
 	this._initializeJudgeCounters();
@@ -110,11 +112,11 @@ Level.prototype.initialize = function (scene, musicUrl, beatmapUrl, recording) {
 Level.prototype.newScene = function () {
 	const recording = this._scene.isRecording ? undefined : this.newRecording;
 	const retryCount = this._scene.isRecording ? this._scene.retryCount + 1 : this._scene.retryCount;
-	return new Scene_Game(this._musicUrl, this._beatmapUrl, recording, retryCount);
+	return new Scene_Game(this._musicUrl, this._beatmapUrl, recording, retryCount, this._forceOffPerformances);
 };
 
 Level.prototype.newReplayScene = function () {
-	return new Scene_Game(this._musicUrl, this._beatmapUrl, this.newRecording, this._scene.retryCount);
+	return new Scene_Game(this._musicUrl, this._beatmapUrl, this.newRecording, this._scene.retryCount, this._forceOffPerformances);
 };
 
 Level.prototype.progress = function (now) {

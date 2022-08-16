@@ -66,6 +66,13 @@ TyphmUtils.fromRGBAToHex = function () {
 	return '#' + Array.from(arguments, x => Math.round(x * 0xff).toString(16).padStart(2, '0')).join('');
 };
 
+TyphmUtils.htmlToElement = function (html) {
+	const template = document.createElement('template');
+	html = html.trim();
+	template.innerHTML = html;
+	return template.content.firstChild;
+};
+
 Object.fromKeysAndValues = function (keys, values) {
 	const result = {};
 	for (let i = 0; i < keys.length; i++)
