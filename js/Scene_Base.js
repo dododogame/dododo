@@ -35,8 +35,15 @@ Scene_Base.prototype.stop = function () {
 };
 
 Scene_Base.prototype._globalOnKeyDown = function (event) {
-	if (event.key === 'F9')
-		this._shouldTakeScreenShot = true;
+	if (!event.ctrlKey && !event.altKey) {
+		if (event.key === 'F9') {
+			this._shouldTakeScreenShot = true;
+		} else if (window.nw && event.key === 'F5') {
+			location.reload();
+		} else if (window.nw && event.key === 'F12') {
+			nw.Window.get().showDevTools();
+		}
+	}
 };
 
 Scene_Base.prototype.updateChildren = function () {

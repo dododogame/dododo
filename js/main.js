@@ -4,15 +4,34 @@
 
 window.musicInput = document.createElement('input');
 musicInput.type = 'file';
-musicInput.accept = 'audio/*';
+if (Utils.isMobileSafari()) {
+	musicInput.style.visibility = 'hidden';
+	document.body.appendChild(musicInput);
+} else {
+	musicInput.accept = 'audio/*';
+}
 
 window.beatmapInput = document.createElement('input');
 beatmapInput.type = 'file';
-beatmapInput.accept = '.ddd';
+if (Utils.isMobileSafari()) {
+	beatmapInput.style.visibility = 'hidden';
+	document.body.appendChild(beatmapInput);
+} else {
+	beatmapInput.accept = '.ddd';
+}
 
 window.recordingInput = document.createElement('input');
 recordingInput.type = 'file';
-recordingInput.accept = 'application/json'
+if (Utils.isMobileSafari()) {
+	recordingInput.visibility = 'hidden';
+	document.body.appendChild(recordingInput);
+} else {
+	recordingInput.accept = 'application/json';
+}
+
+if (Utils.isNwjs()) {
+	window.nw = require('nw.gui');
+}
 
 window.onload = () => {
 	document.body.style.backgroundColor = preferences.backgroundColor;

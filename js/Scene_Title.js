@@ -42,7 +42,13 @@ Scene_Title.prototype.start = function () {
 	this._center(this._preferences, 400+preferences.textHeight*4);
 	this._preferences.bitmap.drawText(`${Strings.preferences} (p)`, 0, 0, 256,
 			preferences.textHeight, 'center')
-	this.addChild(this._preferences)
+	this.addChild(this._preferences);
+	
+	this._versionSprite = new Sprite(new Bitmap(Graphics.width, preferences.textHeight));
+	this._versionSprite.bitmap.drawText(sprintf(Strings.versionFormat, TyphmConstants.VERSION),
+			0, 0, this._versionSprite.width, preferences.textHeight, 'right');
+	this._versionSprite.y = Graphics.height - preferences.textHeight;
+	this.addChild(this._versionSprite);
 
 	this._shouldGotoFiles = false;
 	this._shouldGotoStore = false;
@@ -60,6 +66,9 @@ Scene_Title.prototype._loadPreferences = function () {
 		Graphics._boxWidth = preferences.graphicsWidth;
 		Graphics._boxHeight = preferences.graphicsHeight;
 		Graphics._updateAllElements();
+		if (window.nw) {
+			nw.Window.get().resizeTo(preferences.graphicsWidth, preferences.graphicsHeight);
+		}
 	}
 	if (document.body.style.backgroundColor !== preferences.backgroundColor) {
 		document.body.style.backgroundColor = preferences.backgroundColor;

@@ -62,7 +62,7 @@ Beatmap.prototype.load = async function () {
 	this.length = this.end && this.end - this.start;
 	this.volume = head.volume ? parseFloat(head.volume) : 1.0;
 	this.offset = head.offset ? parseFloat(head.offset) : 0.0;
-	this.pseWarning = !(head.pseWarning === 'false');
+	this.pseWarning = head.pseWarning === 'true';
 	this.parse(data, dataLineno)
 };
 

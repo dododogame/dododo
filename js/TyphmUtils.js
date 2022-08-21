@@ -73,6 +73,14 @@ TyphmUtils.htmlToElement = function (html) {
 	return template.content.firstChild;
 };
 
+TyphmUtils.openLink = function (href) {
+	if (window.nw) {
+		nw.Shell.openExternal(href);
+	} else {
+		open(href);
+	}
+};
+
 Object.fromKeysAndValues = function (keys, values) {
 	const result = {};
 	for (let i = 0; i < keys.length; i++)

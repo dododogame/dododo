@@ -1,0 +1,17 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    front_matter_parser (1.0.1)
+    liquid (5.4.0)
+    rubyzip (2.3.2)
+
+PLATFORMS
+  x86_64-linux
+
+DEPENDENCIES
+  front_matter_parser
+  liquid
+  rubyzip
+
+BUNDLED WITH
+   2.3.7

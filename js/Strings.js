@@ -21,6 +21,7 @@ Strings["en-US"] = {
 	"browseStore": "Browse store",
 	"browseHistory": "Browse history",
 	"preferences": "Preferences",
+	"versionFormat": "Ver. %s",
 	
 	// browse files
 	"uploadAudio": "Upload audio",
@@ -228,6 +229,7 @@ Strings["zh-CN"] = {
 	"browseStore": "浏览商店",
 	"browseHistory": "浏览历史",
 	"preferences": "设置",
+	"versionFormat": "版本 %s",
 	
 	// browse files
 	"uploadAudio": "上传音频文件",
@@ -433,6 +435,7 @@ Strings["zh-TW"] = {
 	"browseStore": "瀏覽商店",
 	"browseHistory": "瀏覽歷史",
 	"preferences": "設定",
+	"versionFormat": "版本 %s",
 	
 	// browse files
 	"uploadAudio": "上載音頻文件",
