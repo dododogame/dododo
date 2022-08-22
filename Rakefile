@@ -288,9 +288,12 @@ module DododoBuilder
 	
 	def build_win
 		log "Writing launcher script"
-		File.write File.join(@target_path, 'launcher.bat'), <<~'BAT'
-			%~dp0\nw.exe %~dp0\www
-		BAT
+		File.write File.join(@target_path, 'launcher.vbs'), <<~'VBS'
+			Set oShell = CreateObject("Wscript.Shell")
+			Dim strArgs
+			strArgs = "nw www"
+			oShell.Run strArgs, 0, false
+		VBS
 	end
 	
 	def build_osx

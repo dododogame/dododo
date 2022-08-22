@@ -46,7 +46,7 @@ To install the game on Windows,
 first download the zip package for Windows from [releases](https://github.com/dododogame/dododo/releases).
 Just extract the contents of the zip file to somewhere you want to install the game, and then
 [create a desktop shortcut](https://support.microsoft.com/en-us/office/create-a-desktop-shortcut-for-an-office-program-or-file-9a8df64b-cd87-4700-95cc-4bc3e2a962da)
-for the file `launcher.bat`.
+for the file `launcher.vbs`.
 There are icon files in the `www/icon` folder,
 you may change the icon of the shortcut to the icon of the game.
 
