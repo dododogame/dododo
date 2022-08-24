@@ -456,7 +456,7 @@ Strings["zh-TW"] = {
 	// pre-game error
 	"failedToLoad": "載入文件失敗",
 	"infoForBeatmapper": "向譜師提供下列信息:",
-	"copy": "複製",
+	"copy": "複刻",
 	
 	// PSE warning
 	"pseWarningTitle": "癲癇發作警告",
