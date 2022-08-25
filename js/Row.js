@@ -234,14 +234,14 @@ Row.prototype.drawVoiceAndGetLastNote = function (voice, isFirstVoice, y, lastNo
 		if (event.event === "note") {
 			if (lastTie) {
 				event.tiedNote = lastNote;
-				if (i === 0) {
-					this.drawRightHalfTie(event.x, y+(lastNote.multiplicity - 1) * 5);
+				if (voice.slice(0, i).every(e => e.event === 'barline')) {
+					this.drawRightHalfTie(event.x, y+(lastNote.multiplicity - 1) * preferences.headsRadius);
 				} else {
-					this.drawTie(lastNote.x, event.x, y+(lastNote.multiplicity - 1) * 5);
+					this.drawTie(lastNote.x, event.x, y+(lastNote.multiplicity - 1) * preferences.headsRadius);
 				}
 			}
-			if (event.tie && i === voice.length - 1) {
-				this.drawLeftHalfTie(event.x,y+(lastNote.multiplicity - 1) * 5);
+			if (event.tie && voice.slice(i+1).every(e => e.event === 'barline')) {
+				this.drawLeftHalfTie(event.x,y+(lastNote.multiplicity - 1) * preferences.headsRadius);
 			}
 			this.drawIndividualNote(event, y, !lastTie);
 			lastNote = event;
@@ -253,7 +253,9 @@ Row.prototype.drawVoiceAndGetLastNote = function (voice, isFirstVoice, y, lastNo
 				firstNote.big = false;
 			}
 			lastNote = this.drawGroupAndGetLastNoteRecursive(isFirstVoice, event, y, lastNote,
-				i === 0, i === voice.length - 1, Row.getGroupHeightRecursive(event), timeLengthPassed, 1);
+				voice.slice(0, i).every(e => e.event === 'barline'),
+				voice.slice(i+1).every(e => e.event === 'barline'),
+				Row.getGroupHeightRecursive(event), timeLengthPassed, 1);
 		} else if (event.event === 'barline') {
 			if (isFirstVoice) {
 				this._beatmap.barLines.push({

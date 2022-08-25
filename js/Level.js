@@ -547,6 +547,7 @@ Level.prototype._excessHit = function (now) {
 	this._excessNumber++;
 	this._scene._onDestinedExcess();
 	this.calculateScore();
+	this.numbersUpdated = true;
 };
 
 Level.prototype._processLoosen = function (now) {
@@ -641,7 +642,7 @@ Level.prototype._preprocessHitEvents = function () {
 	this._unclearedHitSounds = [...this._beatmap.notes];
 	this._totalMeasures = 0;
 	this._totalNotes = this._unclearedEvents.length;
-	for (let i = 0, j = 0; i < this._beatmap.barLines.length && j < this._totalNotes; i++, j++) {
+	for (let i = 0, j = 0; i < this._beatmap.barLines.length && j < this._totalNotes; i++) {
 		const barlineTime = this._beatmap.barLines[i].time;
 		if (barlineTime <= this._unclearedEvents[j].time)
 			continue;
@@ -650,6 +651,7 @@ Level.prototype._preprocessHitEvents = function () {
 			j++;
 		}
 		this._unclearedEvents[j].isLastInMeasure = true;
+		j++;
 		this._totalMeasures++;
 	}
 	this._currentMeasureJudge = Level.PERFECT;
