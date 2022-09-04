@@ -73,6 +73,12 @@ TyphmUtils.htmlToElement = function (html) {
 	return template.content.firstChild;
 };
 
+Utils.isMobileSafari = function() {
+	var agent = navigator.userAgent;
+	return !!(agent.match(/iPhone|iPad|iPod|Macintosh/) && agent.match(/AppleWebKit/) &&
+		!agent.match('CriOS'));
+};
+
 TyphmUtils.openLink = function (href) {
 	if (window.nw) {
 		nw.Shell.openExternal(href);

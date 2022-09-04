@@ -23,7 +23,7 @@ if (Utils.isMobileSafari()) {
 window.recordingInput = document.createElement('input');
 recordingInput.type = 'file';
 if (Utils.isMobileSafari()) {
-	recordingInput.visibility = 'hidden';
+	recordingInput.style.visibility = 'hidden';
 	document.body.appendChild(recordingInput);
 } else {
 	recordingInput.accept = 'application/json';
