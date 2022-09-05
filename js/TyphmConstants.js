@@ -2,7 +2,7 @@ function TyphmConstants() {
 	throw new Error('This is a static class');
 }
 
-TyphmConstants.VERSION = '1.0.1.0-2';
+TyphmConstants.VERSION = '1.0.1.0-3';
 TyphmConstants.PREFERENCES_MARGIN = 128;
 TyphmConstants.DEFAULT_PERFECT = 0.02;
 TyphmConstants.DEFAULT_GOOD = 0.04;
