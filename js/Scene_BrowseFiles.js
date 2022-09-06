@@ -8,31 +8,31 @@ Scene_BrowseFiles.prototype.constructor = Scene_BrowseFiles;
 Scene_BrowseFiles.prototype.start = function () {
 	Scene_Base.prototype.start.call(this);
 
-	this._musicPrompt = new Button(new Bitmap(256, preferences.textHeight),
+	this._musicPrompt = new Button(new Bitmap(Graphics.width, preferences.textHeight),
 			() => { this._shouldUploadAudio = true; });
 	this._musicPrompt.bitmap.drawText(`${Strings.uploadAudio} (a)`, 0, 0,
 			this._musicPrompt.width, preferences.textHeight, 'center');
 	this._center(this._musicPrompt, preferences.textHeight);
 	this.addChild(this._musicPrompt);
 
-	this._musicResult = new Sprite(new Bitmap(1024, preferences.textHeight));
+	this._musicResult = new Sprite(new Bitmap(Graphics.width, preferences.textHeight));
 	this._musicResult.opacity = 128;
 	this._center(this._musicResult, preferences.textHeight*2);
 	this.addChild(this._musicResult);
 
-	this._beatmapPrompt = new Button(new Bitmap(256, preferences.textHeight),
+	this._beatmapPrompt = new Button(new Bitmap(Graphics.width, preferences.textHeight),
 			() => { this._shouldUploadBeatmap = true; });
 	this._beatmapPrompt.bitmap.drawText(`${Strings.uploadBeatmap} (b)`, 0, 0,
 			this._beatmapPrompt.width, preferences.textHeight, 'center');
 	this._center(this._beatmapPrompt, preferences.textHeight*4);
 	this.addChild(this._beatmapPrompt);
 
-	this._beatmapResult = new Sprite(new Bitmap(1024, preferences.textHeight));
+	this._beatmapResult = new Sprite(new Bitmap(Graphics.width, preferences.textHeight));
 	this._beatmapResult.opacity = 128;
 	this._center(this._beatmapResult, preferences.textHeight*5);
 	this.addChild(this._beatmapResult);
 	
-	this._recordingPrompt = new Button(new Bitmap(256, preferences.textHeight),
+	this._recordingPrompt = new Button(new Bitmap(Graphics.width, preferences.textHeight),
 		() => this._shouldUploadRecording = true);
 	this._recordingPrompt.bitmap.drawText(`${Strings.uploadRecording} (r)`, 0, 0,
 		this._recordingPrompt.width, preferences.textHeight, 'right');

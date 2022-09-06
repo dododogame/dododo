@@ -641,6 +641,7 @@ Strings["ja-JP"] = {
 	"browseStore": "ストアー",
 	"browseHistory": "履歴",
 	"preferences": "設定",
+	"versionFormat": undefined,
 	
 	// browse files
 	"uploadAudio": "音声ファイルをアップロードする",
@@ -658,10 +659,18 @@ Strings["ja-JP"] = {
 	
 	// browse history
 	
-	// in-game
+	// pre-game error
 	"failedToLoad": "データの読み込みに失敗しました",
 	"infoForBeatmapper": "譜面制作者に次の情報を提供する:",
 	"copy": "コピー",
+	
+	// PSE warning
+	"pseWarningTitle": undefined,
+	"pseWarningContents": undefined,
+	"turnOffPerformances": undefined,
+	"playAnyway": undefined,
+	
+	// in-game
 	"quitGame": "戻る",
 	"restartGame": "リスタート",
 	"perfect": "Perfect",
@@ -685,6 +694,7 @@ Strings["ja-JP"] = {
 	// in-game display of modifiers
 	"inGame_playRate": "%fx スピード",
 	"inGame_autoPlay": "オートプレイ",
+	"inGame_noFail": undefined,
 	"inGame_noBad": "No-bad",
 	"inGame_noExcess": "No-excess",
 	"inGame_judgementWindow": "%fx 判",
@@ -694,6 +704,7 @@ Strings["ja-JP"] = {
 	"modifiers": "モード",
 	"playRate": "倍速",
 	"autoPlay": "オートプレイ",
+	"noFail": undefined,
 	"noBad": "No-Bad モード",
 	"noExcess": "No-excess モード",
 	"judgementWindow": "判定幅 (小さいほど厳しい)",
@@ -704,6 +715,7 @@ Strings["ja-JP"] = {
 	"offset": "オフセット (ms)",
 	"offsetWizard": "オフセットウィザード",
 	"countdown": "ゲームに戻る前にカウントダウンを表示する",
+	"autoRestartFail": undefined,
 	"autoRestartGood": "APに失敗すると自動的にリスタートする",
 	"autoRestartMiss": "FCに失敗すると自動的にリスタートする",
 	"F8Pause": "F8 で一時停止する",
@@ -719,9 +731,9 @@ Strings["ja-JP"] = {
 	"flashWarningGood": "Good ヒットで画面をフラッシュして警告する",
 	"flashWarningMiss": "コンボブレイク時に画面をフラッシュして警告する",
 	"showInaccuracyData": "不正確なデータを表示する",
-	"comboPopupInterval": "コンボポップアップの間隔 (無効にするには0を設定してください)",
-	"fadeIn": "フェードイン (解像度に対する比率 無効にするには0を設定してください)",
-	"fadeOut": "フェードアウト (解像度に対する比率 無効にするには0を設定してください)",
+	"comboPopupInterval": "コンボポップアップの間隔 (無効にするには0を設定してください)", // too long
+	"fadeIn": "フェードイン (解像度に対する比率 無効にするには0を設定してください)", // too long
+	"fadeOut": "フェードアウト (解像度に対する比率 無効にするには0を設定してください)", // too long
 	"reverseVoices": "声部反転",
 	"mirror": "ミラー (左右反転)",
 	"showKeyboard": "キーボードの押下を表示する",
@@ -760,7 +772,7 @@ Strings["ja-JP"] = {
 	"graphics": "グラフィック",
 	"graphicsWidth": "解像度 (横の長さ)",
 	"graphicsHeight": "解像度 (縦の長さ)",
-	"useWebGL": "WebGL を使用したレンダリング (サイトを更新して有効にする)",
+	"useWebGL": "WebGL を使用したレンダリング (サイトを更新して有効にする)", // too long
 	"showFPS": "FPSを表示を切り替える (F2)",
 	"stretchGraphics": "ウィンドウに合わせてストレッチ (F3)",
 	"fullscreen": "フルスクリーン切り替える (F4, F11)",
@@ -770,8 +782,8 @@ Strings["ja-JP"] = {
 	"audio": "オーディオ",
 	"enableHitSound": "ヒットサウンドを有効にする",
 	"hitSound": "ヒットサウンド",
-	"hitSoundWithMusic": "ヒットサウンドはキーボード入力ではなく音楽で再生する",
-	"countdownBeats": "カウントダウン時にヒットサウンドでビートをキューに入れる",
+	"hitSoundWithMusic": "ヒットサウンドはキーボード入力ではなく音楽で再生する", // too long
+	"countdownBeats": "カウントダウン時にヒットサウンドでビートをキューに入れる", // too long
 	"musicVolume": "ミュージックのボリューム",
 	"hitSoundVolume": "ヒットサウンドのボリューム",
 	"masterVolume": "全体のボリューム",
