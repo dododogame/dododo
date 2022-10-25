@@ -641,7 +641,7 @@ Strings["ja-JP"] = {
 	"browseStore": "ストアー",
 	"browseHistory": "履歴",
 	"preferences": "設定",
-	"versionFormat": undefined,
+	"versionFormat": "バージョン %s",
 	
 	// browse files
 	"uploadAudio": "音声ファイルをアップロードする",
@@ -665,10 +665,14 @@ Strings["ja-JP"] = {
 	"copy": "コピー",
 	
 	// PSE warning
-	"pseWarningTitle": undefined,
-	"pseWarningContents": undefined,
-	"turnOffPerformances": undefined,
-	"playAnyway": undefined,
+	"pseWarningTitle": "光過敏性てんかん警告",
+	"pseWarningContents": "このビートマップには, 光過敏性てんかんを持つ人々の発作を引き起こす可能性の " +
+		"あるちらつき, フラッシュ, まばたき, または移動する幾何学的形状が含まれています. " +
+		"このビートマップを再生する前に, 装飾判定ラインのパフォーマンスをオフにすることをお勧めします. " +
+		"立ちくらみ, 視力の変化, 目や顔のけいれん, 腕や脚のけいれんや震え, 見当識障害, 混乱, 一時的な意識喪失などの症状が見られた場合は, " +
+		"すぐにプレイを中止して医師に相談してください. ",
+	"turnOffPerformances": "装飾判定ライン演出をオフにしてプレイ",
+	"playAnyway": "直接でプレイ",
 	
 	// in-game
 	"quitGame": "戻る",
@@ -676,7 +680,7 @@ Strings["ja-JP"] = {
 	"perfect": "Perfect",
 	"good": "Good",
 	"bad": "Bad",
-	"miss": "ミス~",
+	"miss": "Miss",
 	"excess": "Excess",
 	"maxCombo": "最大コンボ数",
 	"markP": "P",
@@ -694,7 +698,7 @@ Strings["ja-JP"] = {
 	// in-game display of modifiers
 	"inGame_playRate": "%fx スピード",
 	"inGame_autoPlay": "オートプレイ",
-	"inGame_noFail": undefined,
+	"inGame_noFail": "No-fail",
 	"inGame_noBad": "No-bad",
 	"inGame_noExcess": "No-excess",
 	"inGame_judgementWindow": "%fx 判",
@@ -704,7 +708,7 @@ Strings["ja-JP"] = {
 	"modifiers": "モード",
 	"playRate": "倍速",
 	"autoPlay": "オートプレイ",
-	"noFail": undefined,
+	"noFail": "No-fail モード",
 	"noBad": "No-Bad モード",
 	"noExcess": "No-excess モード",
 	"judgementWindow": "判定幅 (小さいほど厳しい)",
@@ -715,7 +719,7 @@ Strings["ja-JP"] = {
 	"offset": "オフセット (ms)",
 	"offsetWizard": "オフセットウィザード",
 	"countdown": "ゲームに戻る前にカウントダウンを表示する",
-	"autoRestartFail": undefined,
+	"autoRestartFail": "Failは自動的にリスタートする",
 	"autoRestartGood": "APに失敗すると自動的にリスタートする",
 	"autoRestartMiss": "FCに失敗すると自動的にリスタートする",
 	"F8Pause": "F8 で一時停止する",
@@ -727,13 +731,13 @@ Strings["ja-JP"] = {
 	"visual": "ビジュアル",
 	"FCAPIndicator": "Full combo / all perfect インジケータ",
 	"TPSIndicator": "Taps per second インジケータ",
-	"judgementLinePerformances": "装飾的な判定ライン効果を有効にする",
+	"judgementLinePerformances": "装飾判定ライン効果を有効にする",
 	"flashWarningGood": "Good ヒットで画面をフラッシュして警告する",
 	"flashWarningMiss": "コンボブレイク時に画面をフラッシュして警告する",
 	"showInaccuracyData": "不正確なデータを表示する",
-	"comboPopupInterval": "コンボポップアップの間隔 (無効にするには0を設定してください)", // too long
-	"fadeIn": "フェードイン (解像度に対する比率 無効にするには0を設定してください)", // too long
-	"fadeOut": "フェードアウト (解像度に対する比率 無効にするには0を設定してください)", // too long
+	"comboPopupInterval": "コンボ数を表示する間隔 (0は無効にする)",
+	"fadeIn": "フェードイン (解像度比 0は無効にする)",
+	"fadeOut": "フェードアウト (解像度比 0は無効にする)",
 	"reverseVoices": "声部反転",
 	"mirror": "ミラー (左右反転)",
 	"showKeyboard": "キーボードの押下を表示する",
@@ -772,7 +776,7 @@ Strings["ja-JP"] = {
 	"graphics": "グラフィック",
 	"graphicsWidth": "解像度 (横の長さ)",
 	"graphicsHeight": "解像度 (縦の長さ)",
-	"useWebGL": "WebGL を使用したレンダリング (サイトを更新して有効にする)", // too long
+	"useWebGL": "WebGL でレンダリング (ページを更新する)",
 	"showFPS": "FPSを表示を切り替える (F2)",
 	"stretchGraphics": "ウィンドウに合わせてストレッチ (F3)",
 	"fullscreen": "フルスクリーン切り替える (F4, F11)",
@@ -782,8 +786,8 @@ Strings["ja-JP"] = {
 	"audio": "オーディオ",
 	"enableHitSound": "ヒットサウンドを有効にする",
 	"hitSound": "ヒットサウンド",
-	"hitSoundWithMusic": "ヒットサウンドはキーボード入力ではなく音楽で再生する", // too long
-	"countdownBeats": "カウントダウン時にヒットサウンドでビートをキューに入れる", // too long
+	"hitSoundWithMusic": "音楽に合わせてヒットサウンドを鳴ります",
+	"countdownBeats": "カウントダウン中にヒットサウンドを鳴ります",
 	"musicVolume": "ミュージックのボリューム",
 	"hitSoundVolume": "ヒットサウンドのボリューム",
 	"masterVolume": "全体のボリューム",
