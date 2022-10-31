@@ -94,13 +94,22 @@ module DododoBuilder
 		@platform = ENV['platform'] || DEFAULT_PLATFORM
 		@architecture = ENV['architecture'] || DEFAULT_ARCHITECTURE
 		@quiet = ENV['quiet'] || false
-		@target_path = File.expand_path ENV['target_path'] || File.join(DEFAULT_TARGET_PATH, "#{@platform}-#{@architecture}")
+		@version_number = version_number
+		@www_only = ENV['www_only'] == 'true'
+		@target_path = File.expand_path ENV['target_path'] || File.join(DEFAULT_TARGET_PATH, target_basename)
 		@temp_dir = File.expand_path ENV['temp_dir'] || '~/.cache/dododo'
 		@nwjs_version = ENV['nwjs_version'] || DEFAULT_NWJS_VERSION
 		@nwjs_path = ENV['nwjs_path'] || File.join(@temp_dir, nwjs_filename)
 		@www_home = File.join @target_path, 'www'
-		@www_only = ENV['www_only'] == 'true'
 		@package = ENV['package'] == 'true'
+	end
+	
+	def target_basename
+		"dododo-v#{@version_number}-#{@www_only ? 'www_only' : "#{@platform}-#{@architecture}"}"
+	end
+
+	def version_number
+		File.read('js/TyphmConstants.js').match(/TyphmConstants\.VERSION = \'(.*)\'/)[1]
 	end
 	
 	def nwjs_filename
